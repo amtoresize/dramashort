@@ -5,65 +5,209 @@ const CONFIG = {
     defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
 };
 
-// ============== API CLIENT SIMPLE ==============
-const API = {
-    // Melolo API (yang sudah dipakai)
+// ============== 3 WORKING APIS ==============
+const WORKING_APIS = {
+    // 1. MELOLO API (SUDAH JALAN DI APLIKASI ANDA)
     melolo: {
+        // Home - via proxy Anda (sudah terbukti work)
         home: async (offset = 0, count = 12) => {
-            const response = await fetch(`${CONFIG.apiBase}/home?offset=${offset}&count=${count}&lang=id`);
-            return response.json();
-        }
-    },
-    
-    // ShortMax API (tambahan baru)
-    shortmax: {
-        home: async () => {
             try {
-                const response = await fetch('https://dramabos.asia/api/shortmax/api/v1/home?lang=id');
+                const response = await fetch(`${CONFIG.apiBase}/home?offset=${offset}&count=${count}&lang=id`);
                 const data = await response.json();
-                return { code: 0, data: data.data || [] };
+                
+                if (data.code === 0 && data.data) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data,
+                        hasMore: data.has_more || false,
+                        nextOffset: data.next_offset || offset + data.data.length
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
             } catch (error) {
+                console.error('Melolo home error:', error);
                 return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        // Detail (via proxy)
+        detail: async (dramaId) => {
+            try {
+                const response = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
+                return await response.json();
+            } catch (error) {
+                console.error('Melolo detail error:', error);
+                return { code: -1, error: error.message };
             }
         }
     },
     
-    // FlickReels API (tambahan baru)
-    flickreels: {
-        home: async (page = 1) => {
+    // 2. DRAMABOX API (BARU - SUDAH TERBUKTI WORK)
+    dramabox: {
+        // For You (Rekomendasi)
+        foryou: async (page = 1) => {
             try {
-                const response = await fetch(`https://dramabos.asia/api/flick/home?page=${page}&page_size=20&lang=6`);
+                const response = await fetch(`https://dramabos.asia/api/dramabox/api/foryou/${page}?lang=in`);
                 const data = await response.json();
-                return { code: 0, data: data.list || [] };
+                
+                if (data.success && data.data && data.data.list) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.list,
+                        hasMore: data.data.list.length >= 20,
+                        nextPage: page + 1,
+                        total: data.data.list.length
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
             } catch (error) {
+                console.error('DramaBox foryou error:', error);
                 return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        // Latest (Terbaru)
+        latest: async (page = 1) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/dramabox/api/new/${page}?lang=in`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.list) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.list,
+                        hasMore: data.data.list.length >= 20,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox latest error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        // Trending (Ranking)
+        trending: async (page = 1) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/dramabox/api/rank/${page}?lang=in`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.list) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.list,
+                        hasMore: data.data.list.length >= 20,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox trending error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        // Detail Drama
+        detail: async (bookId) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/dramabox/api/drama/${bookId}?lang=in`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data
+                    };
+                }
+                return { code: -1, error: 'Invalid response' };
+            } catch (error) {
+                console.error('DramaBox detail error:', error);
+                return { code: -1, error: error.message };
+            }
+        }
+    },
+    
+    // 3. NETSHORT API (BARU - SUDAH TERBUKTI WORK)
+    netshort: {
+        // Explore (Home)
+        explore: async (offset = 0, limit = 20) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/explore?offset=${offset}&limit=${limit}`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.result) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.result,
+                        hasMore: !data.data.isEnd,
+                        nextOffset: data.data.next || offset + limit
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('NetShort explore error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        // Discover (Trending/Populer)
+        discover: async () => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/discover`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.dataList) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.dataList,
+                        hasMore: false
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('NetShort discover error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        // Detail Drama
+        detail: async (dramaId) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/info/${dramaId}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data
+                    };
+                }
+                return { code: -1, error: 'Invalid response' };
+            } catch (error) {
+                console.error('NetShort detail error:', error);
+                return { code: -1, error: error.message };
             }
         }
     }
 };
 
-// Simple cache system
-const cache = new Map();
-const CACHE_TTL = 2 * 60 * 1000; // 2 menit
-
-async function fetchWithCache(apiCall, cacheKey) {
-    const cached = cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        return cached.data;
-    }
-    
-    const data = await apiCall();
-    cache.set(cacheKey, { data, timestamp: Date.now() });
-    return data;
-}
-
 // ============== STATE VARIABLES ==============
 let currentOffset = 0;
+let currentPage = 1;
 let isLoading = false;
 let hasMoreData = true;
-let currentView = 'grid'; // 'grid' atau 'list'
-let currentSource = 'melolo'; // 'melolo', 'shortmax', 'flickreels'
-let currentPage = 1; // Untuk API yang pakai page bukan offset
+let currentView = 'grid';
+let currentSource = 'melolo'; // 'melolo', 'dramabox', 'netshort'
+let currentTab = 'home'; // 'home', 'trending', 'latest', 'discover'
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -71,12 +215,13 @@ const elements = {
     loadMoreBtn: document.getElementById('load-more'),
     loadingIndicator: document.getElementById('loading'),
     emptyState: document.getElementById('empty-state'),
-    sourceSelector: null // Akan diinisialisasi nanti
+    sourceSelector: null,
+    tabSelector: null
 };
 
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DramaShort Enhanced initialized');
+    console.log('🎬 DramaShort - 3 API Edition');
     
     // Load saved preferences
     const savedView = localStorage.getItem('dramashort_view');
@@ -86,12 +231,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const savedSource = localStorage.getItem('dramashort_source');
-    if (savedSource && ['melolo', 'shortmax', 'flickreels'].includes(savedSource)) {
+    if (savedSource && ['melolo', 'dramabox', 'netshort'].includes(savedSource)) {
         currentSource = savedSource;
     }
     
-    // Initialize UI components
+    // Initialize UI
     initializeSourceSelector();
+    initializeTabSelector();
     initializeViewToggle();
     addScrollToTopButton();
     
@@ -102,87 +248,163 @@ document.addEventListener('DOMContentLoaded', function() {
     if (elements.loadMoreBtn) {
         elements.loadMoreBtn.addEventListener('click', function() {
             if (!isLoading && hasMoreData) {
-                loadDramas(currentOffset);
+                loadMoreDramas();
             }
         });
     }
 });
 
-// ============== SOURCE SELECTOR FUNCTIONS ==============
+// ============== SOURCE SELECTOR ==============
 
 /**
- * Initialize source selector dropdown
+ * Initialize source selector (3 pilihan)
  */
 function initializeSourceSelector() {
     const header = document.querySelector('.d-flex.justify-content-between');
     if (!header) return;
     
-    // Create selector HTML
     const selectorHTML = `
         <select id="source-selector" class="form-select form-select-sm source-selector">
             <option value="melolo" ${currentSource === 'melolo' ? 'selected' : ''}>🎬 Melolo</option>
-            <option value="shortmax" ${currentSource === 'shortmax' ? 'selected' : ''}>⚡ ShortMax</option>
-            <option value="flickreels" ${currentSource === 'flickreels' ? 'selected' : ''}>🔥 FlickReels</option>
+            <option value="dramabox" ${currentSource === 'dramabox' ? 'selected' : ''}>📺 DramaBox</option>
+            <option value="netshort" ${currentSource === 'netshort' ? 'selected' : ''}>⚡ NetShort</option>
         </select>
     `;
     
-    // Insert selector before view toggle buttons
     const buttonContainer = header.querySelector('.d-flex');
     buttonContainer.insertAdjacentHTML('afterbegin', selectorHTML);
     
-    // Store reference
     elements.sourceSelector = document.getElementById('source-selector');
     
-    // Add event listener
     elements.sourceSelector.addEventListener('change', async function() {
         currentSource = this.value;
         currentOffset = 0;
         currentPage = 1;
+        currentTab = 'home';
         
         // Save preference
         localStorage.setItem('dramashort_source', currentSource);
         
-        // Clear cache for new source
-        cache.clear();
+        // Update tab selector based on source
+        updateTabSelector();
         
-        // Reload dramas
-        await loadDramas(0);
+        // Clear and reload
+        if (elements.dramaList) {
+            elements.dramaList.innerHTML = '';
+        }
         
-        // Update page title based on source
+        await loadDramas();
+        
+        // Update page title
         updatePageTitle();
     });
 }
 
 /**
- * Update page title based on current source
+ * Initialize tab selector (berbeda per source)
  */
-function updatePageTitle() {
-    const titles = {
-        melolo: 'DramaShort - Streaming Drama Asia',
-        shortmax: 'ShortMax - Drama Pendek Terbaik',
-        flickreels: 'FlickReels - Drama Trending'
-    };
+function initializeTabSelector() {
+    const header = document.querySelector('.d-flex.justify-content-between');
+    if (!header) return;
     
-    if (titles[currentSource]) {
-        document.title = titles[currentSource];
+    const tabHTML = `
+        <div id="tab-selector" class="btn-group btn-group-sm ms-2">
+            <button type="button" class="btn btn-outline-secondary tab-btn active" data-tab="home">Home</button>
+            <button type="button" class="btn btn-outline-secondary tab-btn" data-tab="trending">Trending</button>
+            <button type="button" class="btn btn-outline-secondary tab-btn" data-tab="latest">Latest</button>
+        </div>
+    `;
+    
+    const buttonContainer = header.querySelector('.d-flex');
+    const sourceSelector = buttonContainer.querySelector('.source-selector');
+    sourceSelector.insertAdjacentHTML('afterend', tabHTML);
+    
+    elements.tabSelector = document.getElementById('tab-selector');
+    
+    // Add event listeners to tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Change tab
+            currentTab = this.dataset.tab;
+            currentOffset = 0;
+            currentPage = 1;
+            
+            // Reload dramas
+            if (elements.dramaList) {
+                elements.dramaList.innerHTML = '';
+            }
+            loadDramas();
+        });
+    });
+}
+
+/**
+ * Update tab selector based on current source
+ */
+function updateTabSelector() {
+    if (!elements.tabSelector) return;
+    
+    let tabs = [];
+    
+    switch(currentSource) {
+        case 'melolo':
+            tabs = ['home'];
+            break;
+        case 'dramabox':
+            tabs = ['home', 'trending', 'latest'];
+            break;
+        case 'netshort':
+            tabs = ['home', 'discover'];
+            break;
     }
+    
+    // Update tab buttons
+    elements.tabSelector.innerHTML = '';
+    
+    tabs.forEach(tab => {
+        const active = tab === currentTab ? 'active' : '';
+        const label = tab === 'home' ? 'Home' : 
+                     tab === 'trending' ? 'Trending' : 
+                     tab === 'latest' ? 'Latest' : 
+                     tab === 'discover' ? 'Discover' : tab;
+        
+        elements.tabSelector.innerHTML += `
+            <button type="button" class="btn btn-outline-secondary tab-btn ${active}" data-tab="${tab}">${label}</button>
+        `;
+    });
+    
+    // Re-add event listeners
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            currentTab = this.dataset.tab;
+            currentOffset = 0;
+            currentPage = 1;
+            
+            if (elements.dramaList) {
+                elements.dramaList.innerHTML = '';
+            }
+            loadDramas();
+        });
+    });
 }
 
 // ============== VIEW TOGGLE FUNCTIONS ==============
-
-/**
- * Initialize view toggle buttons
- */
+// (SAMA DENGAN SEBELUMNYA - tidak diubah)
 function initializeViewToggle() {
     const gridBtn = document.getElementById('view-grid');
     const listBtn = document.getElementById('view-list');
     
     if (!gridBtn || !listBtn) return;
     
-    // Set initial button state
     updateViewButtons();
     
-    // Grid button click
     gridBtn.addEventListener('click', () => {
         if (currentView !== 'grid') {
             currentView = 'grid';
@@ -190,7 +412,6 @@ function initializeViewToggle() {
         }
     });
     
-    // List button click
     listBtn.addEventListener('click', () => {
         if (currentView !== 'list') {
             currentView = 'list';
@@ -199,9 +420,6 @@ function initializeViewToggle() {
     });
 }
 
-/**
- * Update view buttons state
- */
 function updateViewButtons() {
     const gridBtn = document.getElementById('view-grid');
     const listBtn = document.getElementById('view-list');
@@ -221,14 +439,10 @@ function updateViewButtons() {
     }
 }
 
-/**
- * Update the view layout
- */
 function updateView() {
     const dramaList = elements.dramaList;
     if (!dramaList) return;
     
-    // Toggle CSS class
     if (currentView === 'list') {
         dramaList.classList.add('list-view');
         dramaList.classList.remove('row-cols-2', 'row-cols-md-3', 'row-cols-lg-4', 'row-cols-xl-5', 'g-4');
@@ -239,18 +453,409 @@ function updateView() {
         dramaList.classList.add('row-cols-2', 'row-cols-md-3', 'row-cols-lg-4', 'row-cols-xl-5', 'g-4');
     }
     
-    // Update buttons
     updateViewButtons();
-    
-    // Save preference
     localStorage.setItem('dramashort_view', currentView);
 }
 
+// ============== LOAD DRAMAS ==============
+
 /**
- * Add scroll to top button
+ * Load dramas based on current source and tab
  */
+async function loadDramas() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    showLoading(true);
+    
+    try {
+        let result;
+        
+        switch(currentSource) {
+            case 'dramabox':
+                if (currentTab === 'trending') {
+                    result = await WORKING_APIS.dramabox.trending(currentPage);
+                } else if (currentTab === 'latest') {
+                    result = await WORKING_APIS.dramabox.latest(currentPage);
+                } else {
+                    result = await WORKING_APIS.dramabox.foryou(currentPage);
+                }
+                break;
+                
+            case 'netshort':
+                if (currentTab === 'discover') {
+                    result = await WORKING_APIS.netshort.discover();
+                } else {
+                    result = await WORKING_APIS.netshort.explore(currentOffset, CONFIG.itemsPerPage);
+                }
+                break;
+                
+            case 'melolo':
+            default:
+                result = await WORKING_APIS.melolo.home(currentOffset, CONFIG.itemsPerPage);
+                break;
+        }
+        
+        if (result.code === 0 && result.data && result.data.length > 0) {
+            // Clear if first load
+            if (currentOffset === 0 || currentPage === 1) {
+                elements.dramaList.innerHTML = '';
+            }
+            
+            renderDramas(result.data);
+            
+            // Update pagination
+            if (currentSource === 'melolo') {
+                hasMoreData = result.hasMore || false;
+                currentOffset = result.nextOffset || currentOffset + result.data.length;
+            } else if (currentSource === 'dramabox') {
+                hasMoreData = result.hasMore || false;
+                currentPage = result.nextPage || currentPage + 1;
+            } else if (currentSource === 'netshort') {
+                hasMoreData = result.hasMore || false;
+                currentOffset = result.nextOffset || currentOffset + result.data.length;
+            }
+            
+            // Update UI
+            updateLoadMoreButton();
+            hideEmptyState();
+            
+        } else {
+            showEmptyState(`No dramas found in ${currentSource} - ${currentTab}`);
+            hasMoreData = false;
+            updateLoadMoreButton();
+        }
+        
+    } catch (error) {
+        console.error('Error loading dramas:', error);
+        showError(`Failed to load: ${error.message}`);
+        hasMoreData = false;
+        updateLoadMoreButton();
+    } finally {
+        isLoading = false;
+        showLoading(false);
+    }
+}
+
+/**
+ * Load more dramas
+ */
+async function loadMoreDramas() {
+    await loadDramas();
+}
+
+// ============== RENDER DRAMAS ==============
+
+/**
+ * Render dramas with source-specific formatting
+ */
+function renderDramas(dramas) {
+    if (!dramas || !Array.isArray(dramas) || dramas.length === 0) {
+        return;
+    }
+    
+    const dramasHtml = dramas.map(drama => {
+        // Format berbeda untuk setiap source
+        let dramaData = formatDramaData(drama);
+        
+        // Escape HTML
+        const title = escapeHtml(dramaData.title);
+        const author = escapeHtml(dramaData.author);
+        const intro = escapeHtml(dramaData.intro);
+        const episodes = dramaData.episodes;
+        const cover = dramaData.cover;
+        const dramaId = dramaData.id;
+        const watchUrl = dramaData.watchUrl;
+        
+        // Grid view (default)
+        if (currentView === 'list') {
+            return createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl);
+        } else {
+            return createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl);
+        }
+    }).join('');
+    
+    elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
+    
+    // Apply view styles
+    if (currentView === 'list') {
+        updateView();
+    }
+}
+
+/**
+ * Format drama data based on source
+ */
+function formatDramaData(drama) {
+    let formatted = {
+        title: 'Untitled Drama',
+        author: 'Unknown',
+        intro: 'No description available.',
+        episodes: 0,
+        cover: CONFIG.defaultImage,
+        id: '',
+        watchUrl: '#',
+        source: currentSource
+    };
+    
+    switch(currentSource) {
+        case 'melolo':
+            formatted = {
+                title: drama.name || drama.title,
+                author: drama.author || 'Unknown Author',
+                intro: drama.intro || 'No description.',
+                episodes: drama.episodes || 0,
+                cover: drama.cover || CONFIG.defaultImage,
+                id: drama.id,
+                watchUrl: `/drama.html?id=${drama.id}`,
+                source: 'melolo'
+            };
+            break;
+            
+        case 'dramabox':
+            formatted = {
+                title: drama.bookName || drama.title,
+                author: 'DramaBox',
+                intro: drama.introduction || 'Drama from DramaBox',
+                episodes: drama.chapterCount || 0,
+                cover: drama.cover || CONFIG.defaultImage,
+                id: drama.bookId,
+                watchUrl: `/dramabox.html?id=${drama.bookId}`, // Akan buat page khusus
+                source: 'dramabox'
+            };
+            break;
+            
+        case 'netshort':
+            // NetShort punya 2 format: explore (simple) dan discover (detail)
+            if (drama.shortPlayName) {
+                // Format discover
+                formatted = {
+                    title: drama.shortPlayName,
+                    author: 'NetShort',
+                    intro: drama.labelArray ? drama.labelArray.join(', ') : 'Short drama',
+                    episodes: 1,
+                    cover: drama.shortPlayCover || drama.cover,
+                    id: drama.shortPlayId || drama.id,
+                    watchUrl: `/netshort.html?id=${drama.shortPlayId}`,
+                    source: 'netshort'
+                };
+            } else {
+                // Format explore
+                formatted = {
+                    title: drama.name || 'NetShort Drama',
+                    author: 'NetShort',
+                    intro: 'Short form drama',
+                    episodes: 1,
+                    cover: drama.cover || CONFIG.defaultImage,
+                    id: drama.id,
+                    watchUrl: `/netshort.html?id=${drama.id}`,
+                    source: 'netshort'
+                };
+            }
+            break;
+    }
+    
+    return formatted;
+}
+
+/**
+ * Create grid view HTML
+ */
+function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl) {
+    return `
+        <div class="col">
+            <div class="drama-card">
+                <!-- Cover Image -->
+                <div class="card-cover">
+                    <img src="${cover}" 
+                         class="drama-cover"
+                         alt="${title}"
+                         loading="lazy"
+                         onerror="this.src='${CONFIG.defaultImage}'">
+                    
+                    <!-- Episode Badge -->
+                    ${episodes > 0 ? `
+                    <div class="episode-badge">
+                        ${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Source Badge -->
+                    <div class="source-badge">
+                        ${currentSource === 'melolo' ? '🎬' : 
+                          currentSource === 'dramabox' ? '📺' : '⚡'} 
+                        ${currentSource.toUpperCase()}
+                    </div>
+                    
+                    <!-- Play Overlay -->
+                    <div class="play-overlay">
+                        <a href="${watchUrl}" class="play-btn">
+                            <i class="bi bi-play-fill"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Card Content -->
+                <div class="card-body">
+                    <h6 class="drama-title">${title}</h6>
+                    <div class="drama-meta">
+                        <small><i class="bi bi-person"></i> ${author}</small>
+                    </div>
+                    <p class="drama-desc">${intro.length > 80 ? intro.substring(0, 80) + '...' : intro}</p>
+                    
+                    <!-- Watch Now Button -->
+                    <a href="${watchUrl}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-eye me-1"></i> 
+                        ${currentSource === 'netshort' ? 'Watch Short' : 'Watch Now'}
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Create list view HTML
+ */
+function createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl) {
+    return `
+        <div class="col">
+            <div class="drama-card">
+                <div class="card-cover">
+                    <img src="${cover}" 
+                         class="drama-cover"
+                         alt="${title}"
+                         loading="lazy"
+                         onerror="this.src='${CONFIG.defaultImage}'">
+                    
+                    ${episodes > 0 ? `
+                    <div class="episode-badge">
+                        ${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}
+                    </div>
+                    ` : ''}
+                    
+                    <div class="play-overlay">
+                        <a href="${watchUrl}" class="play-btn">
+                            <i class="bi bi-play-fill"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <h6 class="drama-title">${title}</h6>
+                    <div class="drama-meta">
+                        <small><i class="bi bi-person"></i> ${author}</small>
+                        ${episodes > 0 ? `<small class="ms-3"><i class="bi bi-film"></i> ${episodes} ${currentSource === 'netshort' ? 'Short' : 'Ep'}</small>` : ''}
+                        <small class="ms-3"><i class="bi bi-database"></i> ${currentSource.toUpperCase()}</small>
+                    </div>
+                    <p class="drama-desc">${intro}</p>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="${watchUrl}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i> 
+                            ${currentSource === 'netshort' ? 'Watch Short' : 'Watch Now'}
+                        </a>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="addToFavorites('${dramaId}', '${currentSource}')">
+                            <i class="bi bi-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ============== UI HELPER FUNCTIONS ==============
+// (SAMA DENGAN SEBELUMNYA)
+function showLoading(show) {
+    if (elements.loadingIndicator) {
+        elements.loadingIndicator.style.display = show ? 'block' : 'none';
+    }
+    
+    if (elements.loadMoreBtn) {
+        if (show) {
+            elements.loadMoreBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                Loading...
+            `;
+            elements.loadMoreBtn.disabled = true;
+        } else {
+            elements.loadMoreBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Load More';
+            elements.loadMoreBtn.disabled = false;
+        }
+    }
+}
+
+function updateLoadMoreButton() {
+    if (elements.loadMoreBtn) {
+        elements.loadMoreBtn.style.display = hasMoreData ? 'block' : 'none';
+    }
+}
+
+function showEmptyState(message) {
+    if (elements.emptyState) {
+        elements.emptyState.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-emoji-frown display-1 text-muted"></i>
+                <h4 class="mt-3">${escapeHtml(message)}</h4>
+                <p class="text-muted">Try switching tab or source</p>
+                <button onclick="location.reload()" class="btn btn-primary mt-3">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+        `;
+        elements.emptyState.style.display = 'block';
+    }
+}
+
+function hideEmptyState() {
+    if (elements.emptyState) {
+        elements.emptyState.style.display = 'none';
+    }
+}
+
+function showError(message) {
+    if (elements.dramaList) {
+        elements.dramaList.innerHTML = `
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    ${escapeHtml(message)}
+                    <div class="mt-2">
+                        <button onclick="switchSource('melolo')" class="btn btn-sm btn-outline-primary me-2">
+                            Switch to Melolo
+                        </button>
+                        <button onclick="location.reload()" class="btn btn-sm btn-outline-danger">
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function updatePageTitle() {
+    const titles = {
+        melolo: 'DramaShort - Melolo Drama',
+        dramabox: 'DramaShort - DramaBox Series',
+        netshort: 'DramaShort - NetShort Videos'
+    };
+    
+    if (titles[currentSource]) {
+        document.title = titles[currentSource];
+    }
+}
+
+// ============== UTILITY FUNCTIONS ==============
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function addScrollToTopButton() {
-    // Cek jika button sudah ada
     if (document.getElementById('scroll-to-top')) return;
     
     const scrollBtn = document.createElement('button');
@@ -279,363 +884,22 @@ function addScrollToTopButton() {
     });
 }
 
-// ============== MAIN FUNCTIONS ==============
-
-/**
- * Load dramas from selected API source
- */
-async function loadDramas(offset = 0) {
-    if (isLoading) return;
-    
-    isLoading = true;
-    showLoading(true);
-    
-    try {
-        let result;
-        const cacheKey = `${currentSource}_${offset}_${currentPage}`;
-        
-        // Gunakan cache jika ada
-        if (cache.has(cacheKey)) {
-            result = cache.get(cacheKey).data;
-        } else {
-            // Pilih API berdasarkan source
-            switch(currentSource) {
-                case 'shortmax':
-                    result = await API.shortmax.home();
-                    break;
-                    
-                case 'flickreels':
-                    result = await API.flickreels.home(currentPage);
-                    break;
-                    
-                case 'melolo':
-                default:
-                    result = await API.melolo.home(offset, CONFIG.itemsPerPage);
-                    break;
-            }
-            
-            // Simpan ke cache
-            cache.set(cacheKey, { data: result, timestamp: Date.now() });
-        }
-        
-        // Process response
-        if (result.code === 0 && result.data && Array.isArray(result.data)) {
-            if (offset === 0) {
-                elements.dramaList.innerHTML = '';
-            }
-            
-            if (result.data.length > 0) {
-                renderDramas(result.data);
-                
-                // Update pagination state berdasarkan source
-                if (currentSource === 'melolo') {
-                    currentOffset = offset + result.data.length;
-                    hasMoreData = result.has_more || (result.data.length >= CONFIG.itemsPerPage);
-                } else if (currentSource === 'flickreels') {
-                    currentPage++;
-                    hasMoreData = result.data.length >= 20; // flickreels selalu 20 per page
-                } else {
-                    // shortmax cuma 1 page
-                    hasMoreData = false;
-                }
-                
-                // Show/hide load more button
-                if (elements.loadMoreBtn) {
-                    elements.loadMoreBtn.style.display = hasMoreData ? 'block' : 'none';
-                }
-                
-                // Hide empty state
-                if (elements.emptyState) {
-                    elements.emptyState.style.display = 'none';
-                }
-            } else {
-                if (offset === 0) {
-                    showEmptyState(`No dramas found in ${currentSource}. Try another source.`);
-                }
-                hasMoreData = false;
-                if (elements.loadMoreBtn) {
-                    elements.loadMoreBtn.style.display = 'none';
-                }
-            }
-        } else {
-            throw new Error(`Invalid API response from ${currentSource}`);
-        }
-    } catch (error) {
-        console.error(`Error loading dramas from ${currentSource}:`, error);
-        
-        if (offset === 0) {
-            showError(`Failed to load dramas: ${error.message}`);
-        }
-        
-        hasMoreData = false;
-        if (elements.loadMoreBtn) {
-            elements.loadMoreBtn.style.display = 'none';
-        }
-    } finally {
-        isLoading = false;
-        showLoading(false);
-    }
-}
-
-/**
- * Render dramas to the grid/list with source-specific formatting
- */
-function renderDramas(dramas) {
-    if (!dramas || !Array.isArray(dramas) || dramas.length === 0) {
-        return;
-    }
-    
-    const dramasHtml = dramas.map(drama => {
-        // Format data berbeda untuk setiap source
-        let title, author, intro, episodes, cover, dramaId, videoUrl;
-        
-        switch(currentSource) {
-            case 'shortmax':
-                title = drama.name || drama.title || 'Untitled Short';
-                author = drama.author || 'Unknown';
-                intro = drama.intro || drama.description || 'No description available.';
-                episodes = 1; // ShortMax biasanya single episode
-                cover = drama.cover || drama.thumbnail || CONFIG.defaultImage;
-                dramaId = drama.id || drama._id;
-                videoUrl = drama.video_url || `#`;
-                break;
-                
-            case 'flickreels':
-                title = drama.drama_name || drama.title || 'Untitled Drama';
-                author = drama.author || 'Unknown';
-                intro = drama.description || 'No description available.';
-                episodes = drama.total_episodes || 0;
-                cover = drama.vertical_cover || drama.cover || CONFIG.defaultImage;
-                dramaId = drama.drama_id || drama.id;
-                videoUrl = `https://dramabos.asia/api/flick/drama/${dramaId}?lang=6`;
-                break;
-                
-            case 'melolo':
-            default:
-                title = drama.name || 'Untitled Drama';
-                author = drama.author || 'Unknown Author';
-                intro = drama.intro || 'No description available.';
-                episodes = drama.episodes || 0;
-                cover = drama.cover || CONFIG.defaultImage;
-                dramaId = drama.id;
-                videoUrl = `/drama.html?id=${dramaId}`;
-                break;
-        }
-        
-        // Escape untuk keamanan
-        title = escapeHtml(title);
-        author = escapeHtml(author);
-        intro = escapeHtml(intro.length > 80 ? intro.substring(0, 80) + '...' : intro);
-        
-        // Different HTML for list view
-        if (currentView === 'list') {
-            return `
-                <div class="col">
-                    <div class="drama-card">
-                        <!-- Cover Image -->
-                        <div class="card-cover">
-                            <img src="${cover}" 
-                                 class="drama-cover"
-                                 alt="${title}"
-                                 loading="lazy"
-                                 onerror="this.src='${CONFIG.defaultImage}'">
-                            
-                            <!-- Episode Badge -->
-                            ${episodes > 0 ? `
-                            <div class="episode-badge">
-                                ${episodes} ${currentSource === 'shortmax' ? 'SHORT' : 'EP'}
-                            </div>
-                            ` : ''}
-                            
-                            <!-- Play Overlay -->
-                            <div class="play-overlay">
-                                <a href="${videoUrl}" class="play-btn" ${currentSource === 'shortmax' ? 'target="_blank"' : ''}>
-                                    <i class="bi bi-play-fill"></i>
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <!-- Card Content -->
-                        <div class="card-body">
-                            <h6 class="drama-title">${title}</h6>
-                            <div class="drama-meta">
-                                <small><i class="bi bi-person"></i> ${author}</small>
-                                ${episodes > 0 ? `<small class="ms-3"><i class="bi bi-film"></i> ${episodes} ${currentSource === 'shortmax' ? 'Short' : 'Ep'}</small>` : ''}
-                                <small class="ms-3"><i class="bi bi-database"></i> ${currentSource.toUpperCase()}</small>
-                            </div>
-                            <p class="drama-desc">${intro}</p>
-                            
-                            <!-- Action Buttons -->
-                            <div class="d-flex gap-2">
-                                <a href="${videoUrl}" class="btn btn-primary btn-sm" ${currentSource === 'shortmax' ? 'target="_blank"' : ''}>
-                                    <i class="bi bi-eye me-1"></i> ${currentSource === 'shortmax' ? 'Watch Now' : 'View Details'}
-                                </a>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="addToFavorites('${dramaId}', '${currentSource}')">
-                                    <i class="bi bi-bookmark"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            // Grid view HTML
-            return `
-                <div class="col">
-                    <div class="drama-card">
-                        <!-- Cover Image -->
-                        <div class="card-cover">
-                            <img src="${cover}" 
-                                 class="drama-cover"
-                                 alt="${title}"
-                                 loading="lazy"
-                                 onerror="this.src='${CONFIG.defaultImage}'">
-                            
-                            <!-- Episode Badge -->
-                            ${episodes > 0 ? `
-                            <div class="episode-badge">
-                                ${episodes} ${currentSource === 'shortmax' ? 'SHORT' : 'EP'}
-                            </div>
-                            ` : ''}
-                            
-                            <!-- Source Badge -->
-                            <div class="source-badge" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600;">
-                                ${currentSource === 'shortmax' ? '⚡' : currentSource === 'flickreels' ? '🔥' : '🎬'} ${currentSource.toUpperCase()}
-                            </div>
-                            
-                            <!-- Play Overlay -->
-                            <div class="play-overlay">
-                                <a href="${videoUrl}" class="play-btn" ${currentSource === 'shortmax' ? 'target="_blank"' : ''}>
-                                    <i class="bi bi-play-fill"></i>
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <!-- Card Content -->
-                        <div class="card-body">
-                            <h6 class="drama-title">${title}</h6>
-                            <div class="drama-meta">
-                                <small><i class="bi bi-person"></i> ${author}</small>
-                            </div>
-                            <p class="drama-desc">${intro}</p>
-                            
-                            <!-- Watch Now Button -->
-                            <a href="${videoUrl}" class="btn btn-primary btn-sm w-100" ${currentSource === 'shortmax' ? 'target="_blank"' : ''}>
-                                <i class="bi bi-eye me-1"></i> ${currentSource === 'shortmax' ? 'Watch Short' : 'Watch Now'}
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    }).join('');
-    
-    elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
-    
-    // Apply view-specific styles
-    if (currentView === 'list') {
-        updateView();
-    }
-}
-
-// ============== UI HELPER FUNCTIONS ==============
-
-/**
- * Show/hide loading indicator
- */
-function showLoading(show) {
-    if (elements.loadingIndicator) {
-        elements.loadingIndicator.style.display = show ? 'block' : 'none';
-    }
-    
-    if (elements.loadMoreBtn) {
-        if (show) {
-            elements.loadMoreBtn.innerHTML = `
-                <span class="spinner-border spinner-border-sm" role="status"></span>
-                Loading ${currentSource}...
-            `;
-            elements.loadMoreBtn.disabled = true;
-        } else {
-            elements.loadMoreBtn.innerHTML = `
-                <i class="bi bi-plus-circle"></i> Load More ${currentSource === 'shortmax' ? 'Shorts' : 'Dramas'}
-            `;
-            elements.loadMoreBtn.disabled = false;
-        }
-    }
-}
-
-/**
- * Show empty state message
- */
-function showEmptyState(message = 'No dramas available.') {
-    if (elements.emptyState) {
-        elements.emptyState.innerHTML = `
-            <div class="text-center py-5">
-                <i class="bi bi-emoji-frown display-1 text-muted"></i>
-                <h4 class="mt-3">${escapeHtml(message)}</h4>
-                <p class="text-muted">Try switching to another source</p>
-                <button onclick="location.reload()" class="btn btn-primary mt-3">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh Page
-                </button>
-            </div>
-        `;
-        elements.emptyState.style.display = 'block';
-    }
-    
-    if (elements.dramaList) {
-        elements.dramaList.innerHTML = '';
-    }
-}
-
-/**
- * Show error message
- */
-function showError(message) {
-    if (elements.dramaList) {
-        elements.dramaList.innerHTML = `
-            <div class="col-12">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Error loading from ${currentSource}:</strong> ${escapeHtml(message)}
-                    <div class="mt-2">
-                        <button onclick="switchSource('melolo')" class="btn btn-sm btn-outline-primary me-2">
-                            Switch to Melolo
-                        </button>
-                        <button onclick="location.reload()" class="btn btn-sm btn-outline-danger">
-                            Refresh Page
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-}
-
-/**
- * Add to favorites with source info
- */
-function addToFavorites(dramaId, source) {
+// ============== GLOBAL FUNCTIONS ==============
+window.addToFavorites = function(dramaId, source) {
     const favorites = JSON.parse(localStorage.getItem('dramashort_favorites') || '[]');
     const newFavorite = { id: dramaId, source, addedAt: new Date().toISOString() };
     
-    // Cek jika sudah ada
     const exists = favorites.find(fav => fav.id === dramaId && fav.source === source);
     if (!exists) {
         favorites.push(newFavorite);
         localStorage.setItem('dramashort_favorites', JSON.stringify(favorites));
-        
-        // Show notification
         showNotification(`Added to favorites! (${source})`);
     } else {
         showNotification('Already in favorites!');
     }
-}
+};
 
-/**
- * Show temporary notification
- */
 function showNotification(message) {
-    // Remove existing notification
     const existing = document.getElementById('temp-notification');
     if (existing) existing.remove();
     
@@ -650,7 +914,6 @@ function showNotification(message) {
     
     document.body.appendChild(notification);
     
-    // Auto remove after 3 seconds
     setTimeout(() => {
         if (notification.parentNode) {
             notification.remove();
@@ -658,29 +921,13 @@ function showNotification(message) {
     }, 3000);
 }
 
-/**
- * Switch source programmatically
- */
-function switchSource(source) {
-    if (elements.sourceSelector && ['melolo', 'shortmax', 'flickreels'].includes(source)) {
+window.switchSource = function(source) {
+    if (elements.sourceSelector && ['melolo', 'dramabox', 'netshort'].includes(source)) {
         elements.sourceSelector.value = source;
         elements.sourceSelector.dispatchEvent(new Event('change'));
     }
-}
-
-// ============== UTILITY FUNCTIONS ==============
-
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+};
 
 // ============== GLOBAL EXPORTS ==============
 window.loadDramas = loadDramas;
-window.addToFavorites = addToFavorites;
-window.switchSource = switchSource;
+window.loadMoreDramas = loadMoreDramas;
