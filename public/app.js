@@ -207,7 +207,7 @@ let isLoading = false;
 let hasMoreData = true;
 let currentView = 'grid';
 let currentSource = 'melolo'; // 'melolo', 'dramabox', 'netshort'
-let currentTab = 'home'; // 'home', 'trending', 'latest', 'discover'
+// HAPUS: let currentTab = 'home'; // <=== DELETE THIS LINE
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -221,7 +221,7 @@ const elements = {
 
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 DramaShort - 3 API Edition');
+    console.log('🎬 DramaShort Enhanced initialized');
     
     // Load saved preferences
     const savedView = localStorage.getItem('dramashort_view');
@@ -235,9 +235,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSource = savedSource;
     }
     
-    // Initialize UI
+    // Initialize UI components (TANPA TAB SELECTOR)
     initializeSourceSelector();
-    initializeTabSelector();
     initializeViewToggle();
     addScrollToTopButton();
     
@@ -248,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (elements.loadMoreBtn) {
         elements.loadMoreBtn.addEventListener('click', function() {
             if (!isLoading && hasMoreData) {
-                loadMoreDramas();
+                loadDramas(currentOffset);
             }
         });
     }
