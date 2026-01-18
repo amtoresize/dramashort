@@ -7,8 +7,9 @@ export async function onRequest(context) {
     return new Response('Missing video URL', { status: 400 });
   }
   
-  // PLRJS Player Anda
+  // PLRJS Player
   const PLRJS_BASE = 'https://cdn.plrjs.com/player/bsa9hkrkynde7/qqvmenqpoeve.html';
+  // Gunakan concatenation string biasa, bukan template literal
   const playerUrl = PLRJS_BASE + '?file=' + encodeURIComponent(videoUrl);
   
   return Response.redirect(playerUrl, 302);
