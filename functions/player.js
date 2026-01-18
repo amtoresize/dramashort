@@ -8,9 +8,9 @@ export async function onRequest(context) {
   }
   
   // PLRJS Player
-  const PLRJS_BASE = 'https://cdn.plrjs.com/player/bsa9hkrkynde7/qqvmenqpoeve.html';
+  const PLRJS_BASE = '';
   // Gunakan concatenation string biasa, bukan template literal
-  const playerUrl = PLRJS_BASE + '?file=' + encodeURIComponent(videoUrl);
+  const playerUrl = PLRJS_BASE + '' + (videoUrl);
   
   return Response.redirect(playerUrl, 302);
 }
