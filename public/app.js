@@ -264,9 +264,9 @@ function initializeSourceSelector() {
     
     const selectorHTML = `
         <select id="source-selector" class="form-select form-select-sm source-selector">
-            <option value="melolo" ${currentSource === 'melolo' ? 'selected' : ''}>🎬 Melolo</option>
-            <option value="dramabox" ${currentSource === 'dramabox' ? 'selected' : ''}>📺 DramaBox</option>
-            <option value="netshort" ${currentSource === 'netshort' ? 'selected' : ''}>⚡ NetShort</option>
+            <option value="melolo" ${currentSource === 'melolo' ? 'selected' : ''}>Melolo</option>
+            <option value="dramabox" ${currentSource === 'dramabox' ? 'selected' : ''}>DramaBox</option>
+            <option value="netshort" ${currentSource === 'netshort' ? 'selected' : ''}>NetShort</option>
         </select>
     `;
     
