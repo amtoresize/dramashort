@@ -41,16 +41,11 @@
         .drama-poster {
             border-radius: 16px;
             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
-            transition: transform 0.4s ease;
             width: 100%;
             height: auto;
             max-height: 500px;
             object-fit: cover;
             background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
-        }
-        
-        .drama-poster:hover {
-            transform: scale(1.03);
         }
         
         .drama-title {
@@ -68,7 +63,6 @@
             border: 1px solid #444;
             border-radius: 12px;
             padding: 1.5rem;
-            backdrop-filter: blur(10px);
             line-height: 1.8;
         }
         
@@ -123,90 +117,6 @@
             opacity: 0.8;
         }
         
-        /* ========== MODAL PLAYER FULLSCREEN ========== */
-        #playerModal .modal-dialog {
-            max-width: 100%;
-            margin: 0;
-            height: 100%;
-        }
-        
-        #playerModal .modal-content {
-            background: #000;
-            border: none;
-            border-radius: 0;
-            height: 100%;
-        }
-        
-        #playerModal .modal-header,
-        #playerModal .modal-footer {
-            display: none; /* SEMUA HEADER & FOOTER DIHILANGKAN */
-        }
-        
-        #playerModal .modal-body {
-            padding: 0;
-            height: 100%;
-        }
-        
-        #playerContainer {
-            width: 100%;
-            height: 100%;
-            background: #000;
-        }
-        
-        #playerContainer iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #000;
-        }
-        .player-close-btn {
-            position: fixed;
-            top: 10px;
-            right: 5px;
-            z-index: 9999;
-            background: transparent !important; /* NO BACKGROUND */
-            border: none !important; /* NO BORDER */
-            color: white;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
-            opacity: 0.8;
-        }
-        .player-close-btn:hover {
-            opacity: 1;
-            transform: scale(1.2);
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            color: #fff;
-        }
-        .player-close-btn:active {
-            transform: scale(0.9);
-        }
-
-        /* Untuk dark scenes, tambah glow */
-        .player-close-btn.glow {
-            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
-        }
-        
-        /* Loading overlay */
-        .player-loading {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-        
         /* ========== RESPONSIVE ========== */
         @media (max-width: 768px) {
             .drama-title {
@@ -225,14 +135,6 @@
             
             .episode-number {
                 font-size: 1rem;
-            }
-            
-            .player-close-btn {
-                top: 10px;
-                right: 10px;
-                width: 40px;
-                height: 40px;
-                font-size: 1.2rem;
             }
         }
         
@@ -268,12 +170,6 @@
         /* ========== UTILITIES ========== */
         .total-duration {
             background: linear-gradient(135deg, #6f42c1, #d63384);
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
@@ -324,47 +220,14 @@
             
             <!-- Episode Not Found -->
             <div id="no-episodes" class="text-center py-5" style="display: none;">
-                <div class="alert alert-info glass-effect w-75 mx-auto">
+                <div class="alert alert-info w-75 mx-auto">
                     <i class="bi bi-info-circle display-4 d-block mb-3"></i>
                     <h4>Episode Belum Tersedia</h4>
                     <p class="mb-0">Episode untuk drama ini sedang dalam proses upload.</p>
                 </div>
-</div>
+            </div>
         </section>
     </main>
-
-    <!-- ========== MODAL PLAYER FULLSCREEN ========== -->
-    <div class="modal fade" id="playerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content bg-black">
-                <!-- NO HEADER -->
-                <!-- NO FOOTER -->
-                
-                <!-- Modal Body - Player Only -->
-                <div class="modal-body p-0">
-                    <!-- Floating Close Button -->
-                    <div class="player-close-btn" onclick="closePlayerModal()" title="Close Player (ESC)">
-                        <i class="bi bi-x-lg"></i>
-                    </div>
-                    
-                    <!-- Player Container -->
-                    <div id="playerContainer">
-                        <!-- Loading State -->
-                        <div class="player-loading" id="playerLoading">
-                            <div class="text-center">
-                                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
-                                    <span class="visually-hidden">Loading player...</span>
-                                </div>
-                                <h5 class="text-light">Memuat Player...</h5>
-                                <p class="text-muted">Video akan segera dimulai</p>
-                            </div>
-                        </div>
-                        <!-- Player iframe akan dimasukkan di sini -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- ========== FOOTER ========== -->
     <footer class="bg-black text-light py-4 mt-5">
@@ -390,8 +253,6 @@
         // ============== STATE MANAGEMENT ==============
         let currentDrama = null;
         let isLoading = false;
-        let currentPlayerUrl = '';
-        let playerModal = null;
 
         // ============== DOM ELEMENTS ==============
         const elements = {
@@ -399,26 +260,12 @@
             episodeList: document.getElementById('episode-list'),
             episodeCount: document.getElementById('episode-count'),
             countText: document.getElementById('count-text'),
-            noEpisodes: document.getElementById('no-episodes'),
-            playerModal: document.getElementById('playerModal'),
-            playerContainer: document.getElementById('playerContainer'),
-            playerLoading: document.getElementById('playerLoading')
+            noEpisodes: document.getElementById('no-episodes')
         };
 
         // ============== INITIALIZATION ==============
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DramaDetail initialized with Fullscreen Modal Player');
-            
-            // Initialize Bootstrap Modal
-            if (typeof bootstrap !== 'undefined') {
-                playerModal = new bootstrap.Modal(elements.playerModal, {
-                    backdrop: 'static',
-                    keyboard: false
-                });
-            } else {
-                console.warn('Bootstrap not loaded, loading now...');
-                loadBootstrap();
-            }
+            console.log('DramaDetail initialized (No Modal Version)');
             
             // Get drama ID from URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -431,9 +278,6 @@
             
             // Load drama details
             loadDramaDetail(dramaId);
-            
-            // Setup keyboard shortcuts
-            setupKeyboardShortcuts();
         });
 
         // ============== MAIN FUNCTIONS ==============
@@ -445,11 +289,9 @@
             if (isLoading) return;
             
             isLoading = true;
-            console.log('Loading drama detail for ID:', dramaId);
             
             try {
                 const apiUrl = `${CONFIG.apiBase}/detail/${dramaId}?lang=id`;
-                console.log('API URL:', apiUrl);
                 
                 const response = await fetch(apiUrl);
                 
@@ -458,7 +300,6 @@
                 }
                 
                 const data = await response.json();
-                console.log('Drama data received:', data);
                 
                 if (data.code === 0) {
                     currentDrama = data;
@@ -504,9 +345,6 @@
                                 <button class="btn btn-primary btn-lg py-3" onclick="playFirstEpisode()" id="playFirstBtn">
                                     <i class="bi bi-play-fill me-2"></i>Putar Episode 1
                                 </button>
-                                <button class="btn btn-outline-light py-3" onclick="scrollToEpisodes()">
-                                    <i class="bi bi-list-ul me-2"></i>Lihat Semua Episode
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -533,7 +371,7 @@
                         </div>
                         
                         <!-- Synopsis -->
-                        <div class="synopsis-box">
+                        <div class="synopsis-box mb-4">
                             <h5 class="fw-bold mb-3">
                                 <i class="bi bi-info-circle text-primary me-2"></i>Sinopsis
                             </h5>
@@ -587,7 +425,7 @@
         }
 
         /**
-         * Play a specific episode in fullscreen modal
+         * Play a specific episode (OPEN IN NEW TAB)
          */
         async function playEpisode(videoId, episodeNumber, buttonElement) {
             if (!videoId) {
@@ -605,7 +443,6 @@
             try {
                 // Get video URL from API
                 const apiUrl = `${CONFIG.apiBase}/video/${videoId}?lang=id`;
-                console.log('Fetching video URL:', apiUrl);
                 
                 const response = await fetch(apiUrl);
                 
@@ -614,22 +451,13 @@
                 }
                 
                 const data = await response.json();
-                console.log('Video API response:', data);
                 
                 if (data.url) {
                     // Generate player URL
-                    currentPlayerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(data.url)}`;
+                    const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(data.url)}`;
                     
-                    // Load player in fullscreen modal
-                    loadPlayerInModal(currentPlayerUrl);
-                    
-                    // Show fullscreen modal
-                    if (playerModal) {
-                        playerModal.show();
-                    } else {
-                        console.error('Player modal not initialized');
-                        window.open(currentPlayerUrl, '_blank');
-                    }
+                    // OPEN IN NEW TAB (NO MODAL)
+                    window.open(playerUrl, '_blank');
                     
                     // Save last watched episode
                     saveLastWatched(episodeNumber);
@@ -639,7 +467,7 @@
                 }
             } catch (error) {
                 console.error('Error playing video:', error);
-                showError('Gagal memutar video: ' + error.message);
+                alert('Gagal memutar video: ' + error.message);
             } finally {
                 // Restore button state
                 if (buttonElement) {
@@ -660,78 +488,6 @@
             const firstEpisode = currentDrama.videos[0];
             const firstButton = elements.episodeList.querySelector('.episode-btn');
             playEpisode(firstEpisode.vid, firstEpisode.episode, firstButton);
-        }
-
-        /**
-         * Load player in fullscreen modal
-         */
-        function loadPlayerInModal(playerUrl) {
-            // Show loading
-            elements.playerLoading.style.display = 'flex';
-            
-            // Clear previous iframe
-            const oldIframe = elements.playerContainer.querySelector('iframe');
-            if (oldIframe) {
-                oldIframe.remove();
-            }
-            
-            // Create new iframe
-            const iframe = document.createElement('iframe');
-            iframe.src = playerUrl;
-            iframe.frameBorder = '0';
-            iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
-            iframe.allowFullscreen = true;
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = 'none';
-            iframe.style.background = '#000';
-            
-            // Hide loading when iframe loads
-            iframe.onload = function() {
-                setTimeout(() => {
-                    elements.playerLoading.style.display = 'none';
-                    iframe.style.display = 'block';
-                }, 500);
-            };
-            
-            iframe.style.display = 'none';
-            elements.playerContainer.appendChild(iframe);
-        }
-
-        /**
-         * Close player modal
-         */
-        function closePlayerModal() {
-            if (playerModal) {
-                playerModal.hide();
-                // Stop video by removing iframe
-                const iframe = elements.playerContainer.querySelector('iframe');
-                if (iframe) {
-                    iframe.src = '';
-                }
-                elements.playerLoading.style.display = 'flex';
-            }
-        }
-
-        // ============== KEYBOARD SHORTCUTS ==============
-
-        /**
-         * Setup keyboard shortcuts
-         */
-        function setupKeyboardShortcuts() {
-            document.addEventListener('keydown', function(e) {
-                // ESC to close modal
-                if (e.key === 'Escape') {
-                    if (playerModal && elements.playerModal.classList.contains('show')) {
-                        closePlayerModal();
-                    }
-                }
-                
-                // Space bar to play/pause (when iframe focused)
-                if (e.key === ' ' && document.activeElement.tagName === 'IFRAME') {
-                    e.preventDefault(); // Prevent page scroll
-                }
-            });
         }
 
         // ============== UI HELPER FUNCTIONS ==============
@@ -768,16 +524,6 @@
                 button.disabled = false;
                 button.classList.remove('playing');
             }
-        }
-
-        /**
-         * Scroll to episodes section
-         */
-        function scrollToEpisodes() {
-            document.querySelector('#episode-list').scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'start'
-            });
         }
 
         /**
@@ -842,30 +588,9 @@
             return div.innerHTML;
         }
 
-        /**
-         * Load Bootstrap dynamically if needed
-         */
-        function loadBootstrap() {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js';
-            script.integrity = 'sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz';
-            script.crossOrigin = 'anonymous';
-            script.onload = function() {
-                console.log('Bootstrap loaded dynamically');
-                playerModal = new bootstrap.Modal(elements.playerModal, {
-                    backdrop: 'static',
-                    keyboard: false
-                });
-                setupKeyboardShortcuts();
-            };
-            document.head.appendChild(script);
-        }
-
         // ============== GLOBAL EXPORTS ==============
         window.playEpisode = playEpisode;
         window.playFirstEpisode = playFirstEpisode;
-        window.closePlayerModal = closePlayerModal;
-        window.scrollToEpisodes = scrollToEpisodes;
     </script>
 </body>
 </html>
