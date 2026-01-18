@@ -123,28 +123,34 @@
             opacity: 0.8;
         }
         
-        /* ========== MODAL PLAYER ========== */
+        /* ========== MODAL PLAYER FULLSCREEN ========== */
+        #playerModal .modal-dialog {
+            max-width: 100%;
+            margin: 0;
+            height: 100vh;
+        }
+        
         #playerModal .modal-content {
             background: #000;
             border: none;
             border-radius: 0;
+            height: 100vh;
         }
         
-        #playerModal .modal-header {
-            border-bottom: 1px solid #333;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-        }
-        
+        #playerModal .modal-header,
         #playerModal .modal-footer {
-            border-top: 1px solid #333;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
+            display: none; /* SEMUA HEADER & FOOTER DIHILANGKAN */
+        }
+        
+        #playerModal .modal-body {
+            padding: 0;
+            height: 100vh;
         }
         
         #playerContainer {
+            width: 100%;
+            height: 100vh;
             background: #000;
-            min-height: 70vh;
         }
         
         #playerContainer iframe {
@@ -154,12 +160,45 @@
             background: #000;
         }
         
+        /* Close button floating */
+        .player-close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .player-close-btn:hover {
+            background: rgba(220, 53, 69, 0.8);
+            transform: scale(1.1);
+            border-color: #dc3545;
+        }
+        
+        /* Loading overlay */
         .player-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 70vh;
-            background: #000;
+            z-index: 10;
         }
         
         /* ========== RESPONSIVE ========== */
@@ -182,13 +221,12 @@
                 font-size: 1rem;
             }
             
-            #playerModal .modal-dialog {
-                margin: 0;
-                max-width: 100%;
-            }
-            
-            #playerContainer {
-                min-height: 50vh;
+            .player-close-btn {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
             }
         }
         
@@ -285,27 +323,27 @@
                     <h4>Episode Belum Tersedia</h4>
                     <p class="mb-0">Episode untuk drama ini sedang dalam proses upload.</p>
                 </div>
-            </div>
+</div>
         </section>
     </main>
 
-    <!-- ========== MODAL PLAYER ========== -->
+    <!-- ========== MODAL PLAYER FULLSCREEN ========== -->
     <div class="modal fade" id="playerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-fullscreen">
             <div class="modal-content bg-black">
-                <!-- Modal Header -->
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-white" id="modalTitle">
-                        <i class="bi bi-play-circle me-2"></i>
-                        <span id="episodeTitle">Episode 1</span>
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+                <!-- NO HEADER -->
+                <!-- NO FOOTER -->
                 
-                <!-- Modal Body - Player -->
+                <!-- Modal Body - Player Only -->
                 <div class="modal-body p-0">
-                    <div id="playerContainer" class="ratio ratio-16x9">
-                        <!-- Loading state -->
+                    <!-- Floating Close Button -->
+                    <div class="player-close-btn" onclick="closePlayerModal()" title="Close Player (ESC)">
+                        <i class="bi bi-x-lg"></i>
+                    </div>
+                    
+                    <!-- Player Container -->
+                    <div id="playerContainer">
+                        <!-- Loading State -->
                         <div class="player-loading" id="playerLoading">
                             <div class="text-center">
                                 <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
@@ -316,18 +354,6 @@
                             </div>
                         </div>
                         <!-- Player iframe akan dimasukkan di sini -->
-                    </div>
-                </div>
-                
-                <!-- Modal Footer -->
-                <div class="modal-footer border-secondary">
-                    <div class="d-flex flex-wrap gap-2 w-100">
-                        <button class="btn btn-outline-light flex-grow-1" onclick="openPlayerInNewTab()" id="newTabBtn">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> Buka di Tab Baru
-                        </button>
-                        <button class="btn btn-primary flex-grow-1" data-bs-dismiss="modal" id="closePlayerBtn">
-                            <i class="bi bi-x-circle me-1"></i> Tutup Player
-                        </button>
                     </div>
                 </div>
             </div>
@@ -352,8 +378,7 @@
         const CONFIG = {
             apiBase: '/api',
             playerBase: '/player',
-            defaultImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgZmlsbD0iIzIyMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMjI1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRyb21hIENvdmVyPC90ZXh0Pjwvc3ZnPg==',
-            modalAutoClose: false
+            defaultImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgZmlsbD0iIzIyMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMjI1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRyb21hIENvdmVyPC90ZXh0Pjwvc3ZnPg=='
         };
 
         // ============== STATE MANAGEMENT ==============
@@ -371,16 +396,12 @@
             noEpisodes: document.getElementById('no-episodes'),
             playerModal: document.getElementById('playerModal'),
             playerContainer: document.getElementById('playerContainer'),
-            playerLoading: document.getElementById('playerLoading'),
-            episodeTitle: document.getElementById('episodeTitle'),
-            modalTitle: document.getElementById('modalTitle'),
-            newTabBtn: document.getElementById('newTabBtn'),
-            closePlayerBtn: document.getElementById('closePlayerBtn')
+            playerLoading: document.getElementById('playerLoading')
         };
 
         // ============== INITIALIZATION ==============
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DramaDetail initialized with Modal Player');
+            console.log('DramaDetail initialized with Fullscreen Modal Player');
             
             // Initialize Bootstrap Modal
             if (typeof bootstrap !== 'undefined') {
@@ -405,8 +426,8 @@
             // Load drama details
             loadDramaDetail(dramaId);
             
-            // Setup modal event listeners
-            setupModalEvents();
+            // Setup keyboard shortcuts
+            setupKeyboardShortcuts();
         });
 
         // ============== MAIN FUNCTIONS ==============
@@ -560,7 +581,7 @@
         }
 
         /**
-         * Play a specific episode in modal
+         * Play a specific episode in fullscreen modal
          */
         async function playEpisode(videoId, episodeNumber, buttonElement) {
             if (!videoId) {
@@ -593,13 +614,10 @@
                     // Generate player URL
                     currentPlayerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(data.url)}`;
                     
-                    // Update modal UI
-                    updateModalUI(episodeNumber);
-                    
-                    // Load player in modal
+                    // Load player in fullscreen modal
                     loadPlayerInModal(currentPlayerUrl);
                     
-                    // Show modal
+                    // Show fullscreen modal
                     if (playerModal) {
                         playerModal.show();
                     } else {
@@ -639,7 +657,7 @@
         }
 
         /**
-         * Load player in modal
+         * Load player in fullscreen modal
          */
         function loadPlayerInModal(playerUrl) {
             // Show loading
@@ -675,64 +693,39 @@
         }
 
         /**
-         * Open player in new tab
+         * Close player modal
          */
-        function openPlayerInNewTab() {
-            if (currentPlayerUrl) {
-                window.open(currentPlayerUrl, '_blank');
-                if (playerModal) {
-                    playerModal.hide();
-                }
-            }
-        }
-
-        // ============== MODAL FUNCTIONS ==============
-
-        /**
-         * Setup modal event listeners
-         */
-        function setupModalEvents() {
-            // When modal is shown
-            elements.playerModal.addEventListener('shown.bs.modal', function() {
-                console.log('Player modal shown');
-                // Focus close button for keyboard navigation
-                elements.closePlayerBtn.focus();
-            });
-            
-            // When modal is hidden
-            elements.playerModal.addEventListener('hidden.bs.modal', function() {
-                console.log('Player modal hidden');
+        function closePlayerModal() {
+            if (playerModal) {
+                playerModal.hide();
                 // Stop video by removing iframe
                 const iframe = elements.playerContainer.querySelector('iframe');
                 if (iframe) {
                     iframe.src = '';
                 }
                 elements.playerLoading.style.display = 'flex';
-            });
-            
-            // Escape key to close modal
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && playerModal && elements.playerModal.classList.contains('show')) {
-                    playerModal.hide();
-                }
-            });
+            }
         }
 
+        // ============== KEYBOARD SHORTCUTS ==============
+
         /**
-         * Update modal UI
+         * Setup keyboard shortcuts
          */
-        function updateModalUI(episodeNumber) {
-            // Update titles
-            elements.episodeTitle.textContent = `Episode ${episodeNumber}`;
-            elements.modalTitle.innerHTML = `
-                <i class="bi bi-play-circle me-2"></i>
-                Episode ${episodeNumber} - ${currentDrama ? escapeHtml(currentDrama.title) : ''}
-            `;
-            
-            // Update new tab button URL
-            elements.newTabBtn.onclick = function() {
-                openPlayerInNewTab();
-            };
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // ESC to close modal
+                if (e.key === 'Escape') {
+                    if (playerModal && elements.playerModal.classList.contains('show')) {
+                        closePlayerModal();
+                    }
+                }
+                
+                // Space bar to play/pause (when iframe focused)
+                if (e.key === ' ' && document.activeElement.tagName === 'IFRAME') {
+                    e.preventDefault(); // Prevent page scroll
+                }
+            });
         }
 
         // ============== UI HELPER FUNCTIONS ==============
@@ -857,7 +850,7 @@
                     backdrop: 'static',
                     keyboard: false
                 });
-                setupModalEvents();
+                setupKeyboardShortcuts();
             };
             document.head.appendChild(script);
         }
@@ -865,7 +858,7 @@
         // ============== GLOBAL EXPORTS ==============
         window.playEpisode = playEpisode;
         window.playFirstEpisode = playFirstEpisode;
-        window.openPlayerInNewTab = openPlayerInNewTab;
+        window.closePlayerModal = closePlayerModal;
         window.scrollToEpisodes = scrollToEpisodes;
     </script>
 </body>
