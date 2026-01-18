@@ -1,88 +1,136 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <title>Detail Drama</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-dark text-light">
-    <div class="container mt-4">
-        <a href="/" class="btn btn-secondary mb-3">← Kembali</a>
-        <div id="drama-detail"></div>
-        <h4 class="mt-4">Episode</h4>
-        <div class="row" id="episode-list"></div>
-    </div>
-    
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const dramaId = urlParams.get("id");
+const urlParams = new URLSearchParams(window.location.search);
+const dramaId = urlParams.get('id');
+
+if (!dramaId) {
+    window.location.href = '/';
+}
+
+async function loadDetail() {
+    try {
+        // Show loading
+        document.getElementById('drama-detail').innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Memuat detail drama...</p>
+            </div>
+        `;
+
+        const response = await fetch('/api/detail/' + dramaId + '?lang=id');
+        const data = await response.json();
         
-        if (!dramaId) {
-            window.location.href = "/";
-        }
-        
-        async function loadDetail() {
-            try {
-                const response = await fetch(\`/api/detail/\${dramaId}?lang=id\`);
-                const data = await response.json();
-                
-                if (data.code === 0) {
-                    document.title = data.title;
-                    
-                    document.getElementById("drama-detail").innerHTML = \`
-                        <div class="row">
-                            <div class="col-md-4">
-                                <img src="\${data.cover}" class="img-fluid rounded">
-                            </div>
-                            <div class="col-md-8">
-                                <h2>\${data.title}</h2>
-                                <p>\${data.intro}</p>
-                                <p><strong>Episode:</strong> \${data.episodes}</p>
+        if (data.code === 0) {
+            document.title = data.title + ' - DramaShort';
+            
+            // Render drama detail
+            document.getElementById('drama-detail').innerHTML = `
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <img src="${data.cover}" 
+                             class="img-fluid rounded shadow" 
+                             alt="${data.title}"
+                             onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"><rect width=\"300\" height=\"450\" fill=\"%23222\"/><text x=\"150\" y=\"225\" font-family=\"Arial\" font-size=\"16\" fill=\"%23fff\" text-anchor=\"middle\">${data.title.substring(0,30)}</text></svg>'">
+                    </div>
+                    <div class="col-md-8">
+                        <h2 class="fw-bold">${data.title}</h2>
+                        <div class="mb-3">
+                            <span class="badge bg-primary me-2">
+                                <i class="bi bi-film"></i> ${data.episodes} Episode
+                            </span>
+                        </div>
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-info-circle me-2"></i> Sinopsis
+                                </h5>
+                                <p class="card-text">${data.intro}</p>
                             </div>
                         </div>
-                    \`;
-                    
-                    renderEpisodes(data.videos);
-                }
-            } catch (error) {
-                console.error("Error:", error);
-            }
-        }
-        
-        function renderEpisodes(episodes) {
-            const container = document.getElementById("episode-list");
+                    </div>
+                </div>
+            `;
             
-            episodes.forEach(ep => {
-                const col = document.createElement("div");
-                col.className = "col-6 col-md-3 col-lg-2 mb-3";
-                
-                col.innerHTML = \`
-                    <button onclick="playEpisode('\${ep.vid}')" 
-                            class="btn btn-outline-light w-100">
-                        Episode \${ep.episode}
-                    </button>
-                \`;
-                
-                container.appendChild(col);
-            });
+            // Render episodes
+            renderEpisodes(data.videos || []);
+        } else {
+            showError('Drama tidak ditemukan');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Gagal memuat detail. Coba refresh halaman.');
+    }
+}
+
+function renderEpisodes(episodes) {
+    const container = document.getElementById('episode-list');
+    
+    if (!episodes || episodes.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">Episode belum tersedia</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = episodes.map(ep => `
+        <div class="col-6 col-md-4 col-lg-3 col-xl-2 mb-3">
+            <button onclick="playEpisode('${ep.vid}')" 
+                    class="btn btn-outline-light w-100 py-3">
+                <div class="fw-bold">Episode ${ep.episode}</div>
+                <small class="text-muted">${formatDuration(ep.duration)}</small>
+            </button>
+        </div>
+    `).join('');
+}
+
+function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+
+async function playEpisode(vid) {
+    try {
+        // Show loading
+        const originalText = event?.target?.innerText || 'Loading...';
+        if (event?.target) {
+            event.target.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
+            event.target.disabled = true;
         }
         
-        async function playEpisode(vid) {
-            try {
-                const response = await fetch(\`/api/video/\${vid}?lang=id\`);
-                const data = await response.json();
-                
-                if (data.url) {
-                    const playerUrl = \`/player?url=\${encodeURIComponent(data.url)}\`;
-                    window.open(playerUrl, "_blank");
-                }
-            } catch (error) {
-                console.error("Error playing:", error);
-                alert("Gagal memuat video");
-            }
-        }
+        const response = await fetch('/api/video/' + vid + '?lang=id');
+        const data = await response.json();
         
-        window.playEpisode = playEpisode;
-        loadDetail();
-    </script>
-</body>
-</html>
+        if (data.url) {
+            // Generate player URL
+            const playerUrl = '/player?url=' + encodeURIComponent(data.url);
+            window.open(playerUrl, '_blank');
+        } else {
+            alert('Video tidak ditemukan');
+        }
+    } catch (error) {
+        console.error('Error playing:', error);
+        alert('Gagal memuat video');
+    } finally {
+        // Reset button
+        if (event?.target) {
+            event.target.innerHTML = originalText;
+            event.target.disabled = false;
+        }
+    }
+}
+
+function showError(message) {
+    document.getElementById('drama-detail').innerHTML = `
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            ${message}
+            <a href="/" class="btn btn-sm btn-outline-danger ms-2">Kembali ke Home</a>
+        </div>
+    `;
+}
+
+// Initialize
+loadDetail();
