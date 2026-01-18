@@ -207,6 +207,131 @@
             z-index: 2;
         }
         
+        /* ========== VIEW TOGGLE STYLES ========== */
+        .view-toggle {
+            min-width: 80px;
+            transition: all 0.3s ease;
+        }
+        
+        .view-toggle.active {
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+        }
+        
+        /* List view specific styles */
+        #drama-list.list-view {
+            --list-card-height: 220px;
+        }
+        
+        #drama-list.list-view .drama-card {
+            display: flex;
+            flex-direction: row;
+            height: var(--list-card-height);
+            margin-bottom: 1rem;
+            align-items: stretch;
+        }
+        
+        #drama-list.list-view .card-cover {
+            width: 160px;
+            height: var(--list-card-height);
+            flex-shrink: 0;
+            border-radius: 12px 0 0 12px;
+            aspect-ratio: unset;
+        }
+        
+        #drama-list.list-view .card-content {
+            flex: 1;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        #drama-list.list-view .drama-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            -webkit-line-clamp: 1;
+        }
+        
+        #drama-list.list-view .drama-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+            align-items: center;
+        }
+        
+        #drama-list.list-view .drama-desc {
+            -webkit-line-clamp: 2;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+        
+        #drama-list.list-view .watch-btn {
+            align-self: flex-start;
+            margin-top: auto;
+        }
+        
+        #drama-list.list-view .play-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        #drama-list.list-view .drama-card:hover .play-overlay {
+            opacity: 1;
+        }
+        
+        /* Responsive for list view */
+        @media (max-width: 768px) {
+            #drama-list.list-view {
+                --list-card-height: 180px;
+            }
+            
+            #drama-list.list-view .card-cover {
+                width: 120px;
+            }
+            
+            #drama-list.list-view .card-content {
+                padding: 1rem;
+            }
+            
+            #drama-list.list-view .drama-title {
+                font-size: 1.1rem;
+            }
+            
+            #drama-list.list-view .drama-desc {
+                -webkit-line-clamp: 1;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            #drama-list.list-view {
+                --list-card-height: 150px;
+            }
+            
+            #drama-list.list-view .card-cover {
+                width: 100px;
+            }
+            
+            #drama-list.list-view .drama-meta {
+                flex-direction: column;
+                gap: 0.3rem;
+                align-items: flex-start;
+            }
+            
+            #drama-list.list-view .watch-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Smooth transition between views */
+        #drama-list {
+            transition: all 0.3s ease;
+        }
+        
+        #drama-list .drama-card {
+            transition: all 0.3s ease;
+        }
+        
         /* ========== LOAD MORE BUTTON ========== */
         .load-more-btn {
             background: var(--primary);
@@ -366,10 +491,10 @@
                 Drama Populer
             </h2>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-sm">
+                <button id="view-grid" class="btn btn-primary btn-sm view-toggle" data-view="grid">
                     <i class="bi bi-grid-fill"></i> Grid
                 </button>
-                <button class="btn btn-outline-secondary btn-sm">
+                <button id="view-list" class="btn btn-outline-secondary btn-sm view-toggle" data-view="list">
                     <i class="bi bi-list"></i> List
                 </button>
             </div>
