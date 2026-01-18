@@ -207,7 +207,6 @@ let isLoading = false;
 let hasMoreData = true;
 let currentView = 'grid';
 let currentSource = 'melolo'; // 'melolo', 'dramabox', 'netshort'
-// HAPUS: let currentTab = 'home'; // <=== DELETE THIS LINE
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -459,9 +458,9 @@ function updateView() {
 // ============== LOAD DRAMAS ==============
 
 /**
- * Load dramas based on current source and tab
+ * Load dramas based on current source
  */
-async function loadDramas() {
+async function loadDramas(offset = 0) {
     if (isLoading) return;
     
     isLoading = true;
@@ -470,64 +469,76 @@ async function loadDramas() {
     try {
         let result;
         
+        // HANYA berdasarkan currentSource, TANPA currentTab
         switch(currentSource) {
             case 'dramabox':
-                if (currentTab === 'trending') {
-                    result = await WORKING_APIS.dramabox.trending(currentPage);
-                } else if (currentTab === 'latest') {
-                    result = await WORKING_APIS.dramabox.latest(currentPage);
-                } else {
-                    result = await WORKING_APIS.dramabox.foryou(currentPage);
-                }
+                // Selalu pakai foryou untuk DramaBox
+                result = await WORKING_APIS.dramabox.foryou(1);
                 break;
                 
             case 'netshort':
-                if (currentTab === 'discover') {
-                    result = await WORKING_APIS.netshort.discover();
-                } else {
-                    result = await WORKING_APIS.netshort.explore(currentOffset, CONFIG.itemsPerPage);
-                }
+                // Selalu pakai explore untuk NetShort
+                result = await WORKING_APIS.netshort.explore(offset, CONFIG.itemsPerPage);
                 break;
                 
             case 'melolo':
             default:
-                result = await WORKING_APIS.melolo.home(currentOffset, CONFIG.itemsPerPage);
+                // Melolo via proxy Anda
+                const apiUrl = `${CONFIG.apiBase}/home?offset=${offset}&count=${CONFIG.itemsPerPage}&lang=id`;
+                const response = await fetch(apiUrl);
+                result = await response.json();
+                
+                if (result.code === 0 && result.data) {
+                    result = {
+                        code: 0,
+                        data: result.data,
+                        hasMore: result.has_more || false
+                    };
+                }
                 break;
         }
         
-        if (result.code === 0 && result.data && result.data.length > 0) {
-            // Clear if first load
-            if (currentOffset === 0 || currentPage === 1) {
+        // Process response
+        if (result.code === 0 && result.data && Array.isArray(result.data)) {
+            if (offset === 0) {
                 elements.dramaList.innerHTML = '';
             }
             
-            renderDramas(result.data);
-            
-            // Update pagination
-            if (currentSource === 'melolo') {
-                hasMoreData = result.hasMore || false;
-                currentOffset = result.nextOffset || currentOffset + result.data.length;
-            } else if (currentSource === 'dramabox') {
-                hasMoreData = result.hasMore || false;
-                currentPage = result.nextPage || currentPage + 1;
-            } else if (currentSource === 'netshort') {
-                hasMoreData = result.hasMore || false;
-                currentOffset = result.nextOffset || currentOffset + result.data.length;
+            if (result.data.length > 0) {
+                renderDramas(result.data);
+                
+                // Update pagination state
+                if (currentSource === 'melolo') {
+                    currentOffset = offset + result.data.length;
+                    hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
+                } else if (currentSource === 'netshort') {
+                    currentOffset = offset + result.data.length;
+                    hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
+                } else {
+                    // dramabox biasanya single page
+                    hasMoreData = false;
+                }
+                
+                // Update UI
+                updateLoadMoreButton();
+                hideEmptyState();
+                
+            } else {
+                showEmptyState(`No dramas found in ${currentSource}.`);
+                hasMoreData = false;
+                updateLoadMoreButton();
             }
-            
-            // Update UI
-            updateLoadMoreButton();
-            hideEmptyState();
-            
         } else {
-            showEmptyState(`No dramas found in ${currentSource} - ${currentTab}`);
-            hasMoreData = false;
-            updateLoadMoreButton();
+            throw new Error(`Invalid response from ${currentSource}`);
         }
         
     } catch (error) {
-        console.error('Error loading dramas:', error);
-        showError(`Failed to load: ${error.message}`);
+        console.error(`Error loading dramas from ${currentSource}:`, error);
+        
+        if (offset === 0) {
+            showError(`Failed to load dramas: ${error.message}`);
+        }
+        
         hasMoreData = false;
         updateLoadMoreButton();
     } finally {
@@ -819,13 +830,13 @@ function showError(message) {
             <div class="col-12">
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle me-2"></i>
-                    ${escapeHtml(message)}
+                    <strong>Error loading from ${currentSource}:</strong> ${escapeHtml(message)}
                     <div class="mt-2">
                         <button onclick="switchSource('melolo')" class="btn btn-sm btn-outline-primary me-2">
                             Switch to Melolo
                         </button>
                         <button onclick="location.reload()" class="btn btn-sm btn-outline-danger">
-                            Refresh
+                            Refresh Page
                         </button>
                     </div>
                 </div>
@@ -921,9 +932,26 @@ function showNotification(message) {
 }
 
 window.switchSource = function(source) {
-    if (elements.sourceSelector && ['melolo', 'dramabox', 'netshort'].includes(source)) {
-        elements.sourceSelector.value = source;
-        elements.sourceSelector.dispatchEvent(new Event('change'));
+    if (['melolo', 'dramabox', 'netshort'].includes(source)) {
+        currentSource = source;
+        currentOffset = 0;
+        
+        // Save preference
+        localStorage.setItem('dramashort_source', source);
+        
+        // Update UI
+        updateSourceUI();
+        
+        // Clear and reload
+        if (elements.dramaList) {
+            elements.dramaList.innerHTML = '';
+        }
+        
+        // Update page title
+        updatePageTitle();
+        
+        // Load dramas
+        loadDramas();
     }
 };
 
