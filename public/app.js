@@ -9,6 +9,7 @@ const CONFIG = {
 let currentOffset = 0;
 let isLoading = false;
 let hasMoreData = true;
+let currentView = 'grid'; // 'grid' atau 'list'
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -22,6 +23,13 @@ const elements = {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DramaShort Home initialized');
     
+    // Load saved view preference
+    const savedView = localStorage.getItem('dramashort_view');
+    if (savedView && (savedView === 'grid' || savedView === 'list')) {
+        currentView = savedView;
+        updateView();
+    }
+    
     // Load initial dramas
     loadDramas();
     
@@ -33,7 +41,121 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Initialize view toggle
+    initializeViewToggle();
+    
+    // Add scroll to top button
+    addScrollToTopButton();
 });
+
+// ============== VIEW TOGGLE FUNCTIONS ==============
+
+/**
+ * Initialize view toggle buttons
+ */
+function initializeViewToggle() {
+    const gridBtn = document.getElementById('view-grid');
+    const listBtn = document.getElementById('view-list');
+    
+    if (!gridBtn || !listBtn) return;
+    
+    // Set initial button state
+    updateViewButtons();
+    
+    // Grid button click
+    gridBtn.addEventListener('click', () => {
+        if (currentView !== 'grid') {
+            currentView = 'grid';
+            updateView();
+        }
+    });
+    
+    // List button click
+    listBtn.addEventListener('click', () => {
+        if (currentView !== 'list') {
+            currentView = 'list';
+            updateView();
+        }
+    });
+}
+
+/**
+ * Update view buttons state
+ */
+function updateViewButtons() {
+    const gridBtn = document.getElementById('view-grid');
+    const listBtn = document.getElementById('view-list');
+    
+    if (gridBtn && listBtn) {
+        if (currentView === 'grid') {
+            gridBtn.classList.remove('btn-outline-secondary');
+            gridBtn.classList.add('btn-primary');
+            listBtn.classList.remove('btn-primary');
+            listBtn.classList.add('btn-outline-secondary');
+        } else {
+            listBtn.classList.remove('btn-outline-secondary');
+            listBtn.classList.add('btn-primary');
+            gridBtn.classList.remove('btn-primary');
+            gridBtn.classList.add('btn-outline-secondary');
+        }
+    }
+}
+
+/**
+ * Update the view layout
+ */
+function updateView() {
+    const dramaList = elements.dramaList;
+    if (!dramaList) return;
+    
+    // Toggle CSS class
+    if (currentView === 'list') {
+        dramaList.classList.add('list-view');
+        dramaList.classList.remove('row-cols-2', 'row-cols-md-3', 'row-cols-lg-4', 'row-cols-xl-5', 'g-4');
+        dramaList.classList.add('row-cols-1', 'g-3');
+    } else {
+        dramaList.classList.remove('list-view');
+        dramaList.classList.remove('row-cols-1', 'g-3');
+        dramaList.classList.add('row-cols-2', 'row-cols-md-3', 'row-cols-lg-4', 'row-cols-xl-5', 'g-4');
+    }
+    
+    // Update buttons
+    updateViewButtons();
+    
+    // Save preference
+    localStorage.setItem('dramashort_view', currentView);
+}
+
+/**
+ * Add scroll to top button
+ */
+function addScrollToTopButton() {
+    const scrollBtn = document.createElement('button');
+    scrollBtn.id = 'scroll-to-top';
+    scrollBtn.className = 'btn btn-primary rounded-circle shadow';
+    scrollBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
+    scrollBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        z-index: 1000;
+        display: none;
+        transition: all 0.3s ease;
+    `;
+    
+    document.body.appendChild(scrollBtn);
+    
+    scrollBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    
+    window.addEventListener('scroll', () => {
+        scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+}
 
 // ============== MAIN FUNCTIONS ==============
 
@@ -106,7 +228,7 @@ async function loadDramas(offset = 0) {
 }
 
 /**
- * Render dramas to the grid (FIXED HEIGHT CARDS)
+ * Render dramas to the grid/list
  */
 function renderDramas(dramas) {
     if (!dramas || !Array.isArray(dramas) || dramas.length === 0) {
@@ -119,52 +241,105 @@ function renderDramas(dramas) {
         const intro = escapeHtml((drama.intro || 'No description.').substring(0, 80) + '...');
         const episodes = drama.episodes || 0;
         
-        return `
-            <div class="col">
-                <div class="drama-card">
-                    <!-- Cover Image (FIXED HEIGHT) -->
-                    <div class="card-cover">
-                        <img src="${drama.cover || CONFIG.defaultImage}" 
-                             class="drama-cover"
-                             alt="${title}"
-                             loading="lazy"
-                             onerror="this.src='${CONFIG.defaultImage}'">
-                        
-                        <!-- Episode Badge -->
-                        <div class="episode-badge">
-                            ${episodes} EP
+        // Different HTML for list view
+        if (currentView === 'list') {
+            return `
+                <div class="col">
+                    <div class="drama-card">
+                        <!-- Cover Image -->
+                        <div class="card-cover">
+                            <img src="${drama.cover || CONFIG.defaultImage}" 
+                                 class="drama-cover"
+                                 alt="${title}"
+                                 loading="lazy"
+                                 onerror="this.src='${CONFIG.defaultImage}'">
+                            
+                            <!-- Episode Badge -->
+                            <div class="episode-badge">
+                                ${episodes} EP
+                            </div>
+                            
+                            <!-- Play Overlay -->
+                            <div class="play-overlay">
+                                <a href="/drama.html?id=${drama.id}" class="play-btn">
+                                    <i class="bi bi-play-fill"></i>
+                                </a>
+                            </div>
                         </div>
                         
-                        <!-- Play Overlay -->
-                        <div class="play-overlay">
-                            <a href="/drama.html?id=${drama.id}" class="play-btn">
-                                <i class="bi bi-play-fill"></i>
+                        <!-- Card Content -->
+                        <div class="card-body">
+                            <h6 class="drama-title">${title}</h6>
+                            <div class="drama-meta">
+                                <small><i class="bi bi-person"></i> ${author}</small>
+                                <small class="ms-3"><i class="bi bi-film"></i> ${episodes} Episode</small>
+                            </div>
+                            <p class="drama-desc">${escapeHtml(drama.intro || 'No description available.')}</p>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-2">
+                                <a href="/drama.html?id=${drama.id}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye me-1"></i> Watch Now
+                                </a>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addToFavorites('${drama.id}')">
+                                    <i class="bi bi-bookmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Grid view HTML
+            return `
+                <div class="col">
+                    <div class="drama-card">
+                        <!-- Cover Image -->
+                        <div class="card-cover">
+                            <img src="${drama.cover || CONFIG.defaultImage}" 
+                                 class="drama-cover"
+                                 alt="${title}"
+                                 loading="lazy"
+                                 onerror="this.src='${CONFIG.defaultImage}'">
+                            
+                            <!-- Episode Badge -->
+                            <div class="episode-badge">
+                                ${episodes} EP
+                            </div>
+                            
+                            <!-- Play Overlay -->
+                            <div class="play-overlay">
+                                <a href="/drama.html?id=${drama.id}" class="play-btn">
+                                    <i class="bi bi-play-fill"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Content -->
+                        <div class="card-body">
+                            <h6 class="drama-title">${title}</h6>
+                            <div class="drama-meta">
+                                <small><i class="bi bi-person"></i> ${author}</small>
+                            </div>
+                            <p class="drama-desc">${intro}</p>
+                            
+                            <!-- Watch Now Button -->
+                            <a href="/drama.html?id=${drama.id}" class="btn btn-primary btn-sm w-100">
+                                <i class="bi bi-eye me-1"></i> Watch Now
                             </a>
                         </div>
                     </div>
-                    
-                    <!-- Card Content (FIXED HEIGHT) -->
-                    <div class="card-content">
-                        <h6 class="drama-title">${title}</h6>
-                        <div class="drama-meta">
-                            <small><i class="bi bi-person"></i> ${author}</small>
-                        </div>
-                        <p class="drama-desc">${intro}</p>
-                        
-                        <!-- Watch Now Button (CLOSE TO TITLE) -->
-                        <a href="/drama.html?id=${drama.id}" class="watch-btn">
-                            <i class="bi bi-eye me-1"></i> Watch Now
-                        </a>
-                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }).join('');
     
     elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
     
-    // Add CSS for consistent card heights
-    addFixedCardStyles();
+    // Apply view-specific styles
+    if (currentView === 'list') {
+        updateView();
+    }
 }
 
 // ============== UI HELPER FUNCTIONS ==============
@@ -184,7 +359,7 @@ function showLoading(show) {
         `;
         elements.loadMoreBtn.disabled = true;
     } else if (elements.loadMoreBtn && !show) {
-        elements.loadMoreBtn.innerHTML = 'Load More';
+        elements.loadMoreBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Load More Drama';
         elements.loadMoreBtn.disabled = false;
     }
 }
@@ -232,188 +407,13 @@ function showError(message) {
     }
 }
 
-// ============== CSS FOR FIXED HEIGHT CARDS ==============
-
-function addFixedCardStyles() {
-    if (document.getElementById('fixed-card-styles')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'fixed-card-styles';
-    style.textContent = `
-        /* FIXED HEIGHT DRAMA CARDS */
-        .drama-card {
-            background: #1a1a1a;
-            border: none;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .drama-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.2);
-        }
-        
-        /* COVER SECTION - FIXED HEIGHT */
-        .card-cover {
-            height: 250px;
-            position: relative;
-            overflow: hidden;
-            background: #2a2a2a;
-        }
-        
-        .drama-cover {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .drama-card:hover .drama-cover {
-            transform: scale(1.05);
-        }
-        
-        .episode-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(13, 110, 253, 0.9);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            backdrop-filter: blur(5px);
-        }
-        
-        .play-overlay {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-        }
-        
-        .play-btn {
-            background: rgba(255, 255, 255, 0.9);
-            color: #0d6efd;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: all 0.3s;
-        }
-        
-        .play-btn:hover {
-            background: #0d6efd;
-            color: white;
-            transform: scale(1.1);
-        }
-        
-        /* CONTENT SECTION - FIXED HEIGHT */
-        .card-content {
-            padding: 15px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .drama-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 5px;
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 2.6em;
-        }
-        
-        .drama-meta {
-            font-size: 0.85rem;
-            color: #888;
-            margin-bottom: 10px;
-        }
-        
-        .drama-desc {
-            font-size: 0.85rem;
-            color: #aaa;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 2.8em;
-            margin-bottom: 15px;
-            flex-grow: 1;
-        }
-        
-        /* WATCH BUTTON - CLOSE TO CONTENT */
-        .watch-btn {
-            background: transparent;
-            border: 1px solid #0d6efd;
-            color: #0d6efd;
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            text-align: center;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: block;
-            margin-top: auto;
-        }
-        
-        .watch-btn:hover {
-            background: #0d6efd;
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        /* GRID LAYOUT FIX */
-        #drama-list .col {
-            margin-bottom: 20px;
-        }
-        
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .card-cover {
-                height: 200px;
-            }
-            
-            .drama-title {
-                font-size: 0.9rem;
-            }
-            
-            .drama-desc {
-                font-size: 0.8rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .card-cover {
-                height: 180px;
-            }
-            
-            .card-content {
-                padding: 12px;
-            }
-            
-            .watch-btn {
-                padding: 6px 12px;
-                font-size: 0.85rem;
-            }
-        }
-    `;
-    
-    document.head.appendChild(style);
+/**
+ * Add to favorites (placeholder function)
+ */
+function addToFavorites(dramaId) {
+    console.log('Added to favorites:', dramaId);
+    alert('Added to favorites!');
+    // Implement actual favorite functionality here
 }
 
 // ============== UTILITY FUNCTIONS ==============
@@ -429,3 +429,4 @@ function escapeHtml(text) {
 
 // ============== GLOBAL EXPORTS ==============
 window.loadDramas = loadDramas;
+window.addToFavorites = addToFavorites;
