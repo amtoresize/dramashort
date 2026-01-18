@@ -1,136 +1,527 @@
-const urlParams = new URLSearchParams(window.location.search);
-const dramaId = urlParams.get('id');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Drama - DramaShort</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: white;
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .drama-poster {
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+            transition: transform 0.4s ease;
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: cover;
+        }
+        
+        .drama-poster:hover {
+            transform: scale(1.03);
+        }
+        
+        .episode-btn {
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 2px solid #333;
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+            color: white;
+            padding: 1rem 0.5rem;
+            height: 100%;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .episode-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
+            border-color: #0d6efd;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+        }
+        
+        .episode-btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .episode-btn.playing {
+            background: linear-gradient(145deg, #0d6efd, #0b5ed7);
+            border-color: #0b5ed7;
+            color: white;
+        }
+        
+        .episode-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        
+        .episode-duration {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .synopsis-box {
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-btn {
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            transform: translateX(-5px);
+        }
+        
+        .loading-spinner {
+            width: 4rem;
+            height: 4rem;
+        }
+        
+        .drama-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, #0dcaf0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        @media (max-width: 768px) {
+            .drama-title {
+                font-size: 1.8rem;
+            }
+            
+            .drama-poster {
+                max-height: 350px;
+            }
+            
+            .episode-btn {
+                min-height: 80px;
+                padding: 0.8rem 0.3rem;
+            }
+            
+            .episode-number {
+                font-size: 1rem;
+            }
+        }
+        
+        .badge-episode {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        
+        .total-duration {
+            background: linear-gradient(135deg, #6f42c1, #d63384);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-camera-reels-fill me-2 text-primary"></i>
+                <span>DramaShort</span>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="/" class="btn btn-outline-light back-btn">
+                    <i class="bi bi-arrow-left me-2"></i>Kembali ke Home
+                </a>
+            </div>
+        </div>
+    </nav>
 
-if (!dramaId) {
-    window.location.href = '/';
-}
-
-async function loadDetail() {
-    try {
-        // Show loading
-        document.getElementById('drama-detail').innerHTML = `
+    <!-- Main Content -->
+    <main class="container py-5">
+        <!-- Drama Detail Section -->
+        <section id="drama-detail" class="mb-5">
+            <!-- Content akan diisi oleh JavaScript -->
             <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border loading-spinner text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-2">Memuat detail drama...</p>
+                <h4 class="mt-3">Memuat detail drama...</h4>
+                <p class="text-muted">Mohon tunggu sebentar</p>
             </div>
-        `;
+        </section>
 
-        const response = await fetch('/api/detail/' + dramaId + '?lang=id');
-        const data = await response.json();
-        
-        if (data.code === 0) {
-            document.title = data.title + ' - DramaShort';
+        <!-- Episodes Section -->
+        <section class="mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold">
+                    <i class="bi bi-play-btn me-2"></i>Daftar Episode
+                </h3>
+                <div id="episode-count" class="badge bg-primary badge-episode">
+                    <span id="count-text">0 Episode</span>
+                </div>
+            </div>
             
-            // Render drama detail
-            document.getElementById('drama-detail').innerHTML = `
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list">
+                <!-- Episodes akan diisi oleh JavaScript -->
+            </div>
+            
+            <!-- Episode Not Found -->
+            <div id="no-episodes" class="text-center py-5" style="display: none;">
+                <div class="alert alert-info w-75 mx-auto">
+                    <i class="bi bi-info-circle display-4 d-block mb-3"></i>
+                    <h4>Episode Belum Tersedia</h4>
+                    <p class="mb-0">Episode untuk drama ini sedang dalam proses upload.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black text-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-2">
+                <i class="bi bi-c-circle"></i> 2024 DramaShort. All content for demonstration only.
+            </p>
+            <small class="text-muted">
+                Stream your favorite drama shorts in HD quality
+            </small>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // ============== CONFIGURATION ==============
+        const CONFIG = {
+            apiBase: '/api',
+            playerBase: '/player',
+            defaultImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgZmlsbD0iIzIyMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMjI1IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRyb21hIENvdmVyPC90ZXh0Pjwvc3ZnPg=='
+        };
+
+        // ============== STATE MANAGEMENT ==============
+        let currentDrama = null;
+        let isLoading = false;
+
+        // ============== DOM ELEMENTS ==============
+        const elements = {
+            dramaDetail: document.getElementById('drama-detail'),
+            episodeList: document.getElementById('episode-list'),
+            episodeCount: document.getElementById('episode-count'),
+            countText: document.getElementById('count-text'),
+            noEpisodes: document.getElementById('no-episodes')
+        };
+
+        // ============== INITIALIZATION ==============
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dramaId = urlParams.get('id');
+            
+            if (!dramaId) {
+                window.location.href = '/';
+                return;
+            }
+            
+            loadDramaDetail(dramaId);
+        });
+
+        // ============== MAIN FUNCTIONS ==============
+
+        /**
+         * Load drama detail from API
+         */
+        async function loadDramaDetail(dramaId) {
+            if (isLoading) return;
+            
+            isLoading = true;
+            console.log('Loading drama detail for ID:', dramaId);
+            
+            try {
+                const response = await fetch(CONFIG.apiBase + '/detail/' + dramaId + '?lang=id');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Drama data received:', data);
+                
+                if (data.code === 0) {
+                    currentDrama = data;
+                    renderDramaDetail(data);
+                    renderEpisodes(data.videos || []);
+                } else {
+                    throw new Error('Drama not found');
+                }
+            } catch (error) {
+                console.error('Error loading drama detail:', error);
+                showError('Gagal memuat detail drama: ' + error.message);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        /**
+         * Render drama detail to the page
+         */
+        function renderDramaDetail(drama) {
+            document.title = drama.title + ' - DramaShort';
+            
+            // Calculate total duration
+            const totalDuration = drama.videos ? 
+                drama.videos.reduce((sum, ep) => sum + ep.duration, 0) : 0;
+            const totalMinutes = Math.floor(totalDuration / 60);
+            const totalHours = Math.floor(totalMinutes / 60);
+            
+            const html = `
                 <div class="row">
-                    <div class="col-md-4 mb-4">
-                        <img src="${data.cover}" 
-                             class="img-fluid rounded shadow" 
-                             alt="${data.title}"
-                             onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 450\"><rect width=\"300\" height=\"450\" fill=\"%23222\"/><text x=\"150\" y=\"225\" font-family=\"Arial\" font-size=\"16\" fill=\"%23fff\" text-anchor=\"middle\">${data.title.substring(0,30)}</text></svg>'">
-                    </div>
-                    <div class="col-md-8">
-                        <h2 class="fw-bold">${data.title}</h2>
-                        <div class="mb-3">
-                            <span class="badge bg-primary me-2">
-                                <i class="bi bi-film"></i> ${data.episodes} Episode
-                            </span>
-                        </div>
-                        <div class="card bg-dark border-secondary">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-info-circle me-2"></i> Sinopsis
-                                </h5>
-                                <p class="card-text">${data.intro}</p>
+                    <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
+                        <div class="position-sticky" style="top: 90px;">
+                            <img src="${drama.cover}" 
+                                 class="drama-poster mb-4"
+                                 alt="${escapeHtml(drama.title)}"
+                                 onerror="this.src='${CONFIG.defaultImage}'">
+                            
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary btn-lg" onclick="playFirstEpisode()">
+                                    <i class="bi bi-play-fill me-2"></i>Putar Episode 1
+                                </button>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-8 col-md-7">
+                        <h1 class="drama-title mb-3">${escapeHtml(drama.title)}</h1>
+                        
+                        <div class="d-flex flex-wrap gap-3 mb-4">
+                            <span class="badge bg-primary badge-episode">
+                                <i class="bi bi-film me-1"></i> ${drama.episodes} Episode
+                            </span>
+                            
+                            ${totalHours > 0 ? `
+                                <span class="badge total-duration badge-episode">
+                                    <i class="bi bi-clock me-1"></i> ${totalHours} Jam ${totalMinutes % 60} Menit
+                                </span>
+                            ` : totalMinutes > 0 ? `
+                                <span class="badge total-duration badge-episode">
+                                    <i class="bi bi-clock me-1"></i> ${totalMinutes} Menit
+                                </span>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="synopsis-box mb-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-info-circle text-primary me-2"></i>Sinopsis
+                            </h5>
+                            <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
+                                ${escapeHtml(drama.intro)}
+                            </p>
                         </div>
                     </div>
                 </div>
             `;
             
-            // Render episodes
-            renderEpisodes(data.videos || []);
-        } else {
-            showError('Drama tidak ditemukan');
+            elements.dramaDetail.innerHTML = html;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showError('Gagal memuat detail. Coba refresh halaman.');
-    }
-}
 
-function renderEpisodes(episodes) {
-    const container = document.getElementById('episode-list');
-    
-    if (!episodes || episodes.length === 0) {
-        container.innerHTML = `
-            <div class="col-12 text-center py-4">
-                <p class="text-muted">Episode belum tersedia</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = episodes.map(ep => `
-        <div class="col-6 col-md-4 col-lg-3 col-xl-2 mb-3">
-            <button onclick="playEpisode('${ep.vid}')" 
-                    class="btn btn-outline-light w-100 py-3">
-                <div class="fw-bold">Episode ${ep.episode}</div>
-                <small class="text-muted">${formatDuration(ep.duration)}</small>
-            </button>
-        </div>
-    `).join('');
-}
-
-function formatDuration(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return mins + ':' + (secs < 10 ? '0' : '') + secs;
-}
-
-async function playEpisode(vid) {
-    try {
-        // Show loading
-        const originalText = event?.target?.innerText || 'Loading...';
-        if (event?.target) {
-            event.target.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Loading...`;
-            event.target.disabled = true;
+        /**
+         * Render episodes list
+         */
+        function renderEpisodes(episodes) {
+            if (!episodes || episodes.length === 0) {
+                elements.episodeList.style.display = 'none';
+                elements.noEpisodes.style.display = 'block';
+                elements.countText.textContent = '0 Episode';
+                return;
+            }
+            
+            // Sort episodes by number
+            episodes.sort((a, b) => a.episode - b.episode);
+            
+            elements.countText.textContent = episodes.length + ' Episode';
+            elements.episodeList.style.display = 'flex';
+            elements.noEpisodes.style.display = 'none';
+            
+            const episodesHtml = episodes.map(episode => `
+                <div class="col">
+                    <button class="episode-btn w-100" 
+                            onclick="playEpisode('${episode.vid}', ${episode.episode}, this)"
+                            data-vid="${episode.vid}"
+                            data-episode="${episode.episode}"
+                            title="Episode ${episode.episode} - ${formatDuration(episode.duration)}">
+                        <div class="episode-number">Episode ${episode.episode}</div>
+                        <div class="episode-duration">${formatDuration(episode.duration)}</div>
+                    </button>
+                </div>
+            `).join('');
+            
+            elements.episodeList.innerHTML = episodesHtml;
         }
-        
-        const response = await fetch('/api/video/' + vid + '?lang=id');
-        const data = await response.json();
-        
-        if (data.url) {
-            // Generate player URL
-            const playerUrl = '/player?url=' + encodeURIComponent(data.url);
-            window.open(playerUrl, '_blank');
-        } else {
-            alert('Video tidak ditemukan');
-        }
-    } catch (error) {
-        console.error('Error playing:', error);
-        alert('Gagal memuat video');
-    } finally {
-        // Reset button
-        if (event?.target) {
-            event.target.innerHTML = originalText;
-            event.target.disabled = false;
-        }
-    }
-}
 
-function showError(message) {
-    document.getElementById('drama-detail').innerHTML = `
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            ${message}
-            <a href="/" class="btn btn-sm btn-outline-danger ms-2">Kembali ke Home</a>
-        </div>
-    `;
-}
+        /**
+         * Play a specific episode
+         */
+        async function playEpisode(videoId, episodeNumber, buttonElement) {
+            if (!videoId) {
+                alert('Video ID tidak valid');
+                return;
+            }
+            
+            console.log('Playing episode:', episodeNumber, 'Video ID:', videoId);
+            
+            // Add playing state to button
+            if (buttonElement) {
+                const buttons = document.querySelectorAll('.episode-btn');
+                buttons.forEach(btn => btn.classList.remove('playing'));
+                buttonElement.classList.add('playing');
+                
+                const originalContent = buttonElement.innerHTML;
+                buttonElement.innerHTML = `
+                    <div class="spinner-border spinner-border-sm text-light" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <small class="mt-1">Loading...</small>
+                `;
+                buttonElement.disabled = true;
+            }
+            
+            try {
+                // Get video URL from API
+                const response = await fetch(CONFIG.apiBase + '/video/' + videoId + '?lang=id');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.url) {
+                    // Generate player URL and open in new tab
+                    const playerUrl = CONFIG.playerBase + '?url=' + encodeURIComponent(data.url);
+                    console.log('Opening player:', playerUrl);
+                    
+                    // Save last watched episode
+                    if (currentDrama) {
+                        localStorage.setItem('last_watched_' + currentDrama.id, episodeNumber);
+                    }
+                    
+                    // Open player in new tab
+                    const playerWindow = window.open(playerUrl, '_blank');
+                    
+                    if (!playerWindow) {
+                        alert('Popup diblokir! Izinkan popup untuk situs ini.');
+                    }
+                } else {
+                    throw new Error('Video URL tidak ditemukan');
+                }
+            } catch (error) {
+                console.error('Error playing video:', error);
+                alert('Gagal memutar video: ' + error.message);
+            } finally {
+                // Restore button state
+                if (buttonElement) {
+                    buttonElement.innerHTML = `
+                        <div class="episode-number">Episode ${episodeNumber}</div>
+                        <div class="episode-duration">${buttonElement.querySelector('.episode-duration')?.textContent || ''}</div>
+                    `;
+                    buttonElement.disabled = false;
+                    buttonElement.classList.remove('playing');
+                }
+            }
+        }
 
-// Initialize
-loadDetail();
+        /**
+         * Play the first episode
+         */
+        function playFirstEpisode() {
+            if (!currentDrama || !currentDrama.videos || currentDrama.videos.length === 0) {
+                alert('Tidak ada episode yang tersedia');
+                return;
+            }
+            
+            const firstEpisode = currentDrama.videos[0];
+            const firstButton = elements.episodeList.querySelector('.episode-btn');
+            playEpisode(firstEpisode.vid, firstEpisode.episode, firstButton);
+        }
+
+        // ============== HELPER FUNCTIONS ==============
+
+        /**
+         * Format duration from seconds to MM:SS or HH:MM:SS
+         */
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Show error message
+         */
+        function showError(message) {
+            elements.dramaDetail.innerHTML = `
+                <div class="alert alert-danger">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill display-4 me-3"></i>
+                        <div>
+                            <h4 class="alert-heading">Terjadi Kesalahan</h4>
+                            <p class="mb-2">${escapeHtml(message)}</p>
+                            <div class="mt-3">
+                                <button onclick="window.location.href='/'" class="btn btn-outline-danger me-2">
+                                    <i class="bi bi-house"></i> Kembali ke Home
+                                </button>
+                                <button onclick="location.reload()" class="btn btn-primary">
+                                    <i class="bi bi-arrow-clockwise"></i> Coba Lagi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============== EXPORT FUNCTIONS TO GLOBAL SCOPE ==============
+        window.playEpisode = playEpisode;
+        window.playFirstEpisode = playFirstEpisode;
+        window.loadDramaDetail = loadDramaDetail;
+    </script>
+</body>
+</html>
