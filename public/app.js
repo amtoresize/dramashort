@@ -2,7 +2,7 @@
 const CONFIG = {
     apiBase: '/api',
     itemsPerPage: 12,
-    defaultImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzIyMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMjAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIENvdmVyPC90ZXh0Pjwvc3ZnPg=='
+    defaultImage: 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=500&fit=crop&auto=format'
 };
 
 // ============== STATE VARIABLES ==============
@@ -20,7 +20,7 @@ const elements = {
 
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DramaShort initialized');
+    console.log('DramaShort Home initialized');
     
     // Load initial dramas
     loadDramas();
@@ -33,17 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Setup search if exists
-    const searchInput = document.getElementById('search-input');
-    const searchBtn = document.getElementById('search-btn');
-    
-    if (searchInput && searchBtn) {
-        searchBtn.addEventListener('click', performSearch);
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') performSearch();
-        });
-    }
 });
 
 // ============== MAIN FUNCTIONS ==============
@@ -52,19 +41,13 @@ document.addEventListener('DOMContentLoaded', function() {
  * Load dramas from API
  */
 async function loadDramas(offset = 0) {
-    if (isLoading) {
-        console.log('Already loading, skipping...');
-        return;
-    }
+    if (isLoading) return;
     
     isLoading = true;
     showLoading(true);
     
     try {
-        console.log('Loading dramas from offset:', offset);
-        
         const apiUrl = `${CONFIG.apiBase}/home?offset=${offset}&count=${CONFIG.itemsPerPage}&lang=id`;
-        console.log('API URL:', apiUrl);
         
         const response = await fetch(apiUrl);
         
@@ -73,11 +56,9 @@ async function loadDramas(offset = 0) {
         }
         
         const data = await response.json();
-        console.log('API Response:', data);
         
         if (data.code === 0 && data.data && Array.isArray(data.data)) {
             if (offset === 0) {
-                // First load, clear existing content
                 elements.dramaList.innerHTML = '';
             }
             
@@ -89,8 +70,6 @@ async function loadDramas(offset = 0) {
                 // Show/hide load more button
                 if (elements.loadMoreBtn) {
                     elements.loadMoreBtn.style.display = hasMoreData ? 'block' : 'none';
-                    elements.loadMoreBtn.textContent = hasMoreData ? 
-                        `Load More (${currentOffset}+)` : 'All Dramas Loaded';
                 }
                 
                 // Hide empty state
@@ -98,7 +77,6 @@ async function loadDramas(offset = 0) {
                     elements.emptyState.style.display = 'none';
                 }
             } else {
-                // No data returned
                 if (offset === 0) {
                     showEmptyState('No dramas found. Try again later.');
                 }
@@ -115,8 +93,6 @@ async function loadDramas(offset = 0) {
         
         if (offset === 0) {
             showError(`Failed to load dramas: ${error.message}`);
-        } else {
-            alert(`Failed to load more dramas: ${error.message}`);
         }
         
         hasMoreData = false;
@@ -130,62 +106,53 @@ async function loadDramas(offset = 0) {
 }
 
 /**
- * Render dramas to the grid
+ * Render dramas to the grid (FIXED HEIGHT CARDS)
  */
 function renderDramas(dramas) {
     if (!dramas || !Array.isArray(dramas) || dramas.length === 0) {
-        console.warn('No dramas to render');
         return;
     }
     
-    console.log(`Rendering ${dramas.length} dramas`);
-    
     const dramasHtml = dramas.map(drama => {
-        // Sanitize data
         const title = escapeHtml(drama.name || 'Untitled Drama');
         const author = escapeHtml(drama.author || 'Unknown Author');
-        const intro = escapeHtml((drama.intro || 'No description available.').substring(0, 100) + '...');
+        const intro = escapeHtml((drama.intro || 'No description.').substring(0, 80) + '...');
         const episodes = drama.episodes || 0;
         
         return `
             <div class="col">
-                <div class="drama-card h-100">
-                    <div class="position-relative overflow-hidden rounded-top">
+                <div class="drama-card">
+                    <!-- Cover Image (FIXED HEIGHT) -->
+                    <div class="card-cover">
                         <img src="${drama.cover || CONFIG.defaultImage}" 
-                             class="img-fluid drama-cover"
+                             class="drama-cover"
                              alt="${title}"
                              loading="lazy"
                              onerror="this.src='${CONFIG.defaultImage}'">
                         
-                        <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge bg-primary">${episodes} EP</span>
+                        <!-- Episode Badge -->
+                        <div class="episode-badge">
+                            ${episodes} EP
                         </div>
                         
-                        <div class="position-absolute bottom-0 start-0 end-0 p-3 overlay-gradient">
-                            <div class="d-flex justify-content-between align-items-end">
-                                <div>
-                                    <small class="text-light opacity-75">
-                                        <i class="bi bi-person"></i> ${author}
-                                    </small>
-                                </div>
-                                <a href="/drama.html?id=${drama.id}" 
-                                   class="btn btn-sm btn-primary rounded-circle">
-                                    <i class="bi bi-play-fill"></i>
-                                </a>
-                            </div>
+                        <!-- Play Overlay -->
+                        <div class="play-overlay">
+                            <a href="/drama.html?id=${drama.id}" class="play-btn">
+                                <i class="bi bi-play-fill"></i>
+                            </a>
                         </div>
                     </div>
                     
-                    <div class="card-body">
-                        <h6 class="drama-title mb-2">${title}</h6>
-                        <p class="drama-description small text-muted mb-0">
-                            ${intro}
-                        </p>
-                    </div>
-                    
-                    <div class="card-footer bg-transparent border-top-0 pt-0">
-                        <a href="/drama.html?id=${drama.id}" 
-                           class="btn btn-outline-primary w-100">
+                    <!-- Card Content (FIXED HEIGHT) -->
+                    <div class="card-content">
+                        <h6 class="drama-title">${title}</h6>
+                        <div class="drama-meta">
+                            <small><i class="bi bi-person"></i> ${author}</small>
+                        </div>
+                        <p class="drama-desc">${intro}</p>
+                        
+                        <!-- Watch Now Button (CLOSE TO TITLE) -->
+                        <a href="/drama.html?id=${drama.id}" class="watch-btn">
                             <i class="bi bi-eye me-1"></i> Watch Now
                         </a>
                     </div>
@@ -196,26 +163,8 @@ function renderDramas(dramas) {
     
     elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
     
-    // Add CSS if not exists
-    addDramaCardStyles();
-}
-
-/**
- * Perform search
- */
-async function performSearch() {
-    const searchInput = document.getElementById('search-input');
-    if (!searchInput) return;
-    
-    const query = searchInput.value.trim();
-    if (!query) {
-        loadDramas(0); // Reload all if empty
-        return;
-    }
-    
-    console.log('Searching for:', query);
-    // Note: You'll need to implement search API endpoint
-    alert('Search functionality coming soon!');
+    // Add CSS for consistent card heights
+    addFixedCardStyles();
 }
 
 // ============== UI HELPER FUNCTIONS ==============
@@ -276,14 +225,195 @@ function showError(message) {
                         <button onclick="location.reload()" class="btn btn-sm btn-outline-danger">
                             Refresh Page
                         </button>
-                        <button onclick="loadDramas(0)" class="btn btn-sm btn-primary ms-2">
-                            Try Again
-                        </button>
                     </div>
                 </div>
             </div>
         `;
     }
+}
+
+// ============== CSS FOR FIXED HEIGHT CARDS ==============
+
+function addFixedCardStyles() {
+    if (document.getElementById('fixed-card-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'fixed-card-styles';
+    style.textContent = `
+        /* FIXED HEIGHT DRAMA CARDS */
+        .drama-card {
+            background: #1a1a1a;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .drama-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.2);
+        }
+        
+        /* COVER SECTION - FIXED HEIGHT */
+        .card-cover {
+            height: 250px;
+            position: relative;
+            overflow: hidden;
+            background: #2a2a2a;
+        }
+        
+        .drama-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .drama-card:hover .drama-cover {
+            transform: scale(1.05);
+        }
+        
+        .episode-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(13, 110, 253, 0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+        
+        .play-overlay {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+        
+        .play-btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #0d6efd;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .play-btn:hover {
+            background: #0d6efd;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        /* CONTENT SECTION - FIXED HEIGHT */
+        .card-content {
+            padding: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .drama-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.6em;
+        }
+        
+        .drama-meta {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        .drama-desc {
+            font-size: 0.85rem;
+            color: #aaa;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            height: 2.8em;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+        
+        /* WATCH BUTTON - CLOSE TO CONTENT */
+        .watch-btn {
+            background: transparent;
+            border: 1px solid #0d6efd;
+            color: #0d6efd;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: block;
+            margin-top: auto;
+        }
+        
+        .watch-btn:hover {
+            background: #0d6efd;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* GRID LAYOUT FIX */
+        #drama-list .col {
+            margin-bottom: 20px;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .card-cover {
+                height: 200px;
+            }
+            
+            .drama-title {
+                font-size: 0.9rem;
+            }
+            
+            .drama-desc {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .card-cover {
+                height: 180px;
+            }
+            
+            .card-content {
+                padding: 12px;
+            }
+            
+            .watch-btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+        }
+    `;
+    
+    document.head.appendChild(style);
 }
 
 // ============== UTILITY FUNCTIONS ==============
@@ -297,79 +427,5 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-/**
- * Add drama card styles dynamically
- */
-function addDramaCardStyles() {
-    if (document.getElementById('drama-card-styles')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'drama-card-styles';
-    style.textContent = `
-        .drama-card {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-        
-        .drama-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-            border-color: #0d6efd;
-        }
-        
-        .drama-cover {
-            width: 100%;
-            height: 280px;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .drama-card:hover .drama-cover {
-            transform: scale(1.05);
-        }
-        
-        .drama-title {
-            font-size: 1rem;
-            font-weight: 600;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 2.8em;
-            color: #fff;
-        }
-        
-        .drama-description {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 2.8em;
-        }
-        
-        .overlay-gradient {
-            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
-        }
-        
-        @media (max-width: 768px) {
-            .drama-cover {
-                height: 220px;
-            }
-            
-            .drama-title {
-                font-size: 0.9rem;
-            }
-        }
-    `;
-    
-    document.head.appendChild(style);
-}
-
 // ============== GLOBAL EXPORTS ==============
 window.loadDramas = loadDramas;
-window.performSearch = performSearch;
