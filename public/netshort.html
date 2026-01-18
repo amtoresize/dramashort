@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id" data-bs-theme="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NetShort - Nonton Video Pendek</title>
+    <title>Detail Video - NetShort</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,282 +11,270 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
-        /* ========== VARIABLES ========== */
-        :root {
-            --primary: #2ed573;
-            --primary-dark: #1dd1a1;
-            --secondary: #54a0ff;
-            --dark-bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text-light: #f8f9fa;
-            --text-muted: #adb5bd;
-        }
-        
         /* ========== BASE STYLES ========== */
         body {
-            background: var(--dark-bg);
-            color: var(--text-light);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: white;
             min-height: 100vh;
-            background-image: radial-gradient(circle at 80% 20%, rgba(46, 213, 115, 0.1) 0%, transparent 25%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
         
         /* ========== NAVBAR ========== */
-        .navbar {
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(46, 213, 115, 0.1);
-        }
-        
         .navbar-brand {
-            font-weight: 800;
+            font-weight: bold;
             font-size: 1.5rem;
-            color: var(--primary);
         }
         
-        /* ========== VIDEO DETAIL ========== */
-        .video-container {
-            background: #000;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            margin-bottom: 2rem;
-            position: relative;
+        .back-btn {
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
         }
         
-        .video-player {
+        .back-btn:hover {
+            transform: translateX(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* ========== DRAMA DETAIL ========== */
+        .drama-poster {
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
             width: 100%;
             height: auto;
-            aspect-ratio: 9/16; /* Vertical/short video format */
-            background: #000;
-            display: block;
+            max-height: 500px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
         }
         
-        .video-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-            padding: 2rem 1.5rem 1rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .video-container:hover .video-controls {
-            opacity: 1;
-        }
-        
-        .video-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: white;
+        .drama-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, #0dcaf0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 1rem;
-            line-height: 1.3;
         }
         
-        /* ========== VIDEO INFO ========== */
-        .video-info {
-            background: rgba(40, 40, 40, 0.7);
-            border-radius: 16px;
+        .synopsis-box {
+            background: rgba(30, 30, 30, 0.7);
+            border: 1px solid #444;
+            border-radius: 12px;
             padding: 1.5rem;
-            margin-top: 2rem;
+            line-height: 1.8;
         }
         
-        .badge-netshort {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            font-weight: 600;
+        .badge-episode {
+            font-size: 0.9rem;
             padding: 0.5rem 1rem;
             border-radius: 20px;
-            font-size: 0.9rem;
+        }
+        
+        /* ========== EPISODE CARDS ========== */
+        .episode-card {
+            margin-bottom: 1rem;
+        }
+        
+        .episode-btn {
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 2px solid #333;
+            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+            color: white;
+            padding: 1.2rem 0.5rem;
+            width: 100%;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .episode-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
+            border-color: #0d6efd;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+        }
+        
+        .episode-btn.playing {
+            background: linear-gradient(145deg, #0d6efd, #0b5ed7);
+            border-color: #0b5ed7;
+            color: white;
+        }
+        
+        .episode-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        
+        .episode-duration {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .drama-title {
+                font-size: 1.8rem;
+            }
+            
+            .drama-poster {
+                max-height: 350px;
+                margin-bottom: 1.5rem;
+            }
+            
+            .episode-btn {
+                min-height: 80px;
+                padding: 1rem 0.3rem;
+            }
+            
+            .episode-number {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .drama-title {
+                font-size: 1.5rem;
+            }
+            
+            .episode-btn {
+                min-height: 70px;
+                padding: 0.8rem 0.2rem;
+            }
+            
+            .synopsis-box {
+                padding: 1rem;
+            }
+        }
+        
+        /* ========== LOADING & STATES ========== */
+        .loading-spinner {
+            width: 4rem;
+            height: 4rem;
+        }
+        
+        .error-box {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid #dc3545;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        /* ========== UTILITIES ========== */
+        .total-duration {
+            background: linear-gradient(135deg, #6f42c1, #d63384);
+        }
+        
+        /* ========== NETSHORT SPECIFIC ========== */
+        .badge-netshort {
+            background: linear-gradient(135deg, #2ed573, #1dd1a1);
         }
         
         .tag-badge {
             background: rgba(46, 213, 115, 0.2);
-            color: var(--primary);
+            color: #2ed573;
             border: 1px solid rgba(46, 213, 115, 0.3);
             padding: 0.3rem 0.8rem;
             border-radius: 12px;
             font-size: 0.8rem;
         }
         
-        /* ========== RELATED VIDEOS ========== */
-        .related-video-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 1px solid #333;
-        }
-        
-        .related-video-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 25px rgba(46, 213, 115, 0.2);
-        }
-        
-        .related-thumbnail {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-        }
-        
-        .related-title {
-            font-size: 0.95rem;
+        .badge-popular {
+            background: linear-gradient(135deg, #ff9f1a, #ffd93d);
+            color: #000;
             font-weight: 600;
-            color: var(--text-light);
-            margin: 0.8rem 1rem 0.5rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            line-height: 1.3;
-        }
-        
-        .related-meta {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin: 0 1rem 0.8rem;
-        }
-        
-        /* ========== LOADING ========== */
-        .loading-spinner {
-            width: 3rem;
-            height: 3rem;
-            color: var(--primary);
-        }
-        
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
-            .video-title {
-                font-size: 1.5rem;
-            }
-            
-            .video-player {
-                aspect-ratio: 16/9; /* Horizontal on mobile */
-            }
-            
-            .video-container {
-                border-radius: 12px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .video-title {
-                font-size: 1.3rem;
-            }
-            
-            .video-info {
-                padding: 1rem;
-            }
-            
-            .related-thumbnail {
-                height: 150px;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <!-- ========== NAVIGATION ========== -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
         <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-lightning-charge-fill me-2"></i>NetShort
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-lightning-charge-fill me-2"></i>
+                <span>NetShort</span>
             </a>
             <div class="navbar-nav ms-auto">
-                <a href="/" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-arrow-left me-1"></i>Kembali ke Home
+                <a href="/" class="btn btn-outline-light back-btn">
+                    <i class="bi bi-arrow-left me-2"></i>Kembali ke Home
                 </a>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="container py-4">
-        <!-- Video Player Section -->
-        <section id="video-section" class="mb-5">
-            <div class="text-center py-5" id="loading-section">
-                <div class="spinner-border loading-spinner" role="status">
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="container py-5">
+        <!-- Drama Detail Section -->
+        <section id="drama-detail" class="mb-5">
+            <!-- Content akan diisi oleh JavaScript -->
+            <div class="text-center py-5">
+                <div class="spinner-border loading-spinner text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <h4 class="mt-3">Memuat video...</h4>
-            </div>
-            
-            <div id="video-content" style="display: none;">
-                <div class="video-container">
-                    <video id="video-player" class="video-player" controls playsinline>
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="video-controls">
-                        <!-- Controls can be added here -->
-                    </div>
-                </div>
-                
-                <div class="video-info">
-                    <h2 id="video-title" class="video-title mb-3"></h2>
-                    
-                    <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-                        <span class="badge-netshort">
-                            <i class="bi bi-lightning-charge me-1"></i> NetShort Video
-                        </span>
-                        <span id="heat-score" class="badge bg-secondary ms-2">
-                            <i class="bi bi-fire me-1"></i> 0 Views
-                        </span>
-                    </div>
-                    
-                    <!-- Tags -->
-                    <div id="tags-container" class="d-flex flex-wrap gap-2 mb-3"></div>
-                    
-                    <!-- Description -->
-                    <div id="video-description" class="mb-4"></div>
-                </div>
+                <h4 class="mt-3">Memuat detail video...</h4>
+                <p class="text-muted">Mohon tunggu sebentar</p>
             </div>
         </section>
 
-        <!-- Related Videos -->
+        <!-- Episodes Section -->
         <section class="mt-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold">
-                    <i class="bi bi-collection-play me-2"></i>Video Terkait
+                    <i class="bi bi-play-btn me-2"></i>Daftar Episode
                 </h3>
-                <button id="load-related" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Refresh
-                </button>
+                <div id="episode-count" class="badge badge-netshort badge-episode">
+                    <span id="count-text">0 Episode</span>
+                </div>
             </div>
             
-            <div id="related-videos" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
-                <!-- Related videos will be loaded here -->
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list">
+                <!-- Episodes akan diisi oleh JavaScript -->
             </div>
             
-            <!-- No Related Videos -->
-            <div id="no-related" class="text-center py-5" style="display: none;">
-                <div class="alert alert-info">
+            <!-- Episode Not Found -->
+            <div id="no-episodes" class="text-center py-5" style="display: none;">
+                <div class="alert alert-info w-75 mx-auto">
                     <i class="bi bi-info-circle display-4 d-block mb-3"></i>
-                    <h4>Tidak ada video terkait</h4>
-                    <p>Coba refresh atau cari video lainnya.</p>
+                    <h4>Episode Belum Tersedia</h4>
+                    <p class="mb-0">Episode untuk video ini sedang dalam proses upload.</p>
                 </div>
             </div>
         </section>
     </main>
-
-    <!-- Script -->
+    
+    <!-- ========== JAVASCRIPT ========== -->
     <script>
         // ============== CONFIGURATION ==============
         const CONFIG = {
-            defaultImage: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iIzIyMiIvPjx0ZXh0IHg9IjE1MCIgeT0iMjUwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5ldFNob3J0IFZpZGVvPC90ZXh0Pjwvc3ZnPg=='
+            playerBase: '/player',
+            defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
         };
 
-        // ============== STATE VARIABLES ==============
+        // ============== STATE MANAGEMENT ==============
         let currentVideo = null;
-        let relatedVideos = [];
-        const videoPlayer = document.getElementById('video-player');
+        let isLoading = false;
+
+        // ============== DOM ELEMENTS ==============
+        const elements = {
+            dramaDetail: document.getElementById('drama-detail'),
+            episodeList: document.getElementById('episode-list'),
+            episodeCount: document.getElementById('episode-count'),
+            countText: document.getElementById('count-text'),
+            noEpisodes: document.getElementById('no-episodes')
+        };
 
         // ============== INITIALIZATION ==============
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('NetShort Video initialized');
+            console.log('NetShort Detail initialized');
             
+            // Get video ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             const videoId = urlParams.get('id');
             
@@ -295,17 +283,8 @@
                 return;
             }
             
-            // Load video detail
+            // Load video details
             loadVideoDetail(videoId);
-            
-            // Load related videos
-            loadRelatedVideos();
-            
-            // Setup load related button
-            document.getElementById('load-related').addEventListener('click', loadRelatedVideos);
-            
-            // Handle video events
-            videoPlayer.addEventListener('ended', onVideoEnded);
         });
 
         // ============== MAIN FUNCTIONS ==============
@@ -314,19 +293,17 @@
          * Load video detail from NetShort API
          */
         async function loadVideoDetail(videoId) {
+            if (isLoading) return;
+            
+            isLoading = true;
+            
             try {
-                // First try to get from explore/discover data
-                const cachedVideo = await findCachedVideo(videoId);
-                if (cachedVideo) {
-                    renderVideoDetail(cachedVideo);
-                    return;
-                }
+                const apiUrl = `https://dramabos.asia/api/netshort/api/drama/info/${videoId}`;
                 
-                // If not cached, try to fetch from API
-                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/info/${videoId}`);
+                const response = await fetch(apiUrl);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
@@ -334,301 +311,316 @@
                 if (data.success && data.data) {
                     currentVideo = data.data;
                     renderVideoDetail(data.data);
-                    
-                    // Try to play video if URL available
-                    if (data.data.result && data.data.result[0] && data.data.result[0].videoUrl) {
-                        playVideo(data.data.result[0].videoUrl);
-                    }
+                    renderEpisodes(data.data.result || []);
                 } else {
                     throw new Error('Video tidak ditemukan');
                 }
             } catch (error) {
                 console.error('Error loading video detail:', error);
-                showError(`Gagal memuat video: ${error.message}`);
+                showError(`Gagal memuat detail video: ${error.message}`);
             } finally {
-                // Hide loading
-                document.getElementById('loading-section').style.display = 'none';
-                document.getElementById('video-content').style.display = 'block';
+                isLoading = false;
             }
         }
 
         /**
-         * Find video in cache (from explore/discover)
-         */
-        async function findCachedVideo(videoId) {
-            try {
-                // Try explore endpoint first
-                const exploreResponse = await fetch('https://dramabos.asia/api/netshort/api/drama/explore?offset=0&limit=50');
-                const exploreData = await exploreResponse.json();
-                
-                if (exploreData.success && exploreData.data && exploreData.data.result) {
-                    const video = exploreData.data.result.find(v => v.id === videoId);
-                    if (video) return { ...video, source: 'explore' };
-                }
-                
-                // Try discover endpoint
-                const discoverResponse = await fetch('https://dramabos.asia/api/netshort/api/drama/discover');
-                const discoverData = await discoverResponse.json();
-                
-                if (discoverData.success && discoverData.data && discoverData.data.dataList) {
-                    const video = discoverData.data.dataList.find(v => v.shortPlayId === videoId);
-                    if (video) return { ...video, source: 'discover' };
-                }
-            } catch (error) {
-                console.log('Cache search error:', error);
-            }
-            
-            return null;
-        }
-
-        /**
-         * Render video detail
+         * Render video detail to the page
          */
         function renderVideoDetail(video) {
-            currentVideo = video;
+            // Update page title
+            document.title = `${escapeHtml(video.name)} - NetShort`;
             
-            // Set page title
-            const title = video.shortPlayName || video.name || 'NetShort Video';
-            document.title = `${escapeHtml(title)} - NetShort`;
+            // Get cover from discover data if available
+            let cover = CONFIG.defaultImage;
+            let tags = [];
+            let heatScore = '';
             
-            // Update video title
-            document.getElementById('video-title').textContent = title;
-            
-            // Update heat score
-            if (video.heatScoreShow) {
-                document.getElementById('heat-score').innerHTML = `
-                    <i class="bi bi-fire me-1"></i> ${video.heatScoreShow}
-                `;
-            }
-            
-            // Render tags
-            const tagsContainer = document.getElementById('tags-container');
-            if (video.labelArray && video.labelArray.length > 0) {
-                tagsContainer.innerHTML = video.labelArray.map(tag => `
-                    <span class="tag-badge">${escapeHtml(tag)}</span>
-                `).join('');
-            } else if (video.scriptName) {
-                tagsContainer.innerHTML = `
-                    <span class="tag-badge">${escapeHtml(video.scriptName)}</span>
-                `;
-            }
-            
-            // Render description
-            const descriptionEl = document.getElementById('video-description');
-            if (video.script) {
-                descriptionEl.innerHTML = `
-                    <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-2"></i>Deskripsi</h6>
-                    <p class="mb-0">${escapeHtml(video.script)}</p>
-                `;
-            } else {
-                descriptionEl.innerHTML = `
-                    <p class="text-muted mb-0"><i>Belum ada deskripsi</i></p>
-                `;
-            }
-        }
-
-        /**
-         * Play video
-         */
-        function playVideo(videoUrl) {
-            if (!videoUrl) {
-                console.log('No video URL available');
-                return;
-            }
-            
-            videoPlayer.src = videoUrl;
-            videoPlayer.load();
-            
-            // Try to play automatically
-            const playPromise = videoPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log('Auto-play prevented:', error);
-                    // Show custom play button if needed
+            // Try to get additional info from discover endpoint
+            fetch('https://dramabos.asia/api/netshort/api/drama/discover')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data && data.data.dataList) {
+                        const discoverVideo = data.data.dataList.find(v => 
+                            v.shortPlayName === video.name || 
+                            v.shortPlayId === videoIdFromUrl()
+                        );
+                        if (discoverVideo) {
+                            cover = discoverVideo.shortPlayCover || cover;
+                            tags = discoverVideo.labelArray || tags;
+                            heatScore = discoverVideo.heatScoreShow || '';
+                        }
+                    }
+                    updateVideoDetailUI(video, cover, tags, heatScore);
+                })
+                .catch(() => {
+                    updateVideoDetailUI(video, cover, tags, heatScore);
                 });
-            }
-            
-            // Save to history
-            saveToHistory();
         }
 
         /**
-         * Load related videos
+         * Update video detail UI
          */
-        async function loadRelatedVideos() {
-            try {
-                // Show loading state
-                document.getElementById('related-videos').innerHTML = `
-                    <div class="col-12 text-center py-4">
-                        <div class="spinner-border spinner-border-sm text-primary"></div>
-                        <p class="mt-2 text-muted">Memuat video terkait...</p>
+        function updateVideoDetailUI(video, cover, tags, heatScore) {
+            // Create HTML
+            const html = `
+                <div class="row">
+                    <!-- Poster Column -->
+                    <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
+                        <div class="position-sticky" style="top: 90px;">
+                            <img src="${cover}" 
+                                 class="drama-poster mb-4"
+                                 alt="${escapeHtml(video.name)}"
+                                 onerror="this.onerror=null; this.src='${CONFIG.defaultImage}'">
+                            
+                            <!-- Tags -->
+                            ${tags.length > 0 ? `
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                ${tags.slice(0, 4).map(tag => `
+                                    <span class="tag-badge">${escapeHtml(tag)}</span>
+                                `).join('')}
+                            </div>
+                            ` : ''}
+                            
+                            <!-- Quick Actions -->
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary btn-lg py-3" onclick="playFirstEpisode()" id="playFirstBtn">
+                                    <i class="bi bi-play-fill me-2"></i>Putar Episode 1
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                `;
-                
-                // Fetch related videos from explore endpoint
-                const response = await fetch('https://dramabos.asia/api/netshort/api/drama/explore?offset=0&limit=20');
-                const data = await response.json();
-                
-                if (data.success && data.data && data.data.result) {
-                    relatedVideos = data.data.result;
-                    renderRelatedVideos(relatedVideos);
-                } else {
-                    showNoRelatedVideos();
-                }
-            } catch (error) {
-                console.error('Error loading related videos:', error);
-                showNoRelatedVideos();
-            }
+                    
+                    <!-- Details Column -->
+                    <div class="col-lg-8 col-md-7">
+                        <h1 class="drama-title">${escapeHtml(video.name)}</h1>
+                        
+                        <!-- Badges -->
+                        <div class="d-flex flex-wrap gap-3 mb-4">
+                            <span class="badge badge-netshort badge-episode">
+                                <i class="bi bi-film me-1"></i> ${video.result ? video.result.length : 1} Episode
+                            </span>
+                            
+                            ${heatScore ? `
+                            <span class="badge badge-popular badge-episode">
+                                <i class="bi bi-fire me-1"></i> ${heatScore}
+                            </span>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Synopsis -->
+                        <div class="synopsis-box mb-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="bi bi-info-circle text-primary me-2"></i>Deskripsi
+                            </h5>
+                            <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
+                                Video pendek dari NetShort. ${tags.length > 0 ? 'Kategori: ' + tags.join(', ') + '.' : ''}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            elements.dramaDetail.innerHTML = html;
         }
 
         /**
-         * Render related videos
+         * Get video ID from URL
          */
-        function renderRelatedVideos(videos) {
-            if (!videos || videos.length === 0) {
-                showNoRelatedVideos();
+        function videoIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        /**
+         * Render episodes list
+         */
+        function renderEpisodes(episodes) {
+            if (!episodes || episodes.length === 0) {
+                elements.episodeList.style.display = 'none';
+                elements.noEpisodes.style.display = 'block';
+                elements.countText.textContent = '0 Episode';
                 return;
             }
             
-            // Filter out current video
-            const filteredVideos = videos.filter(video => 
-                video.id !== currentVideo?.id && 
-                video.shortPlayId !== currentVideo?.shortPlayId
-            ).slice(0, 10); // Limit to 10 videos
+            // Sort episodes by number
+            episodes.sort((a, b) => a.episodeNo - b.episodeNo);
             
-            if (filteredVideos.length === 0) {
-                showNoRelatedVideos();
-                return;
-            }
+            // Update count
+            elements.countText.textContent = `${episodes.length} Episode`;
+            elements.episodeList.style.display = 'flex';
+            elements.noEpisodes.style.display = 'none';
             
-            const relatedHtml = filteredVideos.map(video => {
-                const title = video.shortPlayName || video.name || 'NetShort Video';
-                const cover = video.shortPlayCover || video.cover || CONFIG.defaultImage;
-                const videoId = video.shortPlayId || video.id;
-                
+            // Create episode cards
+            const episodesHtml = episodes.map(episode => {
                 return `
                     <div class="col">
-                        <div class="related-video-card" onclick="playRelatedVideo('${videoId}')">
-                            <img src="${cover}" 
-                                 class="related-thumbnail"
-                                 alt="${escapeHtml(title)}"
-                                 loading="lazy"
-                                 onerror="this.src='${CONFIG.defaultImage}'">
-                            <div class="related-title">${escapeHtml(title)}</div>
-                            <div class="related-meta">
-                                <small><i class="bi bi-play-circle"></i> NetShort</small>
-                            </div>
+                        <div class="episode-card">
+                            <button class="episode-btn w-100" 
+                                    onclick="playEpisode('${episode.id}', ${episode.episodeNo}, this)"
+                                    data-id="${episode.id}"
+                                    data-episode="${episode.episodeNo}"
+                                    title="Episode ${episode.episodeNo}">
+                                <div class="episode-number">Episode ${episode.episodeNo}</div>
+                                <div class="episode-duration">1-3 min</div>
+                            </button>
                         </div>
                     </div>
                 `;
             }).join('');
             
-            document.getElementById('related-videos').innerHTML = relatedHtml;
-            document.getElementById('no-related').style.display = 'none';
+            elements.episodeList.innerHTML = episodesHtml;
         }
 
         /**
-         * Play related video
+         * Play a specific episode (OPEN IN NEW TAB)
          */
-        function playRelatedVideo(videoId) {
-            // Update URL without reloading page
-            const newUrl = `${window.location.pathname}?id=${videoId}`;
-            window.history.pushState({}, '', newUrl);
+        async function playEpisode(videoId, episodeNumber, buttonElement) {
+            if (!videoId) {
+                alert('Video ID tidak valid');
+                return;
+            }
             
-            // Show loading
-            document.getElementById('loading-section').style.display = 'block';
-            document.getElementById('video-content').style.display = 'none';
+            console.log('Playing episode:', episodeNumber, 'Video ID:', videoId);
             
-            // Load new video
-            loadVideoDetail(videoId);
+            // Update button state
+            if (buttonElement) {
+                updateButtonState(buttonElement, true);
+            }
             
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        /**
-         * Handle video ended event
-         */
-        function onVideoEnded() {
-            console.log('Video ended');
-            
-            // Auto-play next video if available
-            if (relatedVideos.length > 0) {
-                // Find current video index
-                const currentIndex = relatedVideos.findIndex(video => 
-                    video.id === currentVideo?.id || 
-                    video.shortPlayId === currentVideo?.shortPlayId
-                );
+            try {
+                // Cari URL video dari data yang sudah di-load
+                let videoUrl = null;
                 
-                // Play next video
-                const nextIndex = (currentIndex + 1) % relatedVideos.length;
-                const nextVideo = relatedVideos[nextIndex];
+                if (currentVideo && currentVideo.result) {
+                    const episode = currentVideo.result.find(ep => 
+                        ep.id === videoId && ep.episodeNo === episodeNumber
+                    );
+                    if (episode && episode.videoUrl) {
+                        videoUrl = episode.videoUrl;
+                    }
+                }
                 
-                if (nextVideo) {
-                    setTimeout(() => {
-                        playRelatedVideo(nextVideo.shortPlayId || nextVideo.id);
-                    }, 2000); // Wait 2 seconds before auto-playing next
+                if (videoUrl) {
+                    // Generate player URL
+                    const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(currentVideo.name)}&episode=${episodeNumber}`;
+                    
+                    // OPEN IN NEW TAB
+                    window.open(playerUrl, '_blank');
+                    
+                    // Save last watched episode
+                    saveLastWatched(episodeNumber);
+                    
+                } else {
+                    // Fallback: Coba ambil dari API info
+                    const apiUrl = `https://dramabos.asia/api/netshort/api/drama/info/${videoIdFromUrl()}`;
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    
+                    if (data.success && data.data && data.data.result) {
+                        const episode = data.data.result.find(ep => ep.episodeNo === episodeNumber);
+                        if (episode && episode.videoUrl) {
+                            const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(episode.videoUrl)}&title=${encodeURIComponent(data.data.name)}&episode=${episodeNumber}`;
+                            window.open(playerUrl, '_blank');
+                            saveLastWatched(episodeNumber);
+                        } else {
+                            throw new Error('Video URL tidak ditemukan');
+                        }
+                    } else {
+                        throw new Error('Video URL tidak ditemukan');
+                    }
+                }
+            } catch (error) {
+                console.error('Error playing video:', error);
+                alert('Gagal memutar video: ' + error.message);
+            } finally {
+                // Restore button state
+                if (buttonElement) {
+                    updateButtonState(buttonElement, false);
                 }
             }
+        }
+
+        /**
+         * Play the first episode
+         */
+        function playFirstEpisode() {
+            if (!currentVideo || !currentVideo.result || currentVideo.result.length === 0) {
+                alert('Tidak ada episode yang tersedia');
+                return;
+            }
+            
+            const firstEpisode = currentVideo.result[0];
+            const firstButton = elements.episodeList.querySelector('.episode-btn');
+            playEpisode(firstEpisode.id, firstEpisode.episodeNo, firstButton);
         }
 
         // ============== UI HELPER FUNCTIONS ==============
 
         /**
-         * Show no related videos
+         * Update button loading state
          */
-        function showNoRelatedVideos() {
-            document.getElementById('related-videos').innerHTML = '';
-            document.getElementById('no-related').style.display = 'block';
+        function updateButtonState(button, isLoading) {
+            if (isLoading) {
+                // Save original content
+                button.dataset.originalContent = button.innerHTML;
+                
+                // Show loading
+                button.innerHTML = `
+                    <div class="spinner-border spinner-border-sm text-light" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <small class="mt-1">Loading...</small>
+                `;
+                button.disabled = true;
+                button.classList.add('playing');
+            } else {
+                // Restore original content
+                if (button.dataset.originalContent) {
+                    button.innerHTML = button.dataset.originalContent;
+                } else {
+                    const episode = button.dataset.episode;
+                    button.innerHTML = `
+                        <div class="episode-number">Episode ${episode}</div>
+                        <div class="episode-duration">1-3 min</div>
+                    `;
+                }
+                button.disabled = false;
+                button.classList.remove('playing');
+            }
+        }
+
+        /**
+         * Save last watched episode
+         */
+        function saveLastWatched(episodeNumber) {
+            const videoId = videoIdFromUrl();
+            if (videoId && currentVideo) {
+                localStorage.setItem(`last_watched_netshort_${videoId}`, episodeNumber);
+                localStorage.setItem('last_watched_time', Date.now());
+            }
         }
 
         /**
          * Show error message
          */
         function showError(message) {
-            document.getElementById('video-content').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Error:</strong> ${escapeHtml(message)}
-                    <div class="mt-2">
-                        <button onclick="window.location.href='/'" class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-house"></i> Kembali ke Home
-                        </button>
-                        <button onclick="location.reload()" class="btn btn-sm btn-primary ms-2">
-                            <i class="bi bi-arrow-clockwise"></i> Coba Lagi
-                        </button>
+            elements.dramaDetail.innerHTML = `
+                <div class="error-box">
+                    <div class="d-flex align-items-center flex-column">
+                        <i class="bi bi-exclamation-triangle-fill display-1 text-danger mb-3"></i>
+                        <h4 class="text-center">Terjadi Kesalahan</h4>
+                        <p class="text-center mb-4">${escapeHtml(message)}</p>
+                        <div class="d-flex gap-2">
+                            <button onclick="window.location.href='/'" class="btn btn-outline-danger">
+                                <i class="bi bi-house me-1"></i> Kembali ke Home
+                            </button>
+                            <button onclick="location.reload()" class="btn btn-primary">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Coba Lagi
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
-        }
-
-        /**
-         * Save video to watch history
-         */
-        function saveToHistory() {
-            if (currentVideo) {
-                const history = {
-                    videoId: currentVideo.shortPlayId || currentVideo.id,
-                    title: currentVideo.shortPlayName || currentVideo.name,
-                    cover: currentVideo.shortPlayCover || currentVideo.cover,
-                    source: 'netshort',
-                    timestamp: Date.now()
-                };
-                
-                // Get existing history
-                const existingHistory = JSON.parse(localStorage.getItem('netshort_history') || '[]');
-                
-                // Remove if already exists
-                const filteredHistory = existingHistory.filter(item => 
-                    item.videoId !== history.videoId
-                );
-                
-                // Add to beginning and limit to 50 items
-                filteredHistory.unshift(history);
-                const limitedHistory = filteredHistory.slice(0, 50);
-                
-                localStorage.setItem('netshort_history', JSON.stringify(limitedHistory));
-            }
         }
 
         // ============== UTILITY FUNCTIONS ==============
@@ -644,7 +636,8 @@
         }
 
         // ============== GLOBAL EXPORTS ==============
-        window.playRelatedVideo = playRelatedVideo;
+        window.playEpisode = playEpisode;
+        window.playFirstEpisode = playFirstEpisode;
     </script>
 </body>
 </html>
