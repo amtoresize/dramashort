@@ -159,32 +159,38 @@
             border: none;
             background: #000;
         }
-        
-        /* Close button floating */
         .player-close-btn {
             position: fixed;
-            top: 10px;
-            right: 5px;
+            top: 20px;
+            right: 20px;
             z-index: 9999;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent !important; /* NO BACKGROUND */
+            border: none !important; /* NO BORDER */
             color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 100%;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 2rem;
             cursor: pointer;
             transition: all 0.3s;
-            backdrop-filter: blur(10px);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            opacity: 0.8;
         }
-        
         .player-close-btn:hover {
-            background: rgba(220, 53, 69, 0.8);
-            transform: scale(1.1);
-            border-color: #dc3545;
+            opacity: 1;
+            transform: scale(1.2);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            color: #fff;
+        }
+        .player-close-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Untuk dark scenes, tambah glow */
+        .player-close-btn.glow {
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
         }
         
         /* Loading overlay */
