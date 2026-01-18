@@ -2,7 +2,7 @@
 const CONFIG = {
     apiBase: '/api',
     itemsPerPage: 12,
-    defaultImage: 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400&h=500&fit=crop&auto=format'
+    defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
 };
 
 // ============== API CLIENT SIMPLE ==============
