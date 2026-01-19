@@ -9,6 +9,7 @@ export async function onRequest(context) {
 
   const decodedVideoUrl = decodeURIComponent(videoUrl);
 
+  // HTML dengan player yang lebih baik
   const html = `
   <!DOCTYPE html>
   <html lang="en">
@@ -304,7 +305,7 @@ export async function onRequest(context) {
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
-      const videoUrl = "${decodedVideoUrl}";
+      const videoUrl = "${decodedVideoUrl.replace(/"/g, '\\"')}";
       let player = null;
       let preloadWindow = null;
       let corsBypassed = false;
@@ -324,17 +325,17 @@ export async function onRequest(context) {
         // Event listeners
         player.on('error', handlePlayerError);
         player.on('loadeddata', handleVideoLoaded);
-        player.on('waiting', () => updateStatus('Buffering...', '⏳'));
-        player.on('playing', () => updateStatus('Playing', '▶️'));
+        player.on('waiting', function() { updateStatus('Buffering...', '⏳'); });
+        player.on('playing', function() { updateStatus('Playing', '▶️'); });
       });
       
-      function updateStatus(text, icon = 'ℹ️') {
+      function updateStatus(text, icon) {
         const statusBox = document.getElementById('statusBox');
         const statusIcon = document.getElementById('statusIcon');
         const statusText = document.getElementById('statusText');
         const progressFill = document.getElementById('progressFill');
         
-        statusIcon.textContent = icon;
+        statusIcon.textContent = icon || 'ℹ️';
         statusText.textContent = text;
         statusBox.classList.add('active');
         
@@ -348,7 +349,7 @@ export async function onRequest(context) {
         }
         
         // Auto hide setelah 5 detik
-        setTimeout(() => {
+        setTimeout(function() {
           statusBox.classList.remove('active');
         }, 5000);
       }
@@ -364,10 +365,10 @@ export async function onRequest(context) {
             'Accept': 'video/mp4',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
           }
-        }).then(() => {
+        }).then(function() {
           updateStatus('Video is accessible', '✅');
           attemptAutoPlay();
-        }).catch(error => {
+        }).catch(function(error) {
           updateStatus('Direct access blocked by CORS', '⚠️');
           document.getElementById('bypassBtn').style.background = 'linear-gradient(45deg, #ff5500, #ff3300)';
           document.getElementById('bypassBtn').innerHTML = '<span>⚠️</span> CORS Blocked - Click to Bypass';
@@ -379,11 +380,11 @@ export async function onRequest(context) {
         retryCount++;
         
         if (retryCount <= maxRetries && !corsBypassed) {
-          updateStatus(`Retrying... (${retryCount}/${maxRetries})`, '🔄');
-          setTimeout(() => {
+          updateStatus('Retrying... (' + retryCount + '/' + maxRetries + ')', '🔄');
+          setTimeout(function() {
             player.src({ type: 'video/mp4', src: videoUrl });
             player.load();
-            player.play().catch(e => console.log('Retry play failed:', e));
+            player.play().catch(function(e) { console.log('Retry play failed:', e); });
           }, 1000 * retryCount);
         } else {
           updateStatus('CORS blocked. Use Bypass button', '❌');
@@ -405,12 +406,12 @@ export async function onRequest(context) {
         fetchWithReferer();
         
         // Method 2: Buka di popup untuk cache
-        setTimeout(() => {
+        setTimeout(function() {
           preloadInBackground();
         }, 1000);
         
         // Method 3: Refresh player dengan cache
-        setTimeout(() => {
+        setTimeout(function() {
           refreshPlayer();
           attemptAutoPlay();
         }, 2000);
@@ -428,7 +429,7 @@ export async function onRequest(context) {
         document.body.appendChild(iframe);
         
         // Hapus setelah 5 detik
-        setTimeout(() => {
+        setTimeout(function() {
           document.body.removeChild(iframe);
         }, 5000);
       }
@@ -442,7 +443,7 @@ export async function onRequest(context) {
         );
         
         // Tutup setelah 3 detik
-        setTimeout(() => {
+        setTimeout(function() {
           if (preloadWindow && !preloadWindow.closed) {
             preloadWindow.close();
             updateStatus('Background preload complete', '✅');
@@ -455,10 +456,10 @@ export async function onRequest(context) {
         updateStatus('Attempting forced playback...', '▶️');
         
         // Coba play dengan berbagai method
-        player.play().then(() => {
+        player.play().then(function() {
           hideLoading();
           updateStatus('Playback successful!', '🎉');
-        }).catch(error => {
+        }).catch(function(error) {
           console.log('Force play failed:', error);
           
           // Coba method lain
@@ -480,18 +481,18 @@ export async function onRequest(context) {
         videoElement.click();
         
         // Coba play lagi setelah simulasi klik
-        setTimeout(() => {
-          player.play().catch(e => {
+        setTimeout(function() {
+          player.play().catch(function(e) {
             updateStatus('Please click the play button manually', '🖱️');
           });
         }, 100);
       }
       
       function showVideoUrl() {
-        alert('Video URL:\n\n' + videoUrl + 
-              '\n\nCopy this URL and try in:\n' +
-              '1. VLC Media Player\n' +
-              '2. New browser tab\n' +
+        alert('Video URL:\\n\\n' + videoUrl + 
+              '\\n\\nCopy this URL and try in:\\n' +
+              '1. VLC Media Player\\n' +
+              '2. New browser tab\\n' +
               '3. Download manager');
       }
       
@@ -506,7 +507,7 @@ export async function onRequest(context) {
         player.load();
         
         // Coba kembali ke waktu sebelumnya
-        setTimeout(() => {
+        setTimeout(function() {
           player.currentTime(currentTime);
           updateStatus('Player refreshed', '✅');
         }, 500);
@@ -519,22 +520,22 @@ export async function onRequest(context) {
         const newTab = window.open(videoUrl, '_blank');
         
         // Beri instruksi
-        setTimeout(() => {
+        setTimeout(function() {
           updateStatus('Please return to this tab and refresh', '↩️');
-          alert('Video opened in new tab.\n' +
-                'Wait for it to start loading, then:\n' +
-                '1. Return to this tab\n' +
-                '2. Click "Refresh Player"\n' +
+          alert('Video opened in new tab.\\n' +
+                'Wait for it to start loading, then:\\n' +
+                '1. Return to this tab\\n' +
+                '2. Click "Refresh Player"\\n' +
                 '3. Click "Force Play"');
         }, 1000);
       }
       
       function attemptAutoPlay() {
         // Tunggu sebentar lalu coba play
-        setTimeout(() => {
-          player.play().then(() => {
+        setTimeout(function() {
+          player.play().then(function() {
             updateStatus('Autoplay successful!', '🎉');
-          }).catch(e => {
+          }).catch(function(e) {
             // Ignore autoplay errors
           });
         }, 1000);
@@ -585,7 +586,7 @@ export async function onRequest(context) {
       });
       
       // Auto bypass setelah 2 detik
-      setTimeout(() => {
+      setTimeout(function() {
         if (!corsBypassed) {
           document.getElementById('bypassBtn').click();
         }
