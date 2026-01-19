@@ -7,7 +7,6 @@ const CONFIG = {
 
 // ============== 3 WORKING APIS ==============
 const WORKING_APIS = {
-    // 1. MELOLO API (SUDAH JALAN DI APLIKASI ANDA)
     melolo: {
         home: async (offset = 0, count = 12) => {
             try {
@@ -41,7 +40,6 @@ const WORKING_APIS = {
         }
     },
     
-    // 2. DRAMABOX API (BARU - SUDAH TERBUKTI WORK)
     dramabox: {
         foryou: async (page = 1) => {
             try {
@@ -54,8 +52,7 @@ const WORKING_APIS = {
                         success: true,
                         data: data.data.list,
                         hasMore: data.data.list.length >= 20,
-                        nextPage: page + 1,
-                        total: data.data.list.length
+                        nextPage: page + 1
                     };
                 }
                 return { code: -1, error: 'Invalid response', data: [] };
@@ -63,71 +60,9 @@ const WORKING_APIS = {
                 console.error('DramaBox foryou error:', error);
                 return { code: -1, error: error.message, data: [] };
             }
-        },
-        
-        latest: async (page = 1) => {
-            try {
-                const response = await fetch(`https://dramabos.asia/api/dramabox/api/new/${page}?lang=in`);
-                const data = await response.json();
-                
-                if (data.success && data.data && data.data.list) {
-                    return {
-                        code: 0,
-                        success: true,
-                        data: data.data.list,
-                        hasMore: data.data.list.length >= 20,
-                        nextPage: page + 1
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('DramaBox latest error:', error);
-                return { code: -1, error: error.message, data: [] };
-            }
-        },
-        
-        trending: async (page = 1) => {
-            try {
-                const response = await fetch(`https://dramabos.asia/api/dramabox/api/rank/${page}?lang=in`);
-                const data = await response.json();
-                
-                if (data.success && data.data && data.data.list) {
-                    return {
-                        code: 0,
-                        success: true,
-                        data: data.data.list,
-                        hasMore: data.data.list.length >= 20,
-                        nextPage: page + 1
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('DramaBox trending error:', error);
-                return { code: -1, error: error.message, data: [] };
-            }
-        },
-        
-        detail: async (bookId) => {
-            try {
-                const response = await fetch(`https://dramabos.asia/api/dramabox/api/drama/${bookId}?lang=in`);
-                const data = await response.json();
-                
-                if (data.success && data.data) {
-                    return {
-                        code: 0,
-                        success: true,
-                        data: data.data
-                    };
-                }
-                return { code: -1, error: 'Invalid response' };
-            } catch (error) {
-                console.error('DramaBox detail error:', error);
-                return { code: -1, error: error.message };
-            }
         }
     },
     
-    // 3. NETSHORT API (BARU - SUDAH TERBUKTI WORK)
     netshort: {
         explore: async (offset = 0, limit = 20) => {
             try {
@@ -146,26 +81,6 @@ const WORKING_APIS = {
                 return { code: -1, error: 'Invalid response', data: [] };
             } catch (error) {
                 console.error('NetShort explore error:', error);
-                return { code: -1, error: error.message, data: [] };
-            }
-        },
-        
-        discover: async () => {
-            try {
-                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/discover?lang=id_ID`);
-                const data = await response.json();
-                
-                if (data.success && data.data && data.data.dataList) {
-                    return {
-                        code: 0,
-                        success: true,
-                        data: data.data.dataList,
-                        hasMore: false
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('NetShort discover error:', error);
                 return { code: -1, error: error.message, data: [] };
             }
         },
@@ -193,11 +108,10 @@ const WORKING_APIS = {
 
 // ============== STATE VARIABLES ==============
 let currentOffset = 0;
-let currentPage = 1;
 let isLoading = false;
 let hasMoreData = true;
 let currentView = 'grid';
-let currentSource = 'melolo'; // 'melolo', 'dramabox', 'netshort'
+let currentSource = 'melolo';
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -205,14 +119,11 @@ const elements = {
     loadMoreBtn: document.getElementById('load-more'),
     loadingIndicator: document.getElementById('loading'),
     emptyState: document.getElementById('empty-state'),
-    sourceSelector: null,
-    tabSelector: null
+    sourceSelector: null
 };
 
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 DramaShort Enhanced initialized');
-    
     const savedView = localStorage.getItem('dramashort_view');
     if (savedView && (savedView === 'grid' || savedView === 'list')) {
         currentView = savedView;
@@ -239,8 +150,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ============== SOURCE SELECTOR ==============
-
 function initializeSourceSelector() {
     const header = document.querySelector('.d-flex.justify-content-between');
     if (!header) return;
@@ -249,7 +158,7 @@ function initializeSourceSelector() {
         <select id="source-selector" class="form-select form-select-sm source-selector">
             <option value="melolo" ${currentSource === 'melolo' ? 'selected' : ''}>Melolo™</option>
             <option value="dramabox" ${currentSource === 'dramabox' ? 'selected' : ''}>DramaBox</option>
-            <option value="netshort" ${currentSource === 'netshort' ? 'selected' : ''}>NetShort (Sulih Suara ID)</option>
+            <option value="netshort" ${currentSource === 'netshort' ? 'selected' : ''}>NetShort</option>
         </select>
     `;
     
@@ -261,7 +170,6 @@ function initializeSourceSelector() {
     elements.sourceSelector.addEventListener('change', async function() {
         currentSource = this.value;
         currentOffset = 0;
-        currentPage = 1;
         
         localStorage.setItem('dramashort_source', currentSource);
         
@@ -270,12 +178,9 @@ function initializeSourceSelector() {
         }
         
         await loadDramas();
-        
-        updatePageTitle();
     });
 }
 
-// ============== VIEW TOGGLE FUNCTIONS ==============
 function initializeViewToggle() {
     const gridBtn = document.getElementById('view-grid');
     const listBtn = document.getElementById('view-list');
@@ -336,8 +241,6 @@ function updateView() {
     localStorage.setItem('dramashort_view', currentView);
 }
 
-// ============== LOAD DRAMAS ==============
-
 async function loadDramas(offset = 0) {
     if (isLoading) return;
     
@@ -350,6 +253,7 @@ async function loadDramas(offset = 0) {
         switch(currentSource) {
             case 'dramabox':
                 result = await WORKING_APIS.dramabox.foryou(1);
+                hasMoreData = false;
                 break;
                 
             case 'netshort':
@@ -360,51 +264,40 @@ async function loadDramas(offset = 0) {
             default:
                 const apiUrl = `${CONFIG.apiBase}/home?offset=${offset}&count=${CONFIG.itemsPerPage}&lang=id`;
                 const response = await fetch(apiUrl);
-                result = await response.json();
+                const data = await response.json();
                 
-                if (result.code === 0 && result.data) {
+                if (data.code === 0 && data.data) {
                     result = {
                         code: 0,
-                        data: result.data,
-                        hasMore: result.has_more || false
+                        data: data.data,
+                        hasMore: data.has_more || false
                     };
                 }
                 break;
         }
         
-        if (result.code === 0 && result.data && Array.isArray(result.data)) {
+        if (result && result.data && Array.isArray(result.data)) {
             if (offset === 0) {
                 elements.dramaList.innerHTML = '';
             }
             
             if (result.data.length > 0) {
                 renderDramas(result.data);
-                
-                if (currentSource === 'melolo' || currentSource === 'netshort') {
-                    currentOffset = offset + result.data.length;
-                    hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
-                } else {
-                    hasMoreData = false;
-                }
-                
+                currentOffset = offset + result.data.length;
+                hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
                 updateLoadMoreButton();
                 hideEmptyState();
             } else {
-                showEmptyState(`No dramas found in ${currentSource}.`);
+                showEmptyState(`Tidak ada drama ditemukan di ${currentSource}.`);
                 hasMoreData = false;
                 updateLoadMoreButton();
             }
         } else {
-            throw new Error(`Invalid response from ${currentSource}`);
+            throw new Error('Response tidak valid');
         }
-        
     } catch (error) {
-        console.error(`Error loading dramas from ${currentSource}:`, error);
-        
-        if (offset === 0) {
-            showError(`Failed to load dramas: ${error.message}`);
-        }
-        
+        console.error('Error loading:', error);
+        showError(`Gagal memuat: ${error.message}`);
         hasMoreData = false;
         updateLoadMoreButton();
     } finally {
@@ -413,44 +306,26 @@ async function loadDramas(offset = 0) {
     }
 }
 
-// ============== RENDER DRAMAS ==============
-
 function renderDramas(dramas) {
-    if (!dramas || !Array.isArray(dramas) || dramas.length === 0) {
-        return;
-    }
-    
     const dramasHtml = dramas.map(drama => {
-        let dramaData = formatDramaData(drama);
-        
-        const title = escapeHtml(dramaData.title);
-        const author = escapeHtml(dramaData.author);
-        const intro = escapeHtml(dramaData.intro);
-        const episodes = dramaData.episodes;
-        const cover = dramaData.cover;
-        const dramaId = dramaData.id;
-        const watchUrl = dramaData.watchUrl;
-        const isDubbing = dramaData.isDubbing;
+        const data = formatDramaData(drama);
+        const isDubbing = data.isDubbing;
         
         if (currentView === 'list') {
-            return createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing);
+            return createListViewHTML(data.title, data.author, data.intro, data.episodes, data.cover, data.id, data.watchUrl, isDubbing);
         } else {
-            return createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing);
+            return createGridViewHTML(data.title, data.author, data.intro, data.episodes, data.cover, data.id, data.watchUrl, isDubbing);
         }
     }).join('');
     
     elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
-    
-    if (currentView === 'list') {
-        updateView();
-    }
 }
 
 function formatDramaData(drama) {
     let formatted = {
-        title: 'Untitled Drama',
+        title: 'Untitled',
         author: 'Unknown',
-        intro: 'No description available.',
+        intro: 'No description',
         episodes: 0,
         cover: CONFIG.defaultImage,
         id: '',
@@ -461,98 +336,75 @@ function formatDramaData(drama) {
     
     switch(currentSource) {
         case 'melolo':
-            formatted = {
-                title: drama.name || drama.title,
-                author: drama.author || 'Unknown Author',
-                intro: drama.intro || 'No description.',
-                episodes: drama.episodes || 0,
-                cover: drama.cover || CONFIG.defaultImage,
-                id: drama.id,
-                watchUrl: `/drama.html?id=${drama.id}`,
-                source: 'melolo',
-                isDubbing: false
-            };
+            formatted.title = drama.name || drama.title || 'Untitled';
+            formatted.author = drama.author || 'Unknown';
+            formatted.intro = drama.intro || 'No desc';
+            formatted.episodes = drama.episodes || 0;
+            formatted.cover = drama.cover || CONFIG.defaultImage;
+            formatted.id = drama.id;
+            formatted.watchUrl = `/drama.html?id=${drama.id}`;
             break;
             
         case 'dramabox':
-            formatted = {
-                title: drama.bookName || drama.title,
-                author: 'DramaBox',
-                intro: drama.introduction || 'Drama from DramaBox',
-                episodes: drama.chapterCount || 0,
-                cover: drama.cover || CONFIG.defaultImage,
-                id: drama.bookId,
-                watchUrl: `/dramabox.html?id=${drama.bookId}`,
-                source: 'dramabox',
-                isDubbing: false
-            };
+            formatted.title = drama.bookName || 'Untitled';
+            formatted.author = 'DramaBox';
+            formatted.intro = drama.introduction || 'DramaBox series';
+            formatted.episodes = drama.chapterCount || 0;
+            formatted.cover = drama.cover || CONFIG.defaultImage;
+            formatted.id = drama.bookId;
+            formatted.watchUrl = `/dramabox.html?id=${drama.bookId}`;
             break;
             
         case 'netshort':
-            const title = drama.name || drama.shortPlayName || 'NetShort Drama';
-            formatted = {
-                title: title,
-                author: 'NetShort',
-                intro: drama.labelArray ? drama.labelArray.join(', ') : 'Short drama Indonesia',
-                episodes: 1,
-                cover: drama.shortPlayCover || drama.cover || CONFIG.defaultImage,
-                id: drama.shortPlayId || drama.id,
-                watchUrl: `/netshort.html?id=${drama.shortPlayId || drama.id}`,
-                source: 'netshort',
-                isDubbing: title.includes('(Sulih suara)') || title.includes('Sulih Suara') || true  // hampir semua di id_ID adalah dubbing
-            };
+            const title = drama.name || drama.shortPlayName || 'NetShort';
+            formatted.title = title;
+            formatted.author = 'NetShort';
+            formatted.intro = drama.labelArray?.join(', ') || 'Short drama';
+            formatted.episodes = 1;
+            formatted.cover = drama.shortPlayCover || drama.cover || CONFIG.defaultImage;
+            formatted.id = drama.shortPlayId || drama.id;
+            formatted.watchUrl = `/netshort.html?id=${formatted.id}`;
+            formatted.isDubbing = title.toLowerCase().includes('sulih suara');
             break;
     }
     
     return formatted;
 }
 
-function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing) {
+function createGridViewHTML(title, author, intro, episodes, cover, id, watchUrl, isDubbing) {
     return `
         <div class="col">
             <div class="drama-card position-relative">
                 <div class="card-cover">
-                    <img src="${cover}" 
-                         class="drama-cover"
-                         alt="${title}"
-                         loading="lazy"
-                         onerror="this.src='${CONFIG.defaultImage}'">
-                    
-                    ${episodes > 0 ? `
-                    <div class="episode-badge">
-                        ${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}
-                    </div>
-                    ` : ''}
-                    
-                    <div class="source-badge">
-                        ${currentSource === 'melolo' ? '🎬' : 
-                          currentSource === 'dramabox' ? '📺' : '⚡'} 
-                        ${currentSource.toUpperCase()}
-                    </div>
-                    
-                    ${isDubbing && currentSource === 'netshort' ? `
-                    <div class="dubbing-badge position-absolute top-0 end-0 m-2 badge bg-success">
-                        <i class="bi bi-volume-up-fill"></i> Sulih Suara ID
-                    </div>` : ''}
-                    
+                    <img src="${cover}" class="drama-cover" alt="${title}" loading="lazy" onerror="this.src='${CONFIG.defaultImage}'">
+                    ${episodes > 0 ? `<div class="episode-badge">${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}</div>` : ''}
+                    <div class="source-badge">${currentSource.toUpperCase()}</div>
+                    ${isDubbing ? `<div class="badge bg-success position-absolute top-0 end-0 m-2"><i class="bi bi-volume-up-fill"></i> Dub ID</div>` : ''}
                     <div class="play-overlay">
-                        <a href="${watchUrl}" class="play-btn">
-                            <i class="bi bi-play-fill"></i>
-                        </a>
+                        <a href="${watchUrl}" class="play-btn"><i class="bi bi-play-fill"></i></a>
                     </div>
                 </div>
-                
                 <div class="card-body">
                     <h6 class="drama-title">${title}</h6>
-                    <div class="drama-meta">
-                        <small><i class="bi bi-person"></i> ${author}</small>
-                    </div>
-                    <p class="drama-desc">${intro.length > 80 ? intro.substring(0, 80) + '...' : intro}</p>
-                    
-                    <a href="${watchUrl}" class="btn btn-primary btn-sm w-100">
-                        <i class="bi bi-eye me-1"></i> 
-                        ${currentSource === 'netshort' ? 'Nonton Short' : 'Watch Now'}
-                    </a>
+                    <p class="drama-desc small">${intro.substring(0, 80)}${intro.length > 80 ? '...' : ''}</p>
+                    <a href="${watchUrl}" class="btn btn-primary btn-sm w-100">Nonton</a>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createListViewHTML(title, author, intro, episodes, cover, id, watchUrl, isDubbing) {
+    return `
+        <div class="col-12">
+            <div class="drama-card d-flex">
+                <img src="${cover}" class="me-3" style="width:120px;height:180px;object-fit:cover;border-radius:8px;" alt="${title}" onerror="this.src='${CONFIG.defaultImage}'">
+                <div class="flex-grow-1">
+                    <h6 class="drama-title">${title}</h6>
+                    <div class="small text-muted">${author} • ${episodes} ${currentSource === 'netshort' ? 'Short' : 'Ep'}</div>
+                    ${isDubbing ? `<span class="badge bg-success mt-1"><i class="bi bi-volume-up-fill"></i> Dub ID</span>` : ''}
+                    <p class="mt-2 mb-2">${intro}</p>
+                    <a href="${watchUrl}" class="btn btn-primary btn-sm">Nonton</a>
                 </div>
             </div>
         </div>
