@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Drama - DramaBox</title>
-    
+   
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
+   
     <style>
         /* ========== BASE STYLES ========== */
         body {
@@ -18,65 +18,46 @@
             min-height: 100vh;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        
-        /* ========== NAVBAR ========== */
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        
+       
+        .navbar-brand { font-weight: bold; font-size: 1.5rem; }
         .back-btn {
             border-radius: 50px;
             padding: 0.5rem 1.5rem;
             font-weight: 600;
             transition: all 0.3s;
         }
-        
         .back-btn:hover {
             transform: translateX(-5px);
             background: rgba(255,255,255,0.1);
         }
-        
-        /* ========== DRAMA DETAIL ========== */
+
         .drama-poster {
             border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.7);
             width: 100%;
             height: auto;
             max-height: 500px;
             object-fit: cover;
-            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
         }
-        
+
         .drama-title {
             font-size: 2.5rem;
             font-weight: 800;
             background: linear-gradient(90deg, #fff, #ff6b6b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             margin-bottom: 1rem;
         }
-        
+
         .synopsis-box {
-            background: rgba(30, 30, 30, 0.7);
+            background: rgba(30,30,30,0.7);
             border: 1px solid #444;
             border-radius: 12px;
             padding: 1.5rem;
             line-height: 1.8;
         }
-        
-        .badge-episode {
-            font-size: 0.9rem;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-        }
-        
-        /* ========== EPISODE CARDS ========== */
-        .episode-card {
-            margin-bottom: 1rem;
-        }
-        
+
+        .episode-card { margin-bottom: 1rem; }
         .episode-btn {
             border-radius: 12px;
             transition: all 0.3s ease;
@@ -92,91 +73,29 @@
             align-items: center;
             text-align: center;
         }
-        
         .episode-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+            box-shadow: 0 10px 25px rgba(255,107,107,0.4);
             border-color: #ff6b6b;
-            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
         }
-        
         .episode-btn.playing {
             background: linear-gradient(145deg, #ff6b6b, #ff4757);
             border-color: #ff4757;
-            color: white;
         }
-        
-        .episode-number {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-        }
-        
-        .episode-duration {
-            font-size: 0.85rem;
-            opacity: 0.8;
-        }
-        
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
-            .drama-title {
-                font-size: 1.8rem;
-            }
-            
-            .drama-poster {
-                max-height: 350px;
-                margin-bottom: 1.5rem;
-            }
-            
-            .episode-btn {
-                min-height: 80px;
-                padding: 1rem 0.3rem;
-            }
-            
-            .episode-number {
-                font-size: 1rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .drama-title {
-                font-size: 1.5rem;
-            }
-            
-            .episode-btn {
-                min-height: 70px;
-                padding: 0.8rem 0.2rem;
-            }
-            
-            .synopsis-box {
-                padding: 1rem;
-            }
-        }
-        
-        /* ========== LOADING & STATES ========== */
-        .loading-spinner {
-            width: 4rem;
-            height: 4rem;
-        }
-        
+
+        .episode-number { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .episode-duration { font-size: 0.85rem; opacity: 0.8; }
+
+        .loading-spinner { width: 4rem; height: 4rem; }
         .error-box {
-            background: rgba(220, 53, 69, 0.1);
+            background: rgba(220,53,69,0.1);
             border: 1px solid #dc3545;
             border-radius: 12px;
             padding: 2rem;
             text-align: center;
         }
-        
-        /* ========== UTILITIES ========== */
-        .total-duration {
-            background: linear-gradient(135deg, #6f42c1, #d63384);
-        }
-        
-        /* ========== DRAMABOX SPECIFIC ========== */
-        .badge-dramabox {
-            background: linear-gradient(135deg, #ff6b6b, #ff4757);
-        }
-        
+
+        .badge-dramabox { background: linear-gradient(135deg, #ff6b6b, #ff4757); }
         .badge-vip {
             background: linear-gradient(135deg, #ffd93d, #ff9f1a);
             color: #000;
@@ -185,25 +104,14 @@
             padding: 0.2rem 0.5rem;
             border-radius: 8px;
         }
-        
-        .tag-badge {
-            background: rgba(255, 107, 107, 0.2);
-            color: #ff6b6b;
-            border: 1px solid rgba(255, 107, 107, 0.3);
-            padding: 0.3rem 0.8rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-        }
-        
-        .views-badge {
-            background: rgba(108, 117, 125, 0.3);
-            color: #adb5bd;
-            border: 1px solid #6c757d;
+
+        @media (max-width: 768px) {
+            .drama-title { font-size: 1.8rem; }
+            .drama-poster { max-height: 350px; margin-bottom: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <!-- ========== NAVIGATION ========== -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
@@ -218,21 +126,16 @@
         </div>
     </nav>
 
-    <!-- ========== MAIN CONTENT ========== -->
     <main class="container py-5">
-        <!-- Drama Detail Section -->
         <section id="drama-detail" class="mb-5">
-            <!-- Content akan diisi oleh JavaScript -->
             <div class="text-center py-5">
                 <div class="spinner-border loading-spinner text-danger" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <h4 class="mt-3">Memuat detail drama...</h4>
-                <p class="text-muted">Mohon tunggu sebentar</p>
             </div>
         </section>
 
-        <!-- Episodes Section -->
         <section class="mt-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold">
@@ -242,36 +145,30 @@
                     <span id="count-text">0 Episode</span>
                 </div>
             </div>
-            
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list">
-                <!-- Episodes akan diisi oleh JavaScript -->
-            </div>
-            
-            <!-- Episode Not Found -->
+           
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list"></div>
+           
             <div id="no-episodes" class="text-center py-5" style="display: none;">
                 <div class="alert alert-info w-75 mx-auto">
                     <i class="bi bi-info-circle display-4 d-block mb-3"></i>
                     <h4>Episode Belum Tersedia</h4>
-                    <p class="mb-0">Episode untuk drama ini sedang dalam proses upload.</p>
                 </div>
             </div>
         </section>
     </main>
-    
-    <!-- ========== JAVASCRIPT ========== -->
+
     <script>
-        // ============== CONFIGURATION ==============
+        // ============== CONFIG & STATE ==============
         const CONFIG = {
             playerBase: '/player',
             defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
         };
 
-        // ============== STATE MANAGEMENT ==============
         let currentDrama = null;
-        let currentChapterList = null; // Menyimpan semua episode
+        let currentChapterList = null;
+        let chapterNamesMap = {}; // {0: "EP 1", 1: "EP 2", ...}
         let isLoading = false;
 
-        // ============== DOM ELEMENTS ==============
         const elements = {
             dramaDetail: document.getElementById('drama-detail'),
             episodeList: document.getElementById('episode-list'),
@@ -280,390 +177,209 @@
             noEpisodes: document.getElementById('no-episodes')
         };
 
-        // ============== INITIALIZATION ==============
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DramaBox Detail initialized');
-            
-            // Get drama ID from URL
+        // ============== INIT ==============
+        document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const dramaId = urlParams.get('id');
-            
-            if (!dramaId) {
-                window.location.href = '/';
-                return;
-            }
-            
-            // Load drama details
+            if (!dramaId) return window.location.href = '/';
+
             loadDramaDetail(dramaId);
         });
 
-        // ============== MAIN FUNCTIONS ==============
-
-        /**
-         * Load drama detail from DramaBox API (2 STEP)
-         */
+        // ============== MAIN LOAD ==============
         async function loadDramaDetail(dramaId) {
             if (isLoading) return;
-            
             isLoading = true;
-            
+
             try {
-                console.log('📥 Loading DramaBox detail for:', dramaId);
-                
-                // STEP 1: Load drama info
-                const detailResponse = await fetch(`https://dramabos.asia/api/dramabox/api/drama/${dramaId}?lang=in`);
-                
-                if (!detailResponse.ok) {
-                    throw new Error(`HTTP ${detailResponse.status}: ${detailResponse.statusText}`);
-                }
-                
-                const detailData = await detailResponse.json();
-                
-                if (!detailData.success || !detailData.data) {
-                    throw new Error('Drama tidak ditemukan');
-                }
-                
+                // 1. Detail Drama (mengandung partial chapter names)
+                const detailRes = await fetch(`https://dramabos.asia/api/dramabox/api/drama/${dramaId}?lang=in`);
+                if (!detailRes.ok) throw new Error(`Detail HTTP ${detailRes.status}`);
+                const detailData = await detailRes.json();
+
+                if (!detailData.success || !detailData.data) throw new Error('Drama tidak ditemukan');
+
                 currentDrama = detailData.data;
-                renderDramaDetail(detailData.data);
-                
-                // STEP 2: Load ALL episodes separately
-                console.log('📥 Loading episodes...');
-                const chaptersResponse = await fetch(`https://dramabos.asia/api/dramabox/api/chapters/${dramaId}?lang=in`);
-                
-                if (!chaptersResponse.ok) {
-                    throw new Error(`Failed to load episodes: HTTP ${chaptersResponse.status}`);
+                renderDramaDetail(currentDrama);
+
+                // Simpan nama chapter dari detail (jika ada)
+                if (detailData.data.chapterList?.length) {
+                    detailData.data.chapterList.forEach(ch => {
+                        if (ch.chapterIndex !== undefined && ch.chapterName) {
+                            chapterNamesMap[ch.chapterIndex] = ch.chapterName.trim();
+                        }
+                    });
                 }
-                
-                const chaptersData = await chaptersResponse.json();
-                
-                if (chaptersData.success && chaptersData.data && chaptersData.data.chapterList) {
+
+                // 2. Full Chapters List
+                const chaptersRes = await fetch(`https://dramabos.asia/api/dramabox/api/chapters/${dramaId}?lang=in`);
+                if (!chaptersRes.ok) throw new Error(`Chapters HTTP ${chaptersRes.status}`);
+                const chaptersData = await chaptersRes.json();
+
+                if (chaptersData.success && chaptersData.data?.chapterList?.length) {
                     currentChapterList = chaptersData.data.chapterList;
-                    renderEpisodes(chaptersData.data.chapterList);
-                    console.log(`✅ Loaded ${chaptersData.data.chapterList.length} episodes`);
+                    renderEpisodes(currentChapterList);
                 } else {
-                    console.log('⚠️ No episodes found');
                     showNoEpisodes();
                 }
-                
-            } catch (error) {
-                console.error('Error loading drama detail:', error);
-                showError(`Gagal memuat detail drama: ${error.message}`);
+
+            } catch (err) {
+                console.error(err);
+                showError(`Gagal memuat: ${err.message}`);
             } finally {
                 isLoading = false;
             }
         }
 
-        /**
-         * Render drama detail to the page
-         */
+        // ============== RENDER DETAIL ==============
         function renderDramaDetail(drama) {
-            // Update page title
-            document.title = `${escapeHtml(drama.bookName)} - DramaBox`;
-            
-            // Create HTML
+            document.title = `${escapeHtml(drama.bookName || 'Drama')} - DramaBox`;
+
             const html = `
                 <div class="row">
-                    <!-- Poster Column -->
                     <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
                         <div class="position-sticky" style="top: 90px;">
-                            <img src="${drama.cover || CONFIG.defaultImage}" 
+                            <img src="${drama.cover || CONFIG.defaultImage}"
                                  class="drama-poster mb-4"
                                  alt="${escapeHtml(drama.bookName)}"
-                                 onerror="this.onerror=null; this.src='${CONFIG.defaultImage}'">
-                            
-                            <!-- Tags -->
-                            ${drama.tags && drama.tags.length > 0 ? `
-                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                ${drama.tags.slice(0, 4).map(tag => `
-                                    <span class="tag-badge">${escapeHtml(tag)}</span>
-                                `).join('')}
-                            </div>
-                            ` : ''}
-                            
-                            <!-- Quick Stats -->
-                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                <span class="badge views-badge">
-                                    <i class="bi bi-eye me-1"></i> ${drama.playCount || '0'} Views
-                                </span>
-                            </div>
-                            
-                            <!-- Quick Actions -->
+                                 onerror="this.src='${CONFIG.defaultImage}'">
+                           
                             <div class="d-grid gap-2">
-                                <button class="btn btn-danger btn-lg py-3" onclick="playFirstEpisode()" id="playFirstBtn">
+                                <button class="btn btn-danger btn-lg py-3" onclick="playFirstEpisode()">
                                     <i class="bi bi-play-fill me-2"></i>Putar Episode 1
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Details Column -->
+                   
                     <div class="col-lg-8 col-md-7">
-                        <h1 class="drama-title">${escapeHtml(drama.bookName)}</h1>
-                        
-                        <!-- Badges -->
+                        <h1 class="drama-title">${escapeHtml(drama.bookName || 'Unknown')}</h1>
+                       
                         <div class="d-flex flex-wrap gap-3 mb-4">
-                            <span class="badge badge-dramabox badge-episode">
-                                <i class="bi bi-film me-1"></i> ${drama.chapterCount || 0} Episode
+                            <span class="badge badge-dramabox">
+                                <i class="bi bi-film me-1"></i>${drama.chapterCount || 0} Episode
                             </span>
                         </div>
-                        
-                        <!-- Synopsis -->
+                       
                         <div class="synopsis-box mb-4">
-                            <h5 class="fw-bold mb-3">
-                                <i class="bi bi-info-circle text-danger me-2"></i>Sinopsis
-                            </h5>
-                            <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
-                                ${escapeHtml(drama.introduction || 'Tidak ada sinopsis.')}
-                            </p>
+                            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-danger me-2"></i>Sinopsis</h5>
+                            <p>${escapeHtml(drama.introduction || 'Tidak ada sinopsis tersedia.')}</p>
                         </div>
                     </div>
                 </div>
             `;
-            
             elements.dramaDetail.innerHTML = html;
         }
 
-        /**
-         * Render episodes list from chapterList
-         */
+        // ============== RENDER EPISODES ==============
         function renderEpisodes(chapterList) {
-            if (!chapterList || chapterList.length === 0) {
-                showNoEpisodes();
-                return;
-            }
-            
-            // Sort by episode number
-            chapterList.sort((a, b) => a.chapterIndex - b.chapterIndex);
-            
-            // Update count
+            if (!chapterList?.length) return showNoEpisodes();
+
+            chapterList.sort((a,b) => a.chapterIndex - b.chapterIndex);
+
             elements.countText.textContent = `${chapterList.length} Episode`;
             elements.episodeList.style.display = 'flex';
             elements.noEpisodes.style.display = 'none';
-            
-            // Create episode cards
-            const episodesHtml = chapterList.map(chapter => {
-                const isVip = chapter.isCharge === 1;
+
+            const html = chapterList.map(ch => {
+                const isVip = ch.isCharge === 1;
                 const vipBadge = isVip ? '<span class="badge badge-vip ms-1">VIP</span>' : '';
                 
+                // Prioritas: nama dari detail → fallback ke Episode N
+                let displayName = chapterNamesMap[ch.chapterIndex] || `Episode ${ch.chapterIndex + 1}`;
+
                 return `
                     <div class="col">
                         <div class="episode-card">
-                            <button class="episode-btn w-100" 
-                                    onclick="playEpisode(${chapter.chapterIndex}, this, ${isVip})"
-                                    data-index="${chapter.chapterIndex}"
-                                    title="${chapter.chapterName || `Episode ${chapter.chapterIndex}`}${isVip ? ' (VIP)' : ''}">
-                                <div class="episode-number">
-                                    ${chapter.chapterName || `Episode ${chapter.chapterIndex}`}
-                                    ${vipBadge}
-                                </div>
-                                <div class="episode-duration">${estimateDuration(chapter)}</div>
+                            <button class="episode-btn w-100"
+                                    onclick="playEpisode(${ch.chapterIndex}, this, ${isVip})"
+                                    data-index="${ch.chapterIndex}"
+                                    title="${escapeHtml(displayName)}${isVip ? ' (VIP)' : ''}">
+                                <div class="episode-number">${escapeHtml(displayName)} ${vipBadge}</div>
+                                <div class="episode-duration">~2-4 min</div>
                             </button>
                         </div>
                     </div>
                 `;
             }).join('');
-            
-            elements.episodeList.innerHTML = episodesHtml;
+
+            elements.episodeList.innerHTML = html;
         }
 
-        /**
-         * Play a specific episode (OPEN IN NEW TAB)
-         */
-        async function playEpisode(episodeIndex, buttonElement, isVip = false) {
-            if (!episodeIndex || !currentDrama) {
-                alert('Episode tidak valid');
-                return;
-            }
-            
-            console.log('Playing episode:', episodeIndex, 'Drama:', currentDrama.bookName);
-            
-            // Update button state
-            if (buttonElement) {
-                updateButtonState(buttonElement, true);
-            }
-            
+        // ============== PLAY FUNCTIONS ==============
+        async function playEpisode(index, btn, isVip = false) {
+            if (!currentDrama) return alert('Data drama belum siap');
+
+            updateButtonState(btn, true);
+
             try {
-                let videoUrl = null;
-                
-                // CARA 1: Cari video URL dari chapterList yang sudah di-load
-                if (currentChapterList) {
-                    const chapter = currentChapterList.find(ch => ch.chapterIndex === episodeIndex);
-                    if (chapter && chapter.cdnList) {
-                        console.log('Found chapter in cache:', chapter);
-                        
-                        // Cari video URL 720p (default)
-                        for (const cdn of chapter.cdnList) {
-                            if (cdn.videoPathList && cdn.videoPathList.length > 0) {
-                                // Prioritize 720p, then default, then first available
-                                const videoPath = cdn.videoPathList.find(v => v.quality === 720) || 
-                                                cdn.videoPathList.find(v => v.isDefault === 1) ||
-                                                cdn.videoPathList[0];
-                                
-                                if (videoPath && videoPath.videoPath) {
-                                    videoUrl = videoPath.videoPath;
-                                    console.log('Found video URL in chapterList:', videoUrl.substring(0, 100));
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // CARA 2: Jika tidak ada, pakai API watch
-                if (!videoUrl) {
-                    console.log('Falling back to watch API...');
-                    const watchResponse = await fetch(`https://dramabos.asia/api/dramabox/api/watch/player?bookId=${currentDrama.bookId}&index=${episodeIndex}&lang=in`);
-                    
-                    if (!watchResponse.ok) {
-                        throw new Error(`Watch API error: HTTP ${watchResponse.status}`);
-                    }
-                    
-                    const watchData = await watchResponse.json();
-                    
-                    if (watchData.success && watchData.data && watchData.data.videoUrl) {
-                        videoUrl = watchData.data.videoUrl;
-                        console.log('Found video URL from watch API');
-                    }
-                }
-                
-                if (videoUrl) {
-                    // Generate player URL
-                    const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(currentDrama.bookName)}&episode=${episodeIndex}`;
-                    
-                    console.log('Opening player:', playerUrl);
-                    
-                    // OPEN IN NEW TAB
-                    window.open(playerUrl, '_blank');
-                    
-                    // Save last watched episode
-                    saveLastWatched(episodeIndex);
-                    
-                } else {
-                    throw new Error('Video URL tidak ditemukan');
-                }
-                
-            } catch (error) {
-                console.error('Error playing video:', error);
-                alert('Gagal memutar video: ' + error.message);
+                const res = await fetch(
+                    `https://dramabos.asia/api/dramabox/api/watch/player?bookId=${currentDrama.bookId}&index=${index}&lang=in`
+                );
+                if (!res.ok) throw new Error(`Player API error ${res.status}`);
+
+                const data = await res.json();
+                const videoUrl = data?.success && data?.data?.videoUrl;
+
+                if (!videoUrl) throw new Error('Video URL tidak ditemukan');
+
+                const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(currentDrama.bookName)}&episode=${index + 1}`;
+                window.open(playerUrl, '_blank');
+
+                saveLastWatched(index);
+
+            } catch (err) {
+                alert('Gagal memutar: ' + err.message);
             } finally {
-                // Restore button state
-                if (buttonElement) {
-                    updateButtonState(buttonElement, false);
-                }
+                updateButtonState(btn, false);
             }
         }
 
-        /**
-         * Play the first episode
-         */
         function playFirstEpisode() {
-            if (!currentChapterList || currentChapterList.length === 0) {
-                alert('Tidak ada episode yang tersedia');
-                return;
-            }
-            
-            const firstEpisode = currentChapterList[0];
-            const firstButton = elements.episodeList.querySelector('.episode-btn');
-            const isVip = firstEpisode.isCharge === 1;
-            playEpisode(firstEpisode.chapterIndex, firstButton, isVip);
+            if (!currentChapterList?.length) return alert('Tidak ada episode');
+            const first = currentChapterList[0];
+            const btn = elements.episodeList.querySelector('[data-index="0"]');
+            playEpisode(first.chapterIndex, btn, first.isCharge === 1);
         }
 
-        // ============== UI HELPER FUNCTIONS ==============
-
-        /**
-         * Update button loading state
-         */
-        function updateButtonState(button, isLoading) {
-            if (isLoading) {
-                // Save original content
-                button.dataset.originalContent = button.innerHTML;
-                
-                // Show loading
-                button.innerHTML = `
-                    <div class="spinner-border spinner-border-sm text-light" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <small class="mt-1">Loading...</small>
-                `;
-                button.disabled = true;
-                button.classList.add('playing');
+        // ============== HELPERS ==============
+        function updateButtonState(btn, loading) {
+            if (!btn) return;
+            if (loading) {
+                btn.dataset.original = btn.innerHTML;
+                btn.innerHTML = `<div class="spinner-border spinner-border-sm"></div> Loading...`;
+                btn.disabled = true;
+                btn.classList.add('playing');
             } else {
-                // Restore original content
-                if (button.dataset.originalContent) {
-                    button.innerHTML = button.dataset.originalContent;
-                } else {
-                    const episode = button.dataset.index;
-                    const isVip = button.innerHTML.includes('badge-vip');
-                    const vipBadge = isVip ? '<span class="badge badge-vip ms-1">VIP</span>' : '';
-                    button.innerHTML = `
-                        <div class="episode-number">
-                            Episode ${episode}
-                            ${vipBadge}
-                        </div>
-                        <div class="episode-duration">1-3 min</div>
-                    `;
-                }
-                button.disabled = false;
-                button.classList.remove('playing');
+                btn.innerHTML = btn.dataset.original || btn.innerHTML;
+                btn.disabled = false;
+                btn.classList.remove('playing');
             }
         }
 
-        /**
-         * Save last watched episode
-         */
-        function saveLastWatched(episodeNumber) {
-            if (currentDrama) {
-                localStorage.setItem(`last_watched_dramabox_${currentDrama.bookId}`, episodeNumber);
-                localStorage.setItem('last_watched_time', Date.now());
-                console.log('Saved watch history for episode:', episodeNumber);
+        function saveLastWatched(index) {
+            if (currentDrama?.bookId) {
+                localStorage.setItem(`last_dramabox_${currentDrama.bookId}`, index);
             }
         }
 
-        /**
-         * Show no episodes state
-         */
         function showNoEpisodes() {
             elements.episodeList.style.display = 'none';
             elements.noEpisodes.style.display = 'block';
             elements.countText.textContent = '0 Episode';
         }
 
-        /**
-         * Show error message
-         */
-        function showError(message) {
+        function showError(msg) {
             elements.dramaDetail.innerHTML = `
                 <div class="error-box">
-                    <div class="d-flex align-items-center flex-column">
-                        <i class="bi bi-exclamation-triangle-fill display-1 text-danger mb-3"></i>
-                        <h4 class="text-center">Terjadi Kesalahan</h4>
-                        <p class="text-center mb-4">${escapeHtml(message)}</p>
-                        <div class="d-flex gap-2">
-                            <button onclick="window.location.href='/'" class="btn btn-outline-danger">
-                                <i class="bi bi-house me-1"></i> Kembali ke Home
-                            </button>
-                            <button onclick="location.reload()" class="btn btn-danger">
-                                <i class="bi bi-arrow-clockwise me-1"></i> Coba Lagi
-                            </button>
-                        </div>
-                    </div>
+                    <i class="bi bi-exclamation-triangle-fill display-1 text-danger mb-3"></i>
+                    <h4>Terjadi Kesalahan</h4>
+                    <p>${escapeHtml(msg)}</p>
+                    <button onclick="location.reload()" class="btn btn-danger mt-3">Coba Lagi</button>
                 </div>
             `;
         }
 
-        // ============== UTILITY FUNCTIONS ==============
-
-        /**
-         * Estimate duration (placeholder)
-         */
-        function estimateDuration(chapter) {
-            // Placeholder - bisa disesuaikan dengan data sebenarnya
-            return '1-3 min';
-        }
-
-        /**
-         * Escape HTML to prevent XSS
-         */
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -671,7 +387,6 @@
             return div.innerHTML;
         }
 
-        // ============== GLOBAL EXPORTS ==============
         window.playEpisode = playEpisode;
         window.playFirstEpisode = playFirstEpisode;
     </script>
