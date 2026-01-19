@@ -16,6 +16,7 @@ export async function onRequest(context) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HeartScene Player</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <style>
       body, html {
         margin: 0;
@@ -26,125 +27,89 @@ export async function onRequest(context) {
         background: #000;
       }
       
-      #videoContainer {
-        width: 100vw;
-        height: 100vh;
-        position: relative;
-        background: #000;
+      .video-js {
+        width: 100vw !important;
+        height: 100vh !important;
+        position: fixed;
+        top: 0;
+        left: 0;
       }
       
-      video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        background: #000;
-      }
-      
-      .error {
+      .vjs-big-play-button {
         position: absolute;
-        top: 50%;
-        left: 50%;
+        top: 50% !important;
+        left: 50% !important;
         transform: translate(-50%, -50%);
-        color: white;
-        text-align: center;
-        background: rgba(0,0,0,0.8);
-        padding: 30px;
-        border-radius: 10px;
-        border: 2px solid red;
-        display: none;
       }
     </style>
   </head>
   <body>
-    <div id="videoContainer">
-      <video 
-        id="videoPlayer"
-        controls
-        autoplay
-        playsinline
-        preload="auto"
-      >
-        <source src="${decodedVideoUrl}" type="video/mp4">
-      </video>
-      
-      <div class="error" id="errorMessage">
-        <h2>Video tidak bisa diputar</h2>
-        <p>Membuka di tab baru...</p>
-      </div>
-    </div>
+    <video
+      id="my-video"
+      class="video-js vjs-default-skin vjs-big-play-centered"
+      controls
+      autoplay
+      playsinline
+      preload="auto"
+      data-setup='{"fluid": true, "aspectRatio": "16:9"}'
+    >
+      <source src="${decodedVideoUrl}" type="video/mp4" />
+    </video>
 
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
-      const video = document.getElementById('videoPlayer');
-      const errorMessage = document.getElementById('errorMessage');
       const videoUrl = "${decodedVideoUrl}";
+      const player = videojs('my-video');
       
       // Coba play video
-      video.play().catch(function(error) {
-        console.log('Autoplay gagal, coba load video...');
-        
-        // Tunggu 2 detik untuk coba lagi
-        setTimeout(function() {
-          video.load();
-          video.play().catch(function(error2) {
-            console.log('Video tidak bisa diputar, buka tab baru');
-            
-            // Tampilkan pesan error
-            errorMessage.style.display = 'block';
-            
-            // Buka di tab baru setelah 1 detik
-            setTimeout(function() {
-              window.open(videoUrl, '_blank');
-            }, 1000);
-          });
-        }, 2000);
+      player.ready(function() {
+        this.play().catch(function(error) {
+          console.log('Video tidak bisa diputar, buka tab baru');
+          
+          // Buka di tab baru setelah 1 detik
+          setTimeout(function() {
+            window.open(videoUrl, '_blank');
+          }, 1000);
+        });
       });
       
-      // Jika video error
-      video.addEventListener('error', function() {
+      // Jika video error, buka tab baru
+      player.on('error', function() {
         console.log('Video error, buka tab baru');
-        errorMessage.style.display = 'block';
         
         setTimeout(function() {
           window.open(videoUrl, '_blank');
         }, 1000);
       });
       
-      // Jika video berhasil diputar, sembunyikan error
-      video.addEventListener('playing', function() {
-        errorMessage.style.display = 'none';
-      });
-      
-      // Fullscreen saat klik video
-      video.addEventListener('click', function() {
-        if (video.requestFullscreen) {
-          video.requestFullscreen();
-        } else if (video.webkitRequestFullscreen) {
-          video.webkitRequestFullscreen();
-        } else if (video.msRequestFullscreen) {
-          video.msRequestFullscreen();
+      // Fullscreen saat double click
+      player.on('dblclick', function() {
+        if (player.isFullscreen()) {
+          player.exitFullscreen();
+        } else {
+          player.requestFullscreen();
         }
       });
       
-      // Keyboard shortcut: Space untuk play/pause
+      // Keyboard shortcut
       document.addEventListener('keydown', function(e) {
+        // Space untuk play/pause
         if (e.code === 'Space') {
           e.preventDefault();
-          if (video.paused) {
-            video.play();
+          if (player.paused()) {
+            player.play();
           } else {
-            video.pause();
+            player.pause();
           }
         }
         
         // F untuk fullscreen
         if (e.code === 'KeyF') {
           e.preventDefault();
-          if (document.fullscreenElement) {
-            document.exitFullscreen();
+          if (player.isFullscreen()) {
+            player.exitFullscreen();
           } else {
-            if (video.requestFullscreen) {
-              video.requestFullscreen();
-            }
+            player.requestFullscreen();
           }
         }
       });
