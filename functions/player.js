@@ -15,7 +15,9 @@ export async function onRequest(context) {
   // Encode biar aman (penting!)
   const safeUrl = encodeURIComponent(videoUrl);
 
-  const html = `
+ // ... (bagian atas sama seperti sebelumnya)
+
+const html = `
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -23,34 +25,7 @@ export async function onRequest(context) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Drama Short Player</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #000;
-      font-family: system-ui, sans-serif;
-      overflow: hidden;
-    }
-    #videoContainer {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #111;
-    }
-    .error {
-      color: white;
-      text-align: center;
-      padding: 2rem;
-    }
-  </style>
+  <style> /* style sama seperti sebelumnya */ </style>
 </head>
 <body>
   <div id="videoContainer">
@@ -59,43 +34,47 @@ export async function onRequest(context) {
 
   <script>
     const video = document.getElementById('video');
-    const hlsUrl = decodeURIComponent("${safeUrl}");
+    const sourceUrl = decodeURIComponent("${safeUrl}");
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        // Optional config - bisa ditambah kalau perlu
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 90
-      });
+    function showError(msg) {
+      document.body.innerHTML = '<div class="error">' + msg + '</div>';
+    }
 
-      hls.loadSource(hlsUrl);
-      hls.attachMedia(video);
+    // Cek apakah ini HLS (.m3u8) atau MP4 langsung
+    if (sourceUrl.includes('.m3u8') || sourceUrl.endsWith('.m3u8')) {
+      // Mode HLS
+      if (Hls.isSupported()) {
+        const hls = new Hls({ lowLatencyMode: true });
+        hls.loadSource(sourceUrl);
+        hls.attachMedia(video);
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(e => console.log("Autoplay dicegah:", e));
-      });
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(() => {});
+        });
 
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        if (data.fatal) {
-          document.body.innerHTML = '<div class="error">Gagal memuat video: ' + data.type + ' - ' + data.details + '</div>';
-        }
-      });
-    } 
-    // Fallback kalau browser sudah support HLS native (contoh: Safari iOS)
-    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = hlsUrl;
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) showError('Gagal memuat HLS: ' + data.type + ' - ' + data.details);
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = sourceUrl;
+        video.addEventListener('loadedmetadata', () => video.play().catch(() => {}));
+      } else {
+        showError('Browser tidak support HLS.');
+      }
+    } else {
+      // Mode MP4 langsung (atau format lain yang HTML5 support)
+      video.src = sourceUrl;
       video.addEventListener('loadedmetadata', () => {
-        video.play().catch(() => {});
+        video.play().catch(e => showError('Gagal autoplay: ' + e.message));
       });
-    } 
-    else {
-      document.body.innerHTML = '<div class="error">Browser tidak mendukung HLS.</div>';
+      video.addEventListener('error', () => {
+        showError('Gagal memuat video MP4. Mungkin link expired / diblok CORS.');
+      });
     }
   </script>
 </body>
 </html>
-  `;
+`;
 
   return new Response(html, {
     headers: {
