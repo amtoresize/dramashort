@@ -9,6 +9,9 @@ export async function onRequest(context) {
 
   const decodedVideoUrl = decodeURIComponent(videoUrl);
 
+  // Tambahkan cache buster ke URL
+  const cacheBustedUrl = decodedVideoUrl + (decodedVideoUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+
   const html = `
   <!DOCTYPE html>
   <html>
@@ -48,7 +51,7 @@ export async function onRequest(context) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.95);
         color: white;
         display: flex;
         flex-direction: column;
@@ -69,15 +72,53 @@ export async function onRequest(context) {
         font-size: 24px;
         text-align: center;
         padding: 0 20px;
+        margin-bottom: 30px;
+      }
+      
+      .manual-button {
+        padding: 15px 30px;
+        background: #ff5555;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      
+      .manual-button:hover {
+        background: #ff7777;
+      }
+      
+      .refresh-button {
+        background: #5555ff;
+        margin-right: 10px;
+      }
+      
+      .refresh-button:hover {
+        background: #7777ff;
+      }
+      
+      .button-container {
+        display: flex;
+        gap: 15px;
       }
     </style>
   </head>
   <body>
     <div class="redirect-overlay" id="redirectOverlay">
-      <div class="redirect-countdown" id="countdown">3</div>
-      <div class="redirect-message">
+      <div class="redirect-countdown" id="countdown">5</div>
+      <div class="redirect-message" id="redirectMessage">
         Video tidak dapat diputar<br>
         Mengarahkan ke tab baru...
+      </div>
+      <div class="button-container">
+        <button class="manual-button refresh-button" onclick="retryPlayback()">
+          🔄 Coba Lagi
+        </button>
+        <button class="manual-button" onclick="forceRedirect()">
+          🚀 Buka Sekarang
+        </button>
       </div>
     </div>
     
@@ -88,108 +129,216 @@ export async function onRequest(context) {
       autoplay
       playsinline
       preload="auto"
+      crossorigin="anonymous"
       data-setup='{"fluid": true, "aspectRatio": "16:9"}'
     >
-      <source src="${decodedVideoUrl}" type="video/mp4" />
+      <source src="${cacheBustedUrl}" type="video/mp4" />
     </video>
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
-      const videoUrl = "${decodedVideoUrl}";
+      const originalVideoUrl = "${decodedVideoUrl}";
+      const cacheBustedUrl = "${cacheBustedUrl}";
       let player = null;
       let videoLoaded = false;
       let redirectTimer = null;
       let countdownTimer = null;
+      let currentRetryCount = 0;
+      const maxRetries = 2;
       
-      // Inisialisasi player
-      document.addEventListener('DOMContentLoaded', function() {
-        player = videojs('my-video');
+      // Bersihkan cache player sebelumnya
+      if (window.videojs) {
+        const oldPlayers = videojs.getPlayers();
+        for (const playerId in oldPlayers) {
+          if (oldPlayers[playerId]) {
+            oldPlayers[playerId].dispose();
+          }
+        }
+      }
+      
+      // Inisialisasi player dengan timeout
+      function initializePlayer() {
+        try {
+          player = videojs('my-video', {
+            fluid: true,
+            aspectRatio: '16:9',
+            autoplay: true,
+            playsinline: true
+          }, function() {
+            console.log('Player initialized');
+            setupPlayerEvents();
+          });
+        } catch (error) {
+          console.error('Failed to initialize player:', error);
+          showRedirectOverlay('Gagal inisialisasi player');
+        }
+      }
+      
+      function setupPlayerEvents() {
+        if (!player) return;
         
-        // Mulai timer untuk deteksi error
-        startErrorDetection();
+        // Reset state
+        videoLoaded = false;
+        currentRetryCount = 0;
         
-        // Event listeners
-        player.on('loadeddata', function() {
+        // Event listeners dengan error handling
+        player.one('loadeddata', function() {
           console.log('Video loaded successfully');
           videoLoaded = true;
-          clearTimeout(redirectTimer);
+          clearRedirectTimers();
         });
         
-        player.on('playing', function() {
+        player.one('playing', function() {
           console.log('Video playing');
           videoLoaded = true;
-          clearTimeout(redirectTimer);
+          clearRedirectTimers();
+          hideRedirectOverlay();
         });
         
         player.on('error', function() {
-          console.log('Video error detected');
-          redirectToNewTab();
+          console.log('Player error detected');
+          handlePlaybackError();
         });
         
-        // Coba play otomatis
-        player.ready(function() {
-          this.play().catch(function(error) {
-            console.log('Autoplay failed:', error);
-            // Lanjutkan dengan error detection timer
-          });
-        });
-      });
-      
-      function startErrorDetection() {
-        // Set timer 3 detik untuk cek jika video gagal load
-        redirectTimer = setTimeout(function() {
-          if (!videoLoaded) {
-            console.log('Video failed to load after 3 seconds');
-            redirectToNewTab();
-          }
-        }, 3000);
+        // Coba play dengan retry mechanism
+        attemptPlayback();
         
-        // Cek setiap detik untuk error state
-        const errorCheckInterval = setInterval(function() {
-          if (player && player.error()) {
-            console.log('Periodic check: Video error detected');
-            clearInterval(errorCheckInterval);
-            redirectToNewTab();
-          }
-          
-          // Jika video sudah loaded, stop checking
-          if (videoLoaded) {
-            clearInterval(errorCheckInterval);
-          }
-        }, 1000);
+        // Start error detection timer
+        startErrorDetection();
       }
       
-      function redirectToNewTab() {
-        clearTimeout(redirectTimer);
+      function attemptPlayback() {
+        if (!player) return;
         
-        // Tampilkan overlay redirect
+        player.play().then(function() {
+          console.log('Autoplay successful');
+          videoLoaded = true;
+          clearRedirectTimers();
+          hideRedirectOverlay();
+        }).catch(function(error) {
+          console.log('Autoplay failed:', error);
+          currentRetryCount++;
+          
+          if (currentRetryCount <= maxRetries) {
+            console.log('Retrying playback...', currentRetryCount);
+            setTimeout(attemptPlayback, 1000);
+          } else {
+            handlePlaybackError();
+          }
+        });
+      }
+      
+      function startErrorDetection() {
+        // Clear existing timers
+        clearRedirectTimers();
+        
+        // Timer utama: 5 detik untuk cek jika video gagal load
+        redirectTimer = setTimeout(function() {
+          if (!videoLoaded) {
+            console.log('Video failed to load after 5 seconds');
+            showRedirectOverlay('Video gagal dimuat');
+          }
+        }, 5000);
+        
+        // Backup timer: 8 detik untuk force redirect
+        setTimeout(function() {
+          if (!videoLoaded) {
+            console.log('Force redirect after 8 seconds');
+            forceRedirect();
+          }
+        }, 8000);
+      }
+      
+      function handlePlaybackError() {
+        if (currentRetryCount < maxRetries) {
+          currentRetryCount++;
+          console.log('Retrying... attempt', currentRetryCount);
+          setTimeout(attemptPlayback, 1500);
+        } else {
+          showRedirectOverlay('Gagal memutar video');
+        }
+      }
+      
+      function showRedirectOverlay(message) {
         const overlay = document.getElementById('redirectOverlay');
+        const messageElement = document.getElementById('redirectMessage');
         const countdownElement = document.getElementById('countdown');
+        
+        if (message) {
+          messageElement.innerHTML = message + '<br>Mengarahkan ke tab baru...';
+        }
+        
         overlay.style.display = 'flex';
         
-        let countdown = 3;
+        // Start countdown
+        let countdown = 5;
+        countdownElement.textContent = countdown;
         
-        // Countdown timer
+        clearInterval(countdownTimer);
         countdownTimer = setInterval(function() {
           countdown--;
           countdownElement.textContent = countdown;
           
           if (countdown <= 0) {
-            clearInterval(countdownTimer);
-            window.open(videoUrl, '_blank');
-            
-            // Optional: Tutup tab ini setelah redirect
-            // window.close();
+            forceRedirect();
           }
         }, 1000);
       }
       
-      // Fullscreen controls
-      player.on('dblclick', function() {
-        if (player.isFullscreen()) {
-          player.exitFullscreen();
-        } else {
-          player.requestFullscreen();
+      function hideRedirectOverlay() {
+        const overlay = document.getElementById('redirectOverlay');
+        overlay.style.display = 'none';
+        clearInterval(countdownTimer);
+      }
+      
+      function retryPlayback() {
+        console.log('Manual retry requested');
+        clearRedirectTimers();
+        hideRedirectOverlay();
+        
+        // Buat URL baru dengan cache buster
+        const newCacheBuster = originalVideoUrl + (originalVideoUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        
+        // Reload player dengan source baru
+        if (player) {
+          player.src({ type: 'video/mp4', src: newCacheBuster });
+          player.load();
+          currentRetryCount = 0;
+          videoLoaded = false;
+          attemptPlayback();
+          startErrorDetection();
+        }
+      }
+      
+      function forceRedirect() {
+        clearRedirectTimers();
+        console.log('Redirecting to new tab:', originalVideoUrl);
+        window.open(originalVideoUrl, '_blank');
+        
+        // Optional: Beri feedback
+        const countdownElement = document.getElementById('countdown');
+        const messageElement = document.getElementById('redirectMessage');
+        countdownElement.textContent = '✓';
+        messageElement.innerHTML = 'Membuka di tab baru...<br>Tab ini dapat ditutup';
+      }
+      
+      function clearRedirectTimers() {
+        if (redirectTimer) clearTimeout(redirectTimer);
+        if (countdownTimer) clearInterval(countdownTimer);
+      }
+      
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializePlayer);
+      } else {
+        initializePlayer();
+      }
+      
+      // Cleanup saat page unload
+      window.addEventListener('beforeunload', function() {
+        clearRedirectTimers();
+        if (player) {
+          player.dispose();
         }
       });
       
@@ -217,20 +366,18 @@ export async function onRequest(context) {
           }
         }
         
-        // R untuk manual redirect
+        // R untuk retry
         if (e.code === 'KeyR') {
           e.preventDefault();
-          redirectToNewTab();
+          retryPlayback();
+        }
+        
+        // T untuk force redirect
+        if (e.code === 'KeyT') {
+          e.preventDefault();
+          forceRedirect();
         }
       });
-      
-      // Fallback: Jika player tidak berhasil diinisialisasi
-      setTimeout(function() {
-        if (!player) {
-          console.log('Player initialization failed');
-          redirectToNewTab();
-        }
-      }, 2000);
     </script>
   </body>
   </html>
@@ -238,7 +385,9 @@ export async function onRequest(context) {
 
   return new Response(html, {
     headers: {
-      'Content-Type': 'text/html;charset=UTF-8'
+      'Content-Type': 'text/html;charset=UTF-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache'
     }
   });
 }
