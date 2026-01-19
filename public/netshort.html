@@ -336,7 +336,7 @@
             let heatScore = '';
             
             // Try to get additional info from discover endpoint
-            fetch('https://dramabos.asia/api/netshort/api/drama/discover')
+            fetch('https://dramabos.asia/api/netshort/api/drama/discover?lang=id_ID')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.data && data.data.dataList) {
