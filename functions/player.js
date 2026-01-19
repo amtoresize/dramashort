@@ -9,9 +9,6 @@ export async function onRequest(context) {
 
   const decodedVideoUrl = decodeURIComponent(videoUrl);
 
-  // Tambahkan cache buster ke URL
-  const cacheBustedUrl = decodedVideoUrl + (decodedVideoUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
-
   const html = `
   <!DOCTYPE html>
   <html>
@@ -94,155 +91,159 @@ export async function onRequest(context) {
       crossorigin="anonymous"
       data-setup='{"fluid": true, "aspectRatio": "16:9"}'
     >
-      <source src="${cacheBustedUrl}" type="video/mp4" />
+      <source src="${decodedVideoUrl}" type="video/mp4" />
     </video>
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
-      const originalVideoUrl = "${decodedVideoUrl}";
-      const cacheBustedUrl = "${cacheBustedUrl}";
+      const videoUrl = "${decodedVideoUrl.replace(/"/g, '\\"')}";
       let player = null;
       let videoLoaded = false;
       let redirectTimer = null;
       let countdownTimer = null;
-      let retryCount = 0;
-      const maxRetries = 1; // Hanya 1x retry
+      let hasRedirected = false;
       
-      // Inisialisasi player
-      document.addEventListener('DOMContentLoaded', function() {
-        // Cleanup player sebelumnya jika ada
-        if (window.videojs && videojs.getPlayers()) {
-          const players = videojs.getPlayers();
-          Object.keys(players).forEach(function(playerId) {
-            if (players[playerId]) {
-              players[playerId].dispose();
-            }
-          });
-        }
+      // Function untuk redirect ke tab baru
+      function redirectToNewTab() {
+        if (hasRedirected) return;
+        hasRedirected = true;
         
-        // Buat player baru
-        player = videojs('my-video');
+        console.log('Redirecting to new tab:', videoUrl);
+        window.open(videoUrl, '_blank');
         
-        // Setup event listeners
-        player.on('loadeddata', function() {
-          console.log('✅ Video loaded');
-          videoLoaded = true;
-          clearTimeout(redirectTimer);
-          clearInterval(countdownTimer);
-          document.getElementById('redirectOverlay').style.display = 'none';
-        });
-        
-        player.on('playing', function() {
-          console.log('▶️ Video playing');
-          videoLoaded = true;
-          clearTimeout(redirectTimer);
-          clearInterval(countdownTimer);
-          document.getElementById('redirectOverlay').style.display = 'none';
-        });
-        
-        player.on('error', function() {
-          console.log('❌ Video error');
-          handlePlaybackFailure();
-        });
-        
-        // Coba play otomatis
-        player.ready(function() {
-          this.play().catch(function(error) {
-            console.log('⚠️ Autoplay failed, retrying...');
-            retryCount++;
-            
-            if (retryCount <= maxRetries) {
-              // Tunggu 1 detik lalu coba lagi
-              setTimeout(function() {
-                player.play().catch(function() {
-                  handlePlaybackFailure();
-                });
-              }, 1000);
-            } else {
-              handlePlaybackFailure();
-            }
-          });
-        });
-        
-        // Timer utama: Jika dalam 4 detik video belum loaded, redirect
-        redirectTimer = setTimeout(function() {
-          if (!videoLoaded) {
-            console.log('⏱️ Timeout - Video failed to load');
-            redirectToNewTab();
-          }
-        }, 4000);
-        
-        // Backup timer: Force redirect setelah 6 detik
-        setTimeout(function() {
-          if (!videoLoaded) {
-            console.log('🚨 Force redirect');
-            redirectToNewTab();
-          }
-        }, 6000);
-      });
-      
-      function handlePlaybackFailure() {
-        console.log('🔧 Playback failed, redirecting...');
-        redirectToNewTab();
+        // Optional: Tutup tab ini setelah 1 detik
+        // setTimeout(function() {
+        //   window.close();
+        // }, 1000);
       }
       
-      function redirectToNewTab() {
-        // Clear semua timer
-        clearTimeout(redirectTimer);
-        clearInterval(countdownTimer);
+      // Function untuk mulai countdown
+      function startRedirectCountdown() {
+        if (hasRedirected) return;
         
-        // Tampilkan overlay
         const overlay = document.getElementById('redirectOverlay');
         const countdownElement = document.getElementById('countdown');
+        
         overlay.style.display = 'flex';
         
         let countdown = 3;
         countdownElement.textContent = countdown;
         
-        // Countdown
+        // Clear timer sebelumnya
+        if (countdownTimer) clearInterval(countdownTimer);
+        
+        // Mulai countdown
         countdownTimer = setInterval(function() {
           countdown--;
           countdownElement.textContent = countdown;
           
+          console.log('Countdown:', countdown);
+          
           if (countdown <= 0) {
             clearInterval(countdownTimer);
-            window.open(originalVideoUrl, '_blank');
+            redirectToNewTab();
           }
         }, 1000);
       }
       
-      // Cleanup saat page unload
-      window.addEventListener('beforeunload', function() {
-        clearTimeout(redirectTimer);
-        clearInterval(countdownTimer);
-        if (player) {
-          player.dispose();
+      // Function untuk cek error video
+      function checkVideoError() {
+        if (!player || hasRedirected) return;
+        
+        // Cek jika player punya error
+        if (player.error()) {
+          console.log('Video error detected, starting redirect...');
+          startRedirectCountdown();
+          return true;
+        }
+        
+        // Cek jika video element punya error
+        const videoElement = player.el().querySelector('video');
+        if (videoElement && videoElement.error) {
+          console.log('Video element error detected');
+          startRedirectCountdown();
+          return true;
+        }
+        
+        return false;
+      }
+      
+      // Inisialisasi player
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          player = videojs('my-video');
+          
+          // Event listeners
+          player.on('loadeddata', function() {
+            console.log('✅ Video loaded successfully');
+            videoLoaded = true;
+            if (redirectTimer) clearTimeout(redirectTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+            document.getElementById('redirectOverlay').style.display = 'none';
+          });
+          
+          player.on('playing', function() {
+            console.log('▶️ Video playing');
+            videoLoaded = true;
+            if (redirectTimer) clearTimeout(redirectTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+            document.getElementById('redirectOverlay').style.display = 'none';
+          });
+          
+          player.on('error', function() {
+            console.log('❌ Player error event fired');
+            if (!hasRedirected) {
+              startRedirectCountdown();
+            }
+          });
+          
+          // Coba play otomatis
+          player.ready(function() {
+            this.play().catch(function(error) {
+              console.log('⚠️ Autoplay failed:', error.message);
+              // Tidak langsung redirect, tunggu timer
+            });
+          });
+          
+          // Timer 1: Cek error setiap 500ms
+          setInterval(function() {
+            checkVideoError();
+          }, 500);
+          
+          // Timer 2: Jika dalam 3 detik belum loaded, redirect
+          redirectTimer = setTimeout(function() {
+            if (!videoLoaded && !hasRedirected) {
+              console.log('⏱️ 3 seconds passed, video not loaded');
+              startRedirectCountdown();
+            }
+          }, 3000);
+          
+          // Timer 3: Force redirect setelah 6 detik
+          setTimeout(function() {
+            if (!videoLoaded && !hasRedirected) {
+              console.log('🚨 Force redirect after 6 seconds');
+              redirectToNewTab();
+            }
+          }, 6000);
+          
+        } catch (error) {
+          console.error('Player initialization error:', error);
+          startRedirectCountdown();
         }
       });
       
-      // Keyboard shortcuts (opsional)
-      document.addEventListener('keydown', function(e) {
-        if (!player) return;
-        
-        // Space untuk play/pause
-        if (e.code === 'Space') {
-          e.preventDefault();
-          if (player.paused()) {
-            player.play();
-          } else {
-            player.pause();
-          }
+      // Fallback: Jika semua gagal, redirect setelah 10 detik
+      setTimeout(function() {
+        if (!videoLoaded && !hasRedirected) {
+          console.log('🔥 Ultimate fallback redirect');
+          redirectToNewTab();
         }
-        
-        // F untuk fullscreen
-        if (e.code === 'KeyF') {
-          e.preventDefault();
-          if (player.isFullscreen()) {
-            player.exitFullscreen();
-          } else {
-            player.requestFullscreen();
-          }
-        }
+      }, 10000);
+      
+      // Cleanup
+      window.addEventListener('beforeunload', function() {
+        if (redirectTimer) clearTimeout(redirectTimer);
+        if (countdownTimer) clearInterval(countdownTimer);
       });
     </script>
   </body>
