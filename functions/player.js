@@ -7,17 +7,16 @@ export async function onRequest(context) {
     return new Response('Missing video URL', { status: 400 });
   }
 
-  // Decode URL parameter
   const decodedVideoUrl = decodeURIComponent(videoUrl);
 
-  // HTML dengan player yang lebih profesional
+  // HTML dengan video element yang sederhana dan efektif
   const html = `
   <!DOCTYPE html>
   <html lang="en">
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>HeartScene Player</title>
+      <title>HeartScene Video Player</title>
       <style>
           * {
               margin: 0;
@@ -26,8 +25,8 @@ export async function onRequest(context) {
           }
           
           body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              background: linear-gradient(135deg, #000428, #004e92);
               min-height: 100vh;
               display: flex;
               justify-content: center;
@@ -35,154 +34,92 @@ export async function onRequest(context) {
               padding: 20px;
           }
           
-          .player-container {
+          .container {
               width: 100%;
-              max-width: 1200px;
-              background: rgba(255, 255, 255, 0.95);
-              border-radius: 20px;
-              box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-              overflow: hidden;
+              max-width: 1000px;
+              text-align: center;
           }
           
-          .player-header {
-              background: linear-gradient(90deg, #4f46e5, #7c3aed);
+          .header {
+              margin-bottom: 20px;
               color: white;
-              padding: 20px 30px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
           }
           
           .logo {
-              font-size: 24px;
-              font-weight: bold;
-              display: flex;
-              align-items: center;
-              gap: 10px;
-          }
-          
-          .logo-icon {
               font-size: 28px;
-          }
-          
-          .controls {
-              display: flex;
-              gap: 15px;
-          }
-          
-          .control-btn {
-              background: rgba(255, 255, 255, 0.2);
-              border: none;
-              color: white;
-              width: 40px;
-              height: 40px;
-              border-radius: 50%;
-              cursor: pointer;
+              font-weight: bold;
+              margin-bottom: 5px;
               display: flex;
               align-items: center;
               justify-content: center;
-              font-size: 18px;
+              gap: 10px;
+          }
+          
+          .tagline {
+              color: rgba(255, 255, 255, 0.8);
+              font-size: 14px;
+          }
+          
+          .video-wrapper {
+              position: relative;
+              width: 100%;
+              background: #000;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+          }
+          
+          video {
+              width: 100%;
+              height: auto;
+              max-height: 70vh;
+              display: block;
+          }
+          
+          .controls-panel {
+              background: rgba(0, 0, 0, 0.8);
+              padding: 15px;
+              margin-top: 20px;
+              border-radius: 10px;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 10px;
+              justify-content: center;
+              align-items: center;
+          }
+          
+          .control-btn {
+              background: linear-gradient(45deg, #ff416c, #ff4b2b);
+              color: white;
+              border: none;
+              padding: 12px 24px;
+              border-radius: 25px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: 500;
+              display: flex;
+              align-items: center;
+              gap: 8px;
               transition: all 0.3s ease;
           }
           
           .control-btn:hover {
-              background: rgba(255, 255, 255, 0.3);
-              transform: scale(1.1);
-          }
-          
-          .player-wrapper {
-              position: relative;
-              width: 100%;
-              padding-top: 56.25%; /* 16:9 Aspect Ratio */
-          }
-          
-          .player-frame {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              border: none;
-              background: #000;
-          }
-          
-          .player-footer {
-              padding: 20px 30px;
-              background: #f8fafc;
-              border-top: 1px solid #e2e8f0;
-          }
-          
-          .video-info {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 15px;
-          }
-          
-          .video-title {
-              font-size: 18px;
-              font-weight: 600;
-              color: #1e293b;
-          }
-          
-          .video-url {
-              font-size: 14px;
-              color: #64748b;
-              background: #f1f5f9;
-              padding: 8px 15px;
-              border-radius: 10px;
-              word-break: break-all;
-          }
-          
-          .player-controls {
-              display: flex;
-              gap: 10px;
-              justify-content: center;
-              margin-top: 20px;
-          }
-          
-          .player-btn {
-              padding: 12px 24px;
-              background: #4f46e5;
-              color: white;
-              border: none;
-              border-radius: 10px;
-              cursor: pointer;
-              font-weight: 500;
-              transition: all 0.3s ease;
-          }
-          
-          .player-btn:hover {
-              background: #4338ca;
               transform: translateY(-2px);
+              box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
           }
           
-          .player-btn.secondary {
-              background: #64748b;
+          .control-btn.secondary {
+              background: linear-gradient(45deg, #4776E6, #8E54E9);
           }
           
-          .player-btn.secondary:hover {
-              background: #475569;
-          }
-          
-          @media (max-width: 768px) {
-              .player-container {
-                  border-radius: 10px;
-              }
-              
-              .player-header {
-                  padding: 15px;
-              }
-              
-              .video-info {
-                  flex-direction: column;
-                  gap: 10px;
-                  align-items: flex-start;
-              }
-              
-              .player-controls {
-                  flex-wrap: wrap;
-              }
+          .status {
+              color: white;
+              margin-top: 15px;
+              padding: 10px;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 8px;
+              font-size: 14px;
+              display: inline-block;
           }
           
           .loading {
@@ -191,120 +128,181 @@ export async function onRequest(context) {
               left: 50%;
               transform: translate(-50%, -50%);
               color: white;
-              font-size: 18px;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 10px;
+              text-align: center;
           }
           
           .spinner {
-              width: 40px;
-              height: 40px;
-              border: 4px solid rgba(255, 255, 255, 0.3);
+              width: 50px;
+              height: 50px;
+              border: 3px solid rgba(255, 255, 255, 0.3);
               border-radius: 50%;
-              border-top-color: #4f46e5;
-              animation: spin 1s ease-in-out infinite;
+              border-top-color: #ff416c;
+              animation: spin 1s linear infinite;
+              margin: 0 auto 10px;
           }
           
           @keyframes spin {
               to { transform: rotate(360deg); }
           }
+          
+          @media (max-width: 768px) {
+              .container {
+                  padding: 10px;
+              }
+              
+              .logo {
+                  font-size: 22px;
+              }
+              
+              .controls-panel {
+                  flex-direction: column;
+              }
+              
+              .control-btn {
+                  width: 100%;
+                  justify-content: center;
+              }
+              
+              video {
+                  max-height: 60vh;
+              }
+          }
       </style>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   </head>
   <body>
-      <div class="player-container">
-          <div class="player-header">
+      <div class="container">
+          <div class="header">
               <div class="logo">
-                  <span class="logo-icon">🎬</span>
-                  <span>HeartScene Player</span>
+                  <i class="fas fa-play-circle"></i>
+                  HeartScene Player
               </div>
-              <div class="controls">
-                  <button class="control-btn" onclick="toggleFullscreen()" title="Fullscreen">
-                      <i class="fas fa-expand"></i>
-                  </button>
-                  <button class="control-btn" onclick="togglePip()" title="Picture-in-Picture">
-                      <i class="fas fa-clone"></i>
-                  </button>
-                  <button class="control-btn" onclick="reloadPlayer()" title="Reload">
-                      <i class="fas fa-redo"></i>
-                  </button>
-              </div>
+              <div class="tagline">Professional Video Streaming</div>
           </div>
           
-          <div class="player-wrapper">
+          <div class="video-wrapper">
               <div class="loading" id="loading">
                   <div class="spinner"></div>
-                  <span>Loading player...</span>
-              </div>
-              <iframe 
-                  class="player-frame" 
-                  id="videoPlayer"
-                  src="${decodedVideoUrl}"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen
-                  loading="eager"
-              ></iframe>
-          </div>
-          
-          <div class="player-footer">
-              <div class="video-info">
-                  <div class="video-title">
-                      <i class="fas fa-play-circle"></i> HeartScene Video Player
-                  </div>
-                  <div class="video-url" title="${decodedVideoUrl}">
-                      <i class="fas fa-link"></i> ${decodedVideoUrl.substring(0, 50)}...
-                  </div>
+                  <div>Loading video...</div>
               </div>
               
-              <div class="player-controls">
-                  <button class="player-btn" onclick="playVideo()">
-                      <i class="fas fa-play"></i> Play
-                  </button>
-                  <button class="player-btn" onclick="pauseVideo()">
-                      <i class="fas fa-pause"></i> Pause
-                  </button>
-                  <button class="player-btn secondary" onclick="copyUrl()">
-                      <i class="fas fa-copy"></i> Copy URL
-                  </button>
-                  <button class="player-btn secondary" onclick="openOriginal()">
-                      <i class="fas fa-external-link-alt"></i> Open Original
-                  </button>
-              </div>
+              <video 
+                  id="videoPlayer"
+                  controls
+                  autoplay
+                  playsinline
+                  preload="auto"
+                  crossorigin="anonymous"
+              >
+                  <source src="${decodedVideoUrl}" type="video/mp4">
+                  Your browser does not support the video tag.
+              </video>
+          </div>
+          
+          <div class="status" id="status">
+              <i class="fas fa-circle" style="color: #4CAF50;"></i>
+              Ready to play
+          </div>
+          
+          <div class="controls-panel">
+              <button class="control-btn" onclick="togglePlayPause()" id="playPauseBtn">
+                  <i class="fas fa-play"></i>
+                  <span>Play/Pause</span>
+              </button>
+              
+              <button class="control-btn secondary" onclick="toggleMute()" id="muteBtn">
+                  <i class="fas fa-volume-up"></i>
+                  <span>Mute/Unmute</span>
+              </button>
+              
+              <button class="control-btn" onclick="toggleFullscreen()">
+                  <i class="fas fa-expand"></i>
+                  <span>Fullscreen</span>
+              </button>
+              
+              <button class="control-btn secondary" onclick="downloadVideo()">
+                  <i class="fas fa-download"></i>
+                  <span>Download</span>
+              </button>
+              
+              <button class="control-btn" onclick="copyVideoLink()">
+                  <i class="fas fa-link"></i>
+                  <span>Copy Link</span>
+              </button>
           </div>
       </div>
 
       <script>
-          const videoPlayer = document.getElementById('videoPlayer');
+          const video = document.getElementById('videoPlayer');
           const loading = document.getElementById('loading');
+          const status = document.getElementById('status');
+          const playPauseBtn = document.getElementById('playPauseBtn');
+          const muteBtn = document.getElementById('muteBtn');
           
-          // Hide loading when iframe is loaded
-          videoPlayer.onload = function() {
+          // Hide loading when video can play
+          video.addEventListener('canplay', () => {
               loading.style.display = 'none';
-              videoPlayer.style.opacity = '1';
-          };
+              updateStatus('Video ready - Click play to start');
+          });
           
-          // Show loading initially
-          videoPlayer.style.opacity = '0';
+          video.addEventListener('waiting', () => {
+              loading.style.display = 'block';
+              updateStatus('Buffering...');
+          });
           
-          function playVideo() {
-              videoPlayer.contentWindow.postMessage('play', '*');
+          video.addEventListener('playing', () => {
+              loading.style.display = 'none';
+              updateStatus('Playing');
+          });
+          
+          video.addEventListener('pause', () => {
+              updateStatus('Paused');
+          });
+          
+          video.addEventListener('error', (e) => {
+              loading.style.display = 'none';
+              console.error('Video error:', video.error);
+              updateStatus('Error loading video. Try downloading instead.', 'error');
+          });
+          
+          // Update button icons based on video state
+          video.addEventListener('play', () => {
+              playPauseBtn.innerHTML = '<i class="fas fa-pause"></i><span>Pause</span>';
+          });
+          
+          video.addEventListener('pause', () => {
+              playPauseBtn.innerHTML = '<i class="fas fa-play"></i><span>Play</span>';
+          });
+          
+          video.addEventListener('volumechange', () => {
+              if (video.muted) {
+                  muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i><span>Unmute</span>';
+              } else {
+                  muteBtn.innerHTML = '<i class="fas fa-volume-up"></i><span>Mute</span>';
+              }
+          });
+          
+          function togglePlayPause() {
+              if (video.paused) {
+                  video.play().catch(e => {
+                      updateStatus('Click the video to play', 'warning');
+                  });
+              } else {
+                  video.pause();
+              }
           }
           
-          function pauseVideo() {
-              videoPlayer.contentWindow.postMessage('pause', '*');
-          }
-          
-          function reloadPlayer() {
-              loading.style.display = 'flex';
-              videoPlayer.style.opacity = '0';
-              videoPlayer.src = videoPlayer.src;
+          function toggleMute() {
+              video.muted = !video.muted;
           }
           
           function toggleFullscreen() {
               if (!document.fullscreenElement) {
-                  document.documentElement.requestFullscreen();
+                  if (video.requestFullscreen) {
+                      video.requestFullscreen();
+                  } else if (video.webkitRequestFullscreen) {
+                      video.webkitRequestFullscreen();
+                  }
               } else {
                   if (document.exitFullscreen) {
                       document.exitFullscreen();
@@ -312,59 +310,67 @@ export async function onRequest(context) {
               }
           }
           
-          async function togglePip() {
-              try {
-                  if (videoPlayer !== document.pictureInPictureElement) {
-                      await videoPlayer.requestPictureInPicture();
-                  } else {
-                      await document.exitPictureInPicture();
-                  }
-              } catch (error) {
-                  console.error('PiP failed:', error);
-                  alert('Picture-in-Picture is not supported for this video');
-              }
+          function downloadVideo() {
+              const link = document.createElement('a');
+              link.href = '${decodedVideoUrl}';
+              link.download = 'heartscene-video.mp4';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              updateStatus('Download started');
           }
           
-          function copyUrl() {
-              const url = '${decodedVideoUrl}';
-              navigator.clipboard.writeText(url).then(() => {
-                  alert('URL copied to clipboard!');
+          function copyVideoLink() {
+              navigator.clipboard.writeText('${decodedVideoUrl}').then(() => {
+                  updateStatus('Link copied to clipboard!', 'success');
+              }).catch(err => {
+                  updateStatus('Failed to copy link', 'error');
               });
           }
           
-          function openOriginal() {
-              window.open('${decodedVideoUrl}', '_blank');
+          function updateStatus(message, type = 'info') {
+              const icon = status.querySelector('i');
+              status.innerHTML = \`\${icon.outerHTML} \${message}\`;
+              
+              // Update icon color based on type
+              if (type === 'error') {
+                  icon.style.color = '#ff416c';
+              } else if (type === 'success') {
+                  icon.style.color = '#4CAF50';
+              } else if (type === 'warning') {
+                  icon.style.color = '#FF9800';
+              } else {
+                  icon.style.color = '#2196F3';
+              }
           }
           
-          // Handle fullscreen change
-          document.addEventListener('fullscreenchange', function() {
-              const fullscreenBtn = document.querySelector('.control-btn .fa-expand');
-              if (document.fullscreenElement) {
-                  fullscreenBtn.classList.remove('fa-expand');
-                  fullscreenBtn.classList.add('fa-compress');
-              } else {
-                  fullscreenBtn.classList.remove('fa-compress');
-                  fullscreenBtn.classList.add('fa-expand');
-              }
-          });
-          
           // Keyboard shortcuts
-          document.addEventListener('keydown', function(e) {
-              switch(e.key) {
+          document.addEventListener('keydown', (e) => {
+              switch(e.key.toLowerCase()) {
                   case ' ':
                   case 'k':
                       e.preventDefault();
-                      playVideo();
+                      togglePlayPause();
+                      break;
+                  case 'm':
+                      e.preventDefault();
+                      toggleMute();
                       break;
                   case 'f':
                       e.preventDefault();
                       toggleFullscreen();
                       break;
-                  case 'r':
+                  case 'd':
                       e.preventDefault();
-                      reloadPlayer();
+                      downloadVideo();
                       break;
               }
+          });
+          
+          // Auto play attempt
+          video.play().catch(e => {
+              // Autoplay was prevented, show instruction
+              updateStatus('Click the play button to start video', 'warning');
           });
       </script>
   </body>
@@ -374,6 +380,7 @@ export async function onRequest(context) {
   return new Response(html, {
     headers: {
       'Content-Type': 'text/html;charset=UTF-8',
+      'Cache-Control': 'no-cache'
     },
   });
 }
