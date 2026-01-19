@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail Video - NetShort</title>
-   
+    
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-   
+    
     <style>
         /* ========== BASE STYLES ========== */
         body {
@@ -18,25 +18,25 @@
             min-height: 100vh;
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
-       
+        
         /* ========== NAVBAR ========== */
         .navbar-brand {
             font-weight: bold;
             font-size: 1.5rem;
         }
-       
+        
         .back-btn {
             border-radius: 50px;
             padding: 0.5rem 1.5rem;
             font-weight: 600;
             transition: all 0.3s;
         }
-       
+        
         .back-btn:hover {
             transform: translateX(-5px);
             background: rgba(255,255,255,0.1);
         }
-       
+        
         /* ========== DRAMA DETAIL ========== */
         .drama-poster {
             border-radius: 16px;
@@ -47,7 +47,7 @@
             object-fit: cover;
             background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
         }
-       
+        
         .drama-title {
             font-size: 2.5rem;
             font-weight: 800;
@@ -57,7 +57,7 @@
             background-clip: text;
             margin-bottom: 1rem;
         }
-       
+        
         .synopsis-box {
             background: rgba(30, 30, 30, 0.7);
             border: 1px solid #444;
@@ -65,18 +65,18 @@
             padding: 1.5rem;
             line-height: 1.8;
         }
-       
+        
         .badge-episode {
             font-size: 0.9rem;
             padding: 0.5rem 1rem;
             border-radius: 20px;
         }
-       
+        
         /* ========== EPISODE CARDS ========== */
         .episode-card {
             margin-bottom: 1rem;
         }
-       
+        
         .episode-btn {
             border-radius: 12px;
             transition: all 0.3s ease;
@@ -92,73 +92,73 @@
             align-items: center;
             text-align: center;
         }
-       
+        
         .episode-btn:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
             border-color: #0d6efd;
             background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
         }
-       
+        
         .episode-btn.playing {
             background: linear-gradient(145deg, #0d6efd, #0b5ed7);
             border-color: #0b5ed7;
             color: white;
         }
-       
+        
         .episode-number {
             font-size: 1.2rem;
             font-weight: 700;
             margin-bottom: 0.3rem;
         }
-       
+        
         .episode-duration {
             font-size: 0.85rem;
             opacity: 0.8;
         }
-       
+        
         /* ========== RESPONSIVE ========== */
         @media (max-width: 768px) {
             .drama-title {
                 font-size: 1.8rem;
             }
-           
+            
             .drama-poster {
                 max-height: 350px;
                 margin-bottom: 1.5rem;
             }
-           
+            
             .episode-btn {
                 min-height: 80px;
                 padding: 1rem 0.3rem;
             }
-           
+            
             .episode-number {
                 font-size: 1rem;
             }
         }
-       
+        
         @media (max-width: 576px) {
             .drama-title {
                 font-size: 1.5rem;
             }
-           
+            
             .episode-btn {
                 min-height: 70px;
                 padding: 0.8rem 0.2rem;
             }
-           
+            
             .synopsis-box {
                 padding: 1rem;
             }
         }
-       
+        
         /* ========== LOADING & STATES ========== */
         .loading-spinner {
             width: 4rem;
             height: 4rem;
         }
-       
+        
         .error-box {
             background: rgba(220, 53, 69, 0.1);
             border: 1px solid #dc3545;
@@ -166,17 +166,17 @@
             padding: 2rem;
             text-align: center;
         }
-       
+        
         /* ========== UTILITIES ========== */
         .total-duration {
             background: linear-gradient(135deg, #6f42c1, #d63384);
         }
-       
+        
         /* ========== NETSHORT SPECIFIC ========== */
         .badge-netshort {
             background: linear-gradient(135deg, #2ed573, #1dd1a1);
         }
-       
+        
         .tag-badge {
             background: rgba(46, 213, 115, 0.2);
             color: #2ed573;
@@ -185,7 +185,7 @@
             border-radius: 12px;
             font-size: 0.8rem;
         }
-       
+        
         .badge-popular {
             background: linear-gradient(135deg, #ff9f1a, #ffd93d);
             color: #000;
@@ -208,6 +208,7 @@
             </div>
         </div>
     </nav>
+
     <!-- ========== MAIN CONTENT ========== -->
     <main class="container py-5">
         <!-- Drama Detail Section -->
@@ -221,6 +222,7 @@
                 <p class="text-muted">Mohon tunggu sebentar</p>
             </div>
         </section>
+
         <!-- Episodes Section -->
         <section class="mt-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -231,11 +233,11 @@
                     <span id="count-text">0 Episode</span>
                 </div>
             </div>
-           
+            
             <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list">
                 <!-- Episodes akan diisi oleh JavaScript -->
             </div>
-           
+            
             <!-- Episode Not Found -->
             <div id="no-episodes" class="text-center py-5" style="display: none;">
                 <div class="alert alert-info w-75 mx-auto">
@@ -246,7 +248,7 @@
             </div>
         </section>
     </main>
-   
+    
     <!-- ========== JAVASCRIPT ========== -->
     <script>
         // ============== CONFIGURATION ==============
@@ -254,9 +256,11 @@
             playerBase: '/player',
             defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
         };
+
         // ============== STATE MANAGEMENT ==============
         let currentVideo = null;
         let isLoading = false;
+
         // ============== DOM ELEMENTS ==============
         const elements = {
             dramaDetail: document.getElementById('drama-detail'),
@@ -265,42 +269,45 @@
             countText: document.getElementById('count-text'),
             noEpisodes: document.getElementById('no-episodes')
         };
+
         // ============== INITIALIZATION ==============
         document.addEventListener('DOMContentLoaded', function() {
             console.log('NetShort Detail initialized');
-           
+            
             // Get video ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             const videoId = urlParams.get('id');
-           
+            
             if (!videoId) {
                 window.location.href = '/';
                 return;
             }
-           
+            
             // Load video details
             loadVideoDetail(videoId);
         });
+
         // ============== MAIN FUNCTIONS ==============
+
         /**
          * Load video detail from NetShort API
          */
         async function loadVideoDetail(videoId) {
             if (isLoading) return;
-           
+            
             isLoading = true;
-           
+            
             try {
                 const apiUrl = `https://dramabos.asia/api/netshort/api/drama/info/${videoId}`;
-               
+                
                 const response = await fetch(apiUrl);
-               
+                
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-               
+                
                 const data = await response.json();
-               
+                
                 if (data.success && data.data) {
                     currentVideo = data.data;
                     renderVideoDetail(data.data);
@@ -315,25 +322,26 @@
                 isLoading = false;
             }
         }
+
         /**
          * Render video detail to the page
          */
         function renderVideoDetail(video) {
             // Update page title
             document.title = `${escapeHtml(video.name)} - NetShort`;
-           
+            
             // Get cover from discover data if available
             let cover = CONFIG.defaultImage;
             let tags = [];
             let heatScore = '';
-           
+            
             // Try to get additional info from discover endpoint
-            fetch('https://dramabos.asia/api/netshort/api/drama/discover?lang=id_ID')
+            fetch('https://dramabos.asia/api/netshort/api/drama/discover')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.data && data.data.dataList) {
-                        const discoverVideo = data.data.dataList.find(v =>
-                            v.shortPlayName === video.name ||
+                        const discoverVideo = data.data.dataList.find(v => 
+                            v.shortPlayName === video.name || 
                             v.shortPlayId === videoIdFromUrl()
                         );
                         if (discoverVideo) {
@@ -348,23 +356,22 @@
                     updateVideoDetailUI(video, cover, tags, heatScore);
                 });
         }
+
         /**
          * Update video detail UI
          */
         function updateVideoDetailUI(video, cover, tags, heatScore) {
-            const isDub = video.name.toLowerCase().includes('(sulih suara)') || video.name.toLowerCase().includes('sulih suara');
-           
             // Create HTML
             const html = `
                 <div class="row">
                     <!-- Poster Column -->
                     <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
                         <div class="position-sticky" style="top: 90px;">
-                            <img src="${cover}"
+                            <img src="${cover}" 
                                  class="drama-poster mb-4"
                                  alt="${escapeHtml(video.name)}"
                                  onerror="this.onerror=null; this.src='${CONFIG.defaultImage}'">
-                           
+                            
                             <!-- Tags -->
                             ${tags.length > 0 ? `
                             <div class="d-flex flex-wrap gap-2 mb-3">
@@ -373,7 +380,7 @@
                                 `).join('')}
                             </div>
                             ` : ''}
-                           
+                            
                             <!-- Quick Actions -->
                             <div class="d-grid gap-2">
                                 <button class="btn btn-primary btn-lg py-3" onclick="playFirstEpisode()" id="playFirstBtn">
@@ -382,47 +389,40 @@
                             </div>
                         </div>
                     </div>
-                   
+                    
                     <!-- Details Column -->
                     <div class="col-lg-8 col-md-7">
                         <h1 class="drama-title">${escapeHtml(video.name)}</h1>
-                       
+                        
                         <!-- Badges -->
                         <div class="d-flex flex-wrap gap-3 mb-4">
                             <span class="badge badge-netshort badge-episode">
                                 <i class="bi bi-film me-1"></i> ${video.result ? video.result.length : 1} Episode
                             </span>
-                           
+                            
                             ${heatScore ? `
                             <span class="badge badge-popular badge-episode">
                                 <i class="bi bi-fire me-1"></i> ${heatScore}
                             </span>
                             ` : ''}
-                           
-                            ${isDub ? `
-                            <span class="badge bg-success">
-                                <i class="bi bi-volume-up-fill me-1"></i> Sulih Suara Indonesia
-                            </span>
-                            ` : ''}
                         </div>
-                       
+                        
                         <!-- Synopsis -->
                         <div class="synopsis-box mb-4">
                             <h5 class="fw-bold mb-3">
                                 <i class="bi bi-info-circle text-primary me-2"></i>Deskripsi
                             </h5>
                             <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
-                                Video pendek dari NetShort. 
-                                ${isDub ? 'Dengan audio sulih suara profesional bahasa Indonesia (tanpa subtitle). ' : ''}
-                                ${tags.length > 0 ? 'Kategori: ' + tags.join(', ') + '.' : ''}
+                                Video pendek dari NetShort. ${tags.length > 0 ? 'Kategori: ' + tags.join(', ') + '.' : ''}
                             </p>
                         </div>
                     </div>
                 </div>
             `;
-           
+            
             elements.dramaDetail.innerHTML = html;
         }
+
         /**
          * Get video ID from URL
          */
@@ -430,47 +430,47 @@
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('id');
         }
+
         /**
          * Render episodes list
          */
         function renderEpisodes(episodes) {
-            const isDub = currentVideo?.name?.toLowerCase().includes('sulih suara') || false;
-           
             if (!episodes || episodes.length === 0) {
                 elements.episodeList.style.display = 'none';
                 elements.noEpisodes.style.display = 'block';
                 elements.countText.textContent = '0 Episode';
                 return;
             }
-           
+            
             // Sort episodes by number
             episodes.sort((a, b) => a.episodeNo - b.episodeNo);
-           
+            
             // Update count
             elements.countText.textContent = `${episodes.length} Episode`;
             elements.episodeList.style.display = 'flex';
             elements.noEpisodes.style.display = 'none';
-           
+            
             // Create episode cards
             const episodesHtml = episodes.map(episode => {
                 return `
                     <div class="col">
                         <div class="episode-card">
-                            <button class="episode-btn w-100"
+                            <button class="episode-btn w-100" 
                                     onclick="playEpisode('${episode.id}', ${episode.episodeNo}, this)"
                                     data-id="${episode.id}"
                                     data-episode="${episode.episodeNo}"
                                     title="Episode ${episode.episodeNo}">
                                 <div class="episode-number">Episode ${episode.episodeNo}</div>
-                                <div class="episode-duration">1-3 min${isDub ? ' • Dub ID' : ''}</div>
+                                <div class="episode-duration">1-3 min</div>
                             </button>
                         </div>
                     </div>
                 `;
             }).join('');
-           
+            
             elements.episodeList.innerHTML = episodesHtml;
         }
+
         /**
          * Play a specific episode (OPEN IN NEW TAB)
          */
@@ -479,43 +479,43 @@
                 alert('Video ID tidak valid');
                 return;
             }
-           
+            
             console.log('Playing episode:', episodeNumber, 'Video ID:', videoId);
-           
+            
             // Update button state
             if (buttonElement) {
                 updateButtonState(buttonElement, true);
             }
-           
+            
             try {
                 // Cari URL video dari data yang sudah di-load
                 let videoUrl = null;
-               
+                
                 if (currentVideo && currentVideo.result) {
-                    const episode = currentVideo.result.find(ep =>
+                    const episode = currentVideo.result.find(ep => 
                         ep.id === videoId && ep.episodeNo === episodeNumber
                     );
                     if (episode && episode.videoUrl) {
                         videoUrl = episode.videoUrl;
                     }
                 }
-               
+                
                 if (videoUrl) {
                     // Generate player URL
                     const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(currentVideo.name)}&episode=${episodeNumber}`;
-                   
+                    
                     // OPEN IN NEW TAB
                     window.open(playerUrl, '_blank');
-                   
+                    
                     // Save last watched episode
                     saveLastWatched(episodeNumber);
-                   
+                    
                 } else {
                     // Fallback: Coba ambil dari API info
                     const apiUrl = `https://dramabos.asia/api/netshort/api/drama/info/${videoIdFromUrl()}`;
                     const response = await fetch(apiUrl);
                     const data = await response.json();
-                   
+                    
                     if (data.success && data.data && data.data.result) {
                         const episode = data.data.result.find(ep => ep.episodeNo === episodeNumber);
                         if (episode && episode.videoUrl) {
@@ -539,6 +539,7 @@
                 }
             }
         }
+
         /**
          * Play the first episode
          */
@@ -547,12 +548,14 @@
                 alert('Tidak ada episode yang tersedia');
                 return;
             }
-           
+            
             const firstEpisode = currentVideo.result[0];
             const firstButton = elements.episodeList.querySelector('.episode-btn');
             playEpisode(firstEpisode.id, firstEpisode.episodeNo, firstButton);
         }
+
         // ============== UI HELPER FUNCTIONS ==============
+
         /**
          * Update button loading state
          */
@@ -560,7 +563,7 @@
             if (isLoading) {
                 // Save original content
                 button.dataset.originalContent = button.innerHTML;
-               
+                
                 // Show loading
                 button.innerHTML = `
                     <div class="spinner-border spinner-border-sm text-light" role="status">
@@ -585,6 +588,7 @@
                 button.classList.remove('playing');
             }
         }
+
         /**
          * Save last watched episode
          */
@@ -595,6 +599,7 @@
                 localStorage.setItem('last_watched_time', Date.now());
             }
         }
+
         /**
          * Show error message
          */
@@ -617,7 +622,9 @@
                 </div>
             `;
         }
+
         // ============== UTILITY FUNCTIONS ==============
+
         /**
          * Escape HTML to prevent XSS
          */
@@ -627,6 +634,7 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
         // ============== GLOBAL EXPORTS ==============
         window.playEpisode = playEpisode;
         window.playFirstEpisode = playFirstEpisode;
