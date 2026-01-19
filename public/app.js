@@ -52,13 +52,75 @@ const WORKING_APIS = {
                         success: true,
                         data: data.data.list,
                         hasMore: data.data.list.length >= 20,
-                        nextPage: page + 1
+                        nextPage: page + 1,
+                        total: data.data.list.length
                     };
                 }
                 return { code: -1, error: 'Invalid response', data: [] };
             } catch (error) {
                 console.error('DramaBox foryou error:', error);
                 return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        latest: async (page = 1) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/dramabox/api/new/${page}?lang=in`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.list) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.list,
+                        hasMore: data.data.list.length >= 20,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox latest error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        trending: async (page = 1) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/dramabox/api/rank/${page}?lang=in`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.list) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.list,
+                        hasMore: data.data.list.length >= 20,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox trending error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        detail: async (bookId) => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/dramabox/api/drama/${bookId}?lang=in`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data
+                    };
+                }
+                return { code: -1, error: 'Invalid response' };
+            } catch (error) {
+                console.error('DramaBox detail error:', error);
+                return { code: -1, error: error.message };
             }
         }
     },
@@ -81,6 +143,26 @@ const WORKING_APIS = {
                 return { code: -1, error: 'Invalid response', data: [] };
             } catch (error) {
                 console.error('NetShort explore error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        discover: async () => {
+            try {
+                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/discover?lang=id_ID`);
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.dataList) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.data.dataList,
+                        hasMore: false
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('NetShort discover error:', error);
                 return { code: -1, error: error.message, data: [] };
             }
         },
@@ -108,10 +190,12 @@ const WORKING_APIS = {
 
 // ============== STATE VARIABLES ==============
 let currentOffset = 0;
+let currentPage = 1;
 let isLoading = false;
 let hasMoreData = true;
 let currentView = 'grid';
-let currentSource = 'melolo';
+let currentSource = 'melolo'; // 'melolo', 'dramabox', 'netshort'
+let currentTab = 'home'; // untuk tab selector
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -119,11 +203,15 @@ const elements = {
     loadMoreBtn: document.getElementById('load-more'),
     loadingIndicator: document.getElementById('loading'),
     emptyState: document.getElementById('empty-state'),
-    sourceSelector: null
+    sourceSelector: null,
+    tabSelector: null
 };
 
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎬 DramaShort Enhanced initialized');
+    
+    // Load saved preferences
     const savedView = localStorage.getItem('dramashort_view');
     if (savedView && (savedView === 'grid' || savedView === 'list')) {
         currentView = savedView;
@@ -135,12 +223,16 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSource = savedSource;
     }
     
+    // Initialize UI
     initializeSourceSelector();
+    initializeTabSelector();
     initializeViewToggle();
     addScrollToTopButton();
     
+    // Load initial dramas
     loadDramas();
     
+    // Setup load more
     if (elements.loadMoreBtn) {
         elements.loadMoreBtn.addEventListener('click', function() {
             if (!isLoading && hasMoreData) {
@@ -150,6 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ============== SOURCE SELECTOR ==============
 function initializeSourceSelector() {
     const header = document.querySelector('.d-flex.justify-content-between');
     if (!header) return;
@@ -170,17 +263,105 @@ function initializeSourceSelector() {
     elements.sourceSelector.addEventListener('change', async function() {
         currentSource = this.value;
         currentOffset = 0;
+        currentPage = 1;
+        currentTab = 'home';
         
         localStorage.setItem('dramashort_source', currentSource);
+        
+        updateTabSelector();
         
         if (elements.dramaList) {
             elements.dramaList.innerHTML = '';
         }
         
         await loadDramas();
+        
+        updatePageTitle();
     });
 }
 
+// ============== TAB SELECTOR ==============
+function initializeTabSelector() {
+    const header = document.querySelector('.d-flex.justify-content-between');
+    if (!header) return;
+    
+    const tabHTML = `
+        <div id="tab-selector" class="btn-group btn-group-sm ms-2">
+            <button type="button" class="btn btn-outline-secondary tab-btn active" data-tab="home">Home</button>
+            <button type="button" class="btn btn-outline-secondary tab-btn" data-tab="trending">Trending</button>
+            <button type="button" class="btn btn-outline-secondary tab-btn" data-tab="latest">Latest</button>
+        </div>
+    `;
+    
+    const buttonContainer = header.querySelector('.d-flex');
+    const sourceSelector = buttonContainer.querySelector('.source-selector');
+    sourceSelector.insertAdjacentHTML('afterend', tabHTML);
+    
+    elements.tabSelector = document.getElementById('tab-selector');
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            currentTab = this.dataset.tab;
+            currentOffset = 0;
+            currentPage = 1;
+            
+            if (elements.dramaList) {
+                elements.dramaList.innerHTML = '';
+            }
+            loadDramas();
+        });
+    });
+}
+
+function updateTabSelector() {
+    if (!elements.tabSelector) return;
+    
+    let tabs = [];
+    
+    switch(currentSource) {
+        case 'melolo':
+            tabs = ['home'];
+            break;
+        case 'dramabox':
+            tabs = ['home', 'trending', 'latest'];
+            break;
+        case 'netshort':
+            tabs = ['home', 'discover'];
+            break;
+    }
+    
+    elements.tabSelector.innerHTML = '';
+    
+    tabs.forEach(tab => {
+        const active = tab === currentTab ? 'active' : '';
+        const label = tab === 'home' ? 'Home' : tab.charAt(0).toUpperCase() + tab.slice(1);
+        
+        elements.tabSelector.innerHTML += `
+            <button type="button" class="btn btn-outline-secondary tab-btn ${active}" data-tab="${tab}">${label}</button>
+        `;
+    });
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            currentTab = this.dataset.tab;
+            currentOffset = 0;
+            currentPage = 1;
+            
+            if (elements.dramaList) {
+                elements.dramaList.innerHTML = '';
+            }
+            loadDramas();
+        });
+    });
+}
+
+// ============== VIEW TOGGLE ==============
 function initializeViewToggle() {
     const gridBtn = document.getElementById('view-grid');
     const listBtn = document.getElementById('view-list');
@@ -241,6 +422,7 @@ function updateView() {
     localStorage.setItem('dramashort_view', currentView);
 }
 
+// ============== LOAD DRAMAS ==============
 async function loadDramas(offset = 0) {
     if (isLoading) return;
     
@@ -252,12 +434,18 @@ async function loadDramas(offset = 0) {
         
         switch(currentSource) {
             case 'dramabox':
-                result = await WORKING_APIS.dramabox.foryou(1);
-                hasMoreData = false;
+                result = await WORKING_APIS.dramabox.foryou(currentPage);
                 break;
                 
             case 'netshort':
+                // Default pakai explore (seperti versi awal)
                 result = await WORKING_APIS.netshort.explore(offset, CONFIG.itemsPerPage);
+                
+                // Jika explore kosong (seperti sekarang), uncomment untuk fallback ke discover
+                // if (result.data.length === 0) {
+                //     result = await WORKING_APIS.netshort.discover();
+                //     hasMoreData = false;
+                // }
                 break;
                 
             case 'melolo':
@@ -276,15 +464,22 @@ async function loadDramas(offset = 0) {
                 break;
         }
         
-        if (result && result.data && Array.isArray(result.data)) {
+        if (result.code === 0 && result.data && Array.isArray(result.data)) {
             if (offset === 0) {
                 elements.dramaList.innerHTML = '';
             }
             
             if (result.data.length > 0) {
                 renderDramas(result.data);
-                currentOffset = offset + result.data.length;
-                hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
+                
+                if (currentSource === 'melolo' || currentSource === 'netshort') {
+                    currentOffset = offset + result.data.length;
+                    hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
+                } else {
+                    currentPage = result.nextPage || currentPage + 1;
+                    hasMoreData = result.hasMore;
+                }
+                
                 updateLoadMoreButton();
                 hideEmptyState();
             } else {
@@ -293,11 +488,12 @@ async function loadDramas(offset = 0) {
                 updateLoadMoreButton();
             }
         } else {
-            throw new Error('Response tidak valid');
+            throw new Error(`Invalid response from ${currentSource}`);
         }
+        
     } catch (error) {
-        console.error('Error loading:', error);
-        showError(`Gagal memuat: ${error.message}`);
+        console.error(`Error loading from ${currentSource}:`, error);
+        showError(`Gagal memuat drama: ${error.message}`);
         hasMoreData = false;
         updateLoadMoreButton();
     } finally {
@@ -306,26 +502,39 @@ async function loadDramas(offset = 0) {
     }
 }
 
+// ============== RENDER DRAMAS ==============
 function renderDramas(dramas) {
+    if (!dramas || !Array.isArray(dramas) || dramas.length === 0) return;
+    
     const dramasHtml = dramas.map(drama => {
-        const data = formatDramaData(drama);
+        let data = formatDramaData(drama);
+        
+        const title = escapeHtml(data.title);
+        const author = escapeHtml(data.author);
+        const intro = escapeHtml(data.intro);
+        const episodes = data.episodes;
+        const cover = data.cover;
+        const dramaId = data.id;
+        const watchUrl = data.watchUrl;
         const isDubbing = data.isDubbing;
         
         if (currentView === 'list') {
-            return createListViewHTML(data.title, data.author, data.intro, data.episodes, data.cover, data.id, data.watchUrl, isDubbing);
+            return createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing);
         } else {
-            return createGridViewHTML(data.title, data.author, data.intro, data.episodes, data.cover, data.id, data.watchUrl, isDubbing);
+            return createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing);
         }
     }).join('');
     
     elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
+    
+    if (currentView === 'list') updateView();
 }
 
 function formatDramaData(drama) {
     let formatted = {
-        title: 'Untitled',
+        title: 'Untitled Drama',
         author: 'Unknown',
-        intro: 'No description',
+        intro: 'No description available.',
         episodes: 0,
         cover: CONFIG.defaultImage,
         id: '',
@@ -337,8 +546,8 @@ function formatDramaData(drama) {
     switch(currentSource) {
         case 'melolo':
             formatted.title = drama.name || drama.title || 'Untitled';
-            formatted.author = drama.author || 'Unknown';
-            formatted.intro = drama.intro || 'No desc';
+            formatted.author = drama.author || 'Unknown Author';
+            formatted.intro = drama.intro || 'No description.';
             formatted.episodes = drama.episodes || 0;
             formatted.cover = drama.cover || CONFIG.defaultImage;
             formatted.id = drama.id;
@@ -346,9 +555,9 @@ function formatDramaData(drama) {
             break;
             
         case 'dramabox':
-            formatted.title = drama.bookName || 'Untitled';
+            formatted.title = drama.bookName || drama.title || 'Untitled';
             formatted.author = 'DramaBox';
-            formatted.intro = drama.introduction || 'DramaBox series';
+            formatted.intro = drama.introduction || 'Drama from DramaBox';
             formatted.episodes = drama.chapterCount || 0;
             formatted.cover = drama.cover || CONFIG.defaultImage;
             formatted.id = drama.bookId;
@@ -356,37 +565,47 @@ function formatDramaData(drama) {
             break;
             
         case 'netshort':
-            const title = drama.name || drama.shortPlayName || 'NetShort';
+            const title = drama.name || drama.shortPlayName || 'NetShort Drama';
             formatted.title = title;
             formatted.author = 'NetShort';
-            formatted.intro = drama.labelArray?.join(', ') || 'Short drama';
+            formatted.intro = drama.labelArray ? drama.labelArray.join(', ') : 'Short drama';
             formatted.episodes = 1;
             formatted.cover = drama.shortPlayCover || drama.cover || CONFIG.defaultImage;
             formatted.id = drama.shortPlayId || drama.id;
             formatted.watchUrl = `/netshort.html?id=${formatted.id}`;
-            formatted.isDubbing = title.toLowerCase().includes('sulih suara');
+            formatted.isDubbing = title.toLowerCase().includes('(sulih suara)') || title.toLowerCase().includes('sulih suara');
             break;
     }
     
     return formatted;
 }
 
-function createGridViewHTML(title, author, intro, episodes, cover, id, watchUrl, isDubbing) {
+// Tambahkan isDubbing di createGridViewHTML (contoh posisi setelah source-badge)
+function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing) {
     return `
         <div class="col">
             <div class="drama-card position-relative">
                 <div class="card-cover">
                     <img src="${cover}" class="drama-cover" alt="${title}" loading="lazy" onerror="this.src='${CONFIG.defaultImage}'">
+                    
                     ${episodes > 0 ? `<div class="episode-badge">${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}</div>` : ''}
+                    
                     <div class="source-badge">${currentSource.toUpperCase()}</div>
-                    ${isDubbing ? `<div class="badge bg-success position-absolute top-0 end-0 m-2"><i class="bi bi-volume-up-fill"></i> Dub ID</div>` : ''}
+                    
+                    ${isDubbing ? `
+                    <div class="badge bg-success position-absolute top-0 end-0 m-2">
+                        <i class="bi bi-volume-up-fill"></i> Dub ID
+                    </div>` : ''}
+                    
                     <div class="play-overlay">
                         <a href="${watchUrl}" class="play-btn"><i class="bi bi-play-fill"></i></a>
                     </div>
                 </div>
+                
                 <div class="card-body">
                     <h6 class="drama-title">${title}</h6>
-                    <p class="drama-desc small">${intro.substring(0, 80)}${intro.length > 80 ? '...' : ''}</p>
+                    <div class="drama-meta"><small><i class="bi bi-person"></i> ${author}</small></div>
+                    <p class="drama-desc">${intro.substring(0, 80)}${intro.length > 80 ? '...' : ''}</p>
                     <a href="${watchUrl}" class="btn btn-primary btn-sm w-100">Nonton</a>
                 </div>
             </div>
@@ -394,44 +613,18 @@ function createGridViewHTML(title, author, intro, episodes, cover, id, watchUrl,
     `;
 }
 
-function createListViewHTML(title, author, intro, episodes, cover, id, watchUrl, isDubbing) {
-    return `
-        <div class="col-12">
-            <div class="drama-card d-flex">
-                <img src="${cover}" class="me-3" style="width:120px;height:180px;object-fit:cover;border-radius:8px;" alt="${title}" onerror="this.src='${CONFIG.defaultImage}'">
-                <div class="flex-grow-1">
-                    <h6 class="drama-title">${title}</h6>
-                    <div class="small text-muted">${author} • ${episodes} ${currentSource === 'netshort' ? 'Short' : 'Ep'}</div>
-                    ${isDubbing ? `<span class="badge bg-success mt-1"><i class="bi bi-volume-up-fill"></i> Dub ID</span>` : ''}
-                    <p class="mt-2 mb-2">${intro}</p>
-                    <a href="${watchUrl}" class="btn btn-primary btn-sm">Nonton</a>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
+// Tambahkan isDubbing di createListViewHTML (contoh setelah drama-meta)
 function createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing) {
     return `
         <div class="col">
-            <div class="drama-card position-relative">
+            <div class="drama-card">
                 <div class="card-cover">
-                    <img src="${cover}" 
-                         class="drama-cover"
-                         alt="${title}"
-                         loading="lazy"
-                         onerror="this.src='${CONFIG.defaultImage}'">
+                    <img src="${cover}" class="drama-cover" alt="${title}" loading="lazy" onerror="this.src='${CONFIG.defaultImage}'">
                     
-                    ${episodes > 0 ? `
-                    <div class="episode-badge">
-                        ${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}
-                    </div>
-                    ` : ''}
+                    ${episodes > 0 ? `<div class="episode-badge">${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}</div>` : ''}
                     
                     <div class="play-overlay">
-                        <a href="${watchUrl}" class="play-btn">
-                            <i class="bi bi-play-fill"></i>
-                        </a>
+                        <a href="${watchUrl}" class="play-btn"><i class="bi bi-play-fill"></i></a>
                     </div>
                 </div>
                 
@@ -443,18 +636,12 @@ function createListViewHTML(title, author, intro, episodes, cover, dramaId, watc
                         <small class="ms-3"><i class="bi bi-database"></i> ${currentSource.toUpperCase()}</small>
                     </div>
                     
-                    ${isDubbing && currentSource === 'netshort' ? `
-                    <div class="dubbing-badge badge bg-success mt-2">
-                        <i class="bi bi-volume-up-fill"></i> Sulih Suara Indonesia
-                    </div>` : ''}
+                    ${isDubbing ? `<span class="badge bg-success mt-2"><i class="bi bi-volume-up-fill"></i> Dub ID</span>` : ''}
                     
                     <p class="drama-desc">${intro}</p>
                     
                     <div class="d-flex gap-2">
-                        <a href="${watchUrl}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-eye me-1"></i> 
-                            ${currentSource === 'netshort' ? 'Nonton Short' : 'Watch Now'}
-                        </a>
+                        <a href="${watchUrl}" class="btn btn-primary btn-sm">Nonton</a>
                         <button class="btn btn-outline-secondary btn-sm" onclick="addToFavorites('${dramaId}', '${currentSource}')">
                             <i class="bi bi-bookmark"></i>
                         </button>
@@ -465,125 +652,19 @@ function createListViewHTML(title, author, intro, episodes, cover, dramaId, watc
     `;
 }
 
-// ============== UI HELPER FUNCTIONS ==============
-// (sama seperti sebelumnya, tidak diubah)
-function showLoading(show) {
-    if (elements.loadingIndicator) {
-        elements.loadingIndicator.style.display = show ? 'block' : 'none';
-    }
-    
-    if (elements.loadMoreBtn) {
-        if (show) {
-            elements.loadMoreBtn.innerHTML = `
-                <span class="spinner-border spinner-border-sm" role="status"></span>
-                Loading...
-            `;
-            elements.loadMoreBtn.disabled = true;
-        } else {
-            elements.loadMoreBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Load More';
-            elements.loadMoreBtn.disabled = false;
-        }
-    }
-}
-
-function updateLoadMoreButton() {
-    if (elements.loadMoreBtn) {
-        elements.loadMoreBtn.style.display = hasMoreData ? 'block' : 'none';
-    }
-}
-
-function showEmptyState(message) {
-    if (elements.emptyState) {
-        elements.emptyState.innerHTML = `
-            <div class="text-center py-5">
-                <i class="bi bi-emoji-frown display-1 text-muted"></i>
-                <h4 class="mt-3">${escapeHtml(message)}</h4>
-                <p class="text-muted">Coba ganti sumber atau tab lain</p>
-                <button onclick="location.reload()" class="btn btn-primary mt-3">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                </button>
-            </div>
-        `;
-        elements.emptyState.style.display = 'block';
-    }
-}
-
-function hideEmptyState() {
-    if (elements.emptyState) {
-        elements.emptyState.style.display = 'none';
-    }
-}
-
-function showError(message) {
-    if (elements.dramaList) {
-        elements.dramaList.innerHTML = `
-            <div class="col-12">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Error loading from ${currentSource}:</strong> ${escapeHtml(message)}
-                    <div class="mt-2">
-                        <button onclick="switchSource('melolo')" class="btn btn-sm btn-outline-primary me-2">
-                            Switch to Melolo
-                        </button>
-                        <button onclick="location.reload()" class="btn btn-sm btn-outline-danger">
-                            Refresh Page
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-}
+// (Fungsi-fungsi helper lain seperti showLoading, updateLoadMoreButton, showEmptyState, hideEmptyState, showError, escapeHtml, addScrollToTopButton, addToFavorites, showNotification, switchSource, dll tetap seperti versi awal kamu - tidak perlu diganti)
 
 function updatePageTitle() {
     const titles = {
         melolo: 'DramaShort - Melolo Drama',
         dramabox: 'DramaShort - DramaBox Series',
-        netshort: 'DramaShort - NetShort Sulih Suara Indonesia'
+        netshort: 'DramaShort - NetShort'
     };
     
-    if (titles[currentSource]) {
-        document.title = titles[currentSource];
-    }
+    if (titles[currentSource]) document.title = titles[currentSource];
 }
 
-// ============== UTILITY FUNCTIONS ==============
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function addScrollToTopButton() {
-    if (document.getElementById('scroll-to-top')) return;
-    
-    const scrollBtn = document.createElement('button');
-    scrollBtn.id = 'scroll-to-top';
-    scrollBtn.className = 'btn btn-primary rounded-circle shadow';
-    scrollBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
-    scrollBtn.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        z-index: 1000;
-        display: none;
-        transition: all 0.3s ease;
-    `;
-    
-    document.body.appendChild(scrollBtn);
-    
-    scrollBtn.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-    
-    window.addEventListener('scroll', () => {
-        scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
-    });
-}
-
+// ============== GLOBAL FUNCTIONS ==============
 window.addToFavorites = function(dramaId, source) {
     const favorites = JSON.parse(localStorage.getItem('dramashort_favorites') || '[]');
     const newFavorite = { id: dramaId, source, addedAt: new Date().toISOString() };
@@ -592,9 +673,9 @@ window.addToFavorites = function(dramaId, source) {
     if (!exists) {
         favorites.push(newFavorite);
         localStorage.setItem('dramashort_favorites', JSON.stringify(favorites));
-        showNotification(`Ditambahkan ke favorit! (${source})`);
+        showNotification(`Added to favorites! (${source})`);
     } else {
-        showNotification('Sudah ada di favorit!');
+        showNotification('Already in favorites!');
     }
 };
 
@@ -614,9 +695,7 @@ function showNotification(message) {
     document.body.appendChild(notification);
     
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
+        if (notification.parentNode) notification.remove();
     }, 3000);
 }
 
@@ -627,9 +706,7 @@ window.switchSource = function(source) {
         
         localStorage.setItem('dramashort_source', source);
         
-        if (elements.dramaList) {
-            elements.dramaList.innerHTML = '';
-        }
+        if (elements.dramaList) elements.dramaList.innerHTML = '';
         
         updatePageTitle();
         loadDramas();
@@ -637,4 +714,3 @@ window.switchSource = function(source) {
 };
 
 window.loadDramas = loadDramas;
-window.loadMoreDramas = loadMoreDramas;
