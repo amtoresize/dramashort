@@ -51,7 +51,7 @@
         .drama-title {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(90deg, #fff, #0dcaf0);
+            background: linear-gradient(90deg, #fff, #ff6b6b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -95,14 +95,14 @@
         
         .episode-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
-            border-color: #0d6efd;
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+            border-color: #ff6b6b;
             background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
         }
         
         .episode-btn.playing {
-            background: linear-gradient(145deg, #0d6efd, #0b5ed7);
-            border-color: #0b5ed7;
+            background: linear-gradient(145deg, #ff6b6b, #ff4757);
+            border-color: #ff4757;
             color: white;
         }
         
@@ -181,6 +181,9 @@
             background: linear-gradient(135deg, #ffd93d, #ff9f1a);
             color: #000;
             font-weight: 600;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
         }
         
         .tag-badge {
@@ -191,6 +194,12 @@
             border-radius: 12px;
             font-size: 0.8rem;
         }
+        
+        .views-badge {
+            background: rgba(108, 117, 125, 0.3);
+            color: #adb5bd;
+            border: 1px solid #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -198,7 +207,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class="bi bi-play-btn-fill me-2"></i>
+                <i class="bi bi-play-btn-fill me-2 text-danger"></i>
                 <span>DramaBox</span>
             </a>
             <div class="navbar-nav ms-auto">
@@ -215,7 +224,7 @@
         <section id="drama-detail" class="mb-5">
             <!-- Content akan diisi oleh JavaScript -->
             <div class="text-center py-5">
-                <div class="spinner-border loading-spinner text-primary" role="status">
+                <div class="spinner-border loading-spinner text-danger" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <h4 class="mt-3">Memuat detail drama...</h4>
@@ -227,7 +236,7 @@
         <section class="mt-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold">
-                    <i class="bi bi-play-btn me-2"></i>Daftar Episode
+                    <i class="bi bi-play-btn me-2 text-danger"></i>Daftar Episode
                 </h3>
                 <div id="episode-count" class="badge badge-dramabox badge-episode">
                     <span id="count-text">0 Episode</span>
@@ -259,6 +268,7 @@
 
         // ============== STATE MANAGEMENT ==============
         let currentDrama = null;
+        let currentChapterList = null; // Menyimpan semua episode
         let isLoading = false;
 
         // ============== DOM ELEMENTS ==============
@@ -290,7 +300,7 @@
         // ============== MAIN FUNCTIONS ==============
 
         /**
-         * Load drama detail from DramaBox API
+         * Load drama detail from DramaBox API (2 STEP)
          */
         async function loadDramaDetail(dramaId) {
             if (isLoading) return;
@@ -298,23 +308,43 @@
             isLoading = true;
             
             try {
-                const apiUrl = `https://dramabos.asia/api/dramabox/api/drama/${dramaId}?lang=in`;
+                console.log('📥 Loading DramaBox detail for:', dramaId);
                 
-                const response = await fetch(apiUrl);
+                // STEP 1: Load drama info
+                const detailResponse = await fetch(`https://dramabos.asia/api/dramabox/api/drama/${dramaId}?lang=in`);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                if (!detailResponse.ok) {
+                    throw new Error(`HTTP ${detailResponse.status}: ${detailResponse.statusText}`);
                 }
                 
-                const data = await response.json();
+                const detailData = await detailResponse.json();
                 
-                if (data.success && data.data) {
-                    currentDrama = data.data;
-                    renderDramaDetail(data.data);
-                    renderEpisodes(data.data.chapterList || []);
-                } else {
+                if (!detailData.success || !detailData.data) {
                     throw new Error('Drama tidak ditemukan');
                 }
+                
+                currentDrama = detailData.data;
+                renderDramaDetail(detailData.data);
+                
+                // STEP 2: Load ALL episodes separately
+                console.log('📥 Loading episodes...');
+                const chaptersResponse = await fetch(`https://dramabos.asia/api/dramabox/api/chapters/${dramaId}?lang=in`);
+                
+                if (!chaptersResponse.ok) {
+                    throw new Error(`Failed to load episodes: HTTP ${chaptersResponse.status}`);
+                }
+                
+                const chaptersData = await chaptersResponse.json();
+                
+                if (chaptersData.success && chaptersData.data && chaptersData.data.chapterList) {
+                    currentChapterList = chaptersData.data.chapterList;
+                    renderEpisodes(chaptersData.data.chapterList);
+                    console.log(`✅ Loaded ${chaptersData.data.chapterList.length} episodes`);
+                } else {
+                    console.log('⚠️ No episodes found');
+                    showNoEpisodes();
+                }
+                
             } catch (error) {
                 console.error('Error loading drama detail:', error);
                 showError(`Gagal memuat detail drama: ${error.message}`);
@@ -350,9 +380,16 @@
                             </div>
                             ` : ''}
                             
+                            <!-- Quick Stats -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge views-badge">
+                                    <i class="bi bi-eye me-1"></i> ${drama.playCount || '0'} Views
+                                </span>
+                            </div>
+                            
                             <!-- Quick Actions -->
                             <div class="d-grid gap-2">
-                                <button class="btn btn-primary btn-lg py-3" onclick="playFirstEpisode()" id="playFirstBtn">
+                                <button class="btn btn-danger btn-lg py-3" onclick="playFirstEpisode()" id="playFirstBtn">
                                     <i class="bi bi-play-fill me-2"></i>Putar Episode 1
                                 </button>
                             </div>
@@ -368,16 +405,12 @@
                             <span class="badge badge-dramabox badge-episode">
                                 <i class="bi bi-film me-1"></i> ${drama.chapterCount || 0} Episode
                             </span>
-                            
-                            <span class="badge bg-secondary badge-episode">
-                                <i class="bi bi-eye me-1"></i> ${drama.playCount || '0'} Views
-                            </span>
                         </div>
                         
                         <!-- Synopsis -->
                         <div class="synopsis-box mb-4">
                             <h5 class="fw-bold mb-3">
-                                <i class="bi bi-info-circle text-primary me-2"></i>Sinopsis
+                                <i class="bi bi-info-circle text-danger me-2"></i>Sinopsis
                             </h5>
                             <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
                                 ${escapeHtml(drama.introduction || 'Tidak ada sinopsis.')}
@@ -391,42 +424,39 @@
         }
 
         /**
-         * Render episodes list
+         * Render episodes list from chapterList
          */
-        function renderEpisodes(episodes) {
-            if (!episodes || episodes.length === 0) {
-                elements.episodeList.style.display = 'none';
-                elements.noEpisodes.style.display = 'block';
-                elements.countText.textContent = '0 Episode';
+        function renderEpisodes(chapterList) {
+            if (!chapterList || chapterList.length === 0) {
+                showNoEpisodes();
                 return;
             }
             
-            // Sort episodes by number
-            episodes.sort((a, b) => a.chapterIndex - b.chapterIndex);
+            // Sort by episode number
+            chapterList.sort((a, b) => a.chapterIndex - b.chapterIndex);
             
             // Update count
-            elements.countText.textContent = `${episodes.length} Episode`;
+            elements.countText.textContent = `${chapterList.length} Episode`;
             elements.episodeList.style.display = 'flex';
             elements.noEpisodes.style.display = 'none';
             
             // Create episode cards
-            const episodesHtml = episodes.map(episode => {
-                const isVip = episode.isCharge === 1;
+            const episodesHtml = chapterList.map(chapter => {
+                const isVip = chapter.isCharge === 1;
                 const vipBadge = isVip ? '<span class="badge badge-vip ms-1">VIP</span>' : '';
                 
                 return `
                     <div class="col">
                         <div class="episode-card">
                             <button class="episode-btn w-100" 
-                                    onclick="playEpisode('${episode.chapterId}', ${episode.chapterIndex}, this, ${isVip})"
-                                    data-id="${episode.chapterId}"
-                                    data-episode="${episode.chapterIndex}"
-                                    title="Episode ${episode.chapterIndex}${isVip ? ' (VIP)' : ''}">
+                                    onclick="playEpisode(${chapter.chapterIndex}, this, ${isVip})"
+                                    data-index="${chapter.chapterIndex}"
+                                    title="${chapter.chapterName || `Episode ${chapter.chapterIndex}`}${isVip ? ' (VIP)' : ''}">
                                 <div class="episode-number">
-                                    ${episode.chapterName || `Episode ${episode.chapterIndex}`}
+                                    ${chapter.chapterName || `Episode ${chapter.chapterIndex}`}
                                     ${vipBadge}
                                 </div>
-                                <div class="episode-duration">${estimateDuration(episode)}</div>
+                                <div class="episode-duration">${estimateDuration(chapter)}</div>
                             </button>
                         </div>
                     </div>
@@ -439,13 +469,13 @@
         /**
          * Play a specific episode (OPEN IN NEW TAB)
          */
-        async function playEpisode(chapterId, episodeNumber, buttonElement, isVip = false) {
-            if (!chapterId) {
-                alert('Chapter ID tidak valid');
+        async function playEpisode(episodeIndex, buttonElement, isVip = false) {
+            if (!episodeIndex || !currentDrama) {
+                alert('Episode tidak valid');
                 return;
             }
             
-            console.log('Playing episode:', episodeNumber, 'Chapter ID:', chapterId);
+            console.log('Playing episode:', episodeIndex, 'Drama:', currentDrama.bookName);
             
             // Update button state
             if (buttonElement) {
@@ -453,21 +483,25 @@
             }
             
             try {
-                // Get video URL from chapter data
                 let videoUrl = null;
                 
-                // Cari URL video dari chapterList yang sudah di-load
-                if (currentDrama && currentDrama.chapterList) {
-                    const chapter = currentDrama.chapterList.find(ch => ch.chapterId === chapterId);
+                // CARA 1: Cari video URL dari chapterList yang sudah di-load
+                if (currentChapterList) {
+                    const chapter = currentChapterList.find(ch => ch.chapterIndex === episodeIndex);
                     if (chapter && chapter.cdnList) {
-                        // Ambil URL video 720p (default)
+                        console.log('Found chapter in cache:', chapter);
+                        
+                        // Cari video URL 720p (default)
                         for (const cdn of chapter.cdnList) {
-                            if (cdn.videoPathList) {
-                                const videoPath = cdn.videoPathList.find(v => v.quality === 720 && v.isDefault === 1) || 
+                            if (cdn.videoPathList && cdn.videoPathList.length > 0) {
+                                // Prioritize 720p, then default, then first available
+                                const videoPath = cdn.videoPathList.find(v => v.quality === 720) || 
                                                 cdn.videoPathList.find(v => v.isDefault === 1) ||
                                                 cdn.videoPathList[0];
+                                
                                 if (videoPath && videoPath.videoPath) {
                                     videoUrl = videoPath.videoPath;
+                                    console.log('Found video URL in chapterList:', videoUrl.substring(0, 100));
                                     break;
                                 }
                             }
@@ -475,30 +509,39 @@
                     }
                 }
                 
+                // CARA 2: Jika tidak ada, pakai API watch
+                if (!videoUrl) {
+                    console.log('Falling back to watch API...');
+                    const watchResponse = await fetch(`https://dramabos.asia/api/dramabox/api/watch/player?bookId=${currentDrama.bookId}&index=${episodeIndex}&lang=in`);
+                    
+                    if (!watchResponse.ok) {
+                        throw new Error(`Watch API error: HTTP ${watchResponse.status}`);
+                    }
+                    
+                    const watchData = await watchResponse.json();
+                    
+                    if (watchData.success && watchData.data && watchData.data.videoUrl) {
+                        videoUrl = watchData.data.videoUrl;
+                        console.log('Found video URL from watch API');
+                    }
+                }
+                
                 if (videoUrl) {
                     // Generate player URL
-                    const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(currentDrama.bookName)}&episode=${episodeNumber}`;
+                    const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(currentDrama.bookName)}&episode=${episodeIndex}`;
+                    
+                    console.log('Opening player:', playerUrl);
                     
                     // OPEN IN NEW TAB
                     window.open(playerUrl, '_blank');
                     
                     // Save last watched episode
-                    saveLastWatched(episodeNumber);
+                    saveLastWatched(episodeIndex);
                     
                 } else {
-                    // Fallback: Direct play via API
-                    const apiUrl = `https://dramabos.asia/api/dramabox/api/watch/player?bookId=${currentDrama.bookId}&index=${episodeNumber}&lang=in`;
-                    const response = await fetch(apiUrl);
-                    const data = await response.json();
-                    
-                    if (data.data && data.data.videoUrl) {
-                        const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(data.data.videoUrl)}&title=${encodeURIComponent(currentDrama.bookName)}&episode=${episodeNumber}`;
-                        window.open(playerUrl, '_blank');
-                        saveLastWatched(episodeNumber);
-                    } else {
-                        throw new Error('Video URL tidak ditemukan');
-                    }
+                    throw new Error('Video URL tidak ditemukan');
                 }
+                
             } catch (error) {
                 console.error('Error playing video:', error);
                 alert('Gagal memutar video: ' + error.message);
@@ -514,15 +557,15 @@
          * Play the first episode
          */
         function playFirstEpisode() {
-            if (!currentDrama || !currentDrama.chapterList || currentDrama.chapterList.length === 0) {
+            if (!currentChapterList || currentChapterList.length === 0) {
                 alert('Tidak ada episode yang tersedia');
                 return;
             }
             
-            const firstEpisode = currentDrama.chapterList[0];
+            const firstEpisode = currentChapterList[0];
             const firstButton = elements.episodeList.querySelector('.episode-btn');
             const isVip = firstEpisode.isCharge === 1;
-            playEpisode(firstEpisode.chapterId, firstEpisode.chapterIndex, firstButton, isVip);
+            playEpisode(firstEpisode.chapterIndex, firstButton, isVip);
         }
 
         // ============== UI HELPER FUNCTIONS ==============
@@ -549,7 +592,7 @@
                 if (button.dataset.originalContent) {
                     button.innerHTML = button.dataset.originalContent;
                 } else {
-                    const episode = button.dataset.episode;
+                    const episode = button.dataset.index;
                     const isVip = button.innerHTML.includes('badge-vip');
                     const vipBadge = isVip ? '<span class="badge badge-vip ms-1">VIP</span>' : '';
                     button.innerHTML = `
@@ -572,7 +615,17 @@
             if (currentDrama) {
                 localStorage.setItem(`last_watched_dramabox_${currentDrama.bookId}`, episodeNumber);
                 localStorage.setItem('last_watched_time', Date.now());
+                console.log('Saved watch history for episode:', episodeNumber);
             }
+        }
+
+        /**
+         * Show no episodes state
+         */
+        function showNoEpisodes() {
+            elements.episodeList.style.display = 'none';
+            elements.noEpisodes.style.display = 'block';
+            elements.countText.textContent = '0 Episode';
         }
 
         /**
@@ -589,7 +642,7 @@
                             <button onclick="window.location.href='/'" class="btn btn-outline-danger">
                                 <i class="bi bi-house me-1"></i> Kembali ke Home
                             </button>
-                            <button onclick="location.reload()" class="btn btn-primary">
+                            <button onclick="location.reload()" class="btn btn-danger">
                                 <i class="bi bi-arrow-clockwise me-1"></i> Coba Lagi
                             </button>
                         </div>
