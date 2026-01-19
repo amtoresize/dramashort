@@ -138,7 +138,7 @@ const WORKING_APIS = {
         // Explore (Home)
         explore: async (offset = 0, limit = 20) => {
             try {
-                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/explore?offset=${offset}&limit=${limit}`);
+                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/explore?lang=id_ID&offset=${offset}&limit=${limit}`);
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.result) {
@@ -160,7 +160,7 @@ const WORKING_APIS = {
         // Discover (Trending/Populer)
         discover: async () => {
             try {
-                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/discover`);
+                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/discover?lang=id_ID`);
                 const data = await response.json();
                 
                 if (data.success && data.data && data.data.dataList) {
