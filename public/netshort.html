@@ -93,50 +93,27 @@
         }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
+<body class="bg-dark text-light">
+    <nav class="navbar navbar-dark bg-black">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class="bi bi-lightning-charge-fill me-2"></i>
-                <span>NetShort Sulih Suara</span>
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a href="/" class="btn btn-outline-light back-btn">
-                    <i class="bi bi-arrow-left me-2"></i>Kembali ke Home
-                </a>
-            </div>
+            <a class="navbar-brand" href="/">NetShort</a>
+            <a href="/" class="btn btn-outline-light">Kembali</a>
         </div>
     </nav>
 
     <main class="container py-5">
         <section id="drama-detail" class="mb-5">
             <div class="text-center py-5">
-                <div class="spinner-border loading-spinner text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <h4 class="mt-3">Memuat detail drama...</h4>
+                <div class="spinner-border text-primary" role="status"></div>
+                <h4 class="mt-3">Memuat...</h4>
             </div>
         </section>
 
-        <section class="mt-5">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold">
-                    <i class="bi bi-play-btn me-2"></i>Daftar Episode
-                </h3>
-                <div class="badge bg-success badge-episode">
-                    <span id="count-text">0 Episode</span>
-                </div>
-            </div>
-            
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list">
-                <!-- Episodes diisi JS -->
-            </div>
-            
-            <div id="no-episodes" class="text-center py-5" style="display: none;">
-                <div class="alert alert-info w-75 mx-auto">
-                    <i class="bi bi-info-circle display-4 d-block mb-3"></i>
-                    <h4>Episode Belum Tersedia</h4>
-                </div>
+        <section>
+            <h3 class="mb-4">Episode</h3>
+            <div class="row g-3" id="episode-list"></div>
+            <div id="no-episodes" class="text-center py-5 d-none">
+                <h4>Belum ada episode</h4>
             </div>
         </section>
     </main>
@@ -148,224 +125,83 @@
         };
 
         let currentVideo = null;
-        let isLoading = false;
 
-        const elements = {
-            dramaDetail: document.getElementById('drama-detail'),
-            episodeList: document.getElementById('episode-list'),
-            countText: document.getElementById('count-text'),
-            noEpisodes: document.getElementById('no-episodes')
-        };
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const videoId = urlParams.get('id');
-            
-            if (!videoId) {
-                window.location.href = '/';
-                return;
-            }
-            
-            loadVideoDetail(videoId);
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (id) loadDetail(id);
         });
 
-        async function loadVideoDetail(videoId) {
-            if (isLoading) return;
-            isLoading = true;
-            
+        async function loadDetail(id) {
             try {
-                const apiUrl = `https://dramabos.asia/api/netshort/api/drama/info/${videoId}`;
-                const response = await fetch(apiUrl);
-                
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const data = await response.json();
+                const res = await fetch(`https://dramabos.asia/api/netshort/api/drama/info/${id}`);
+                const data = await res.json();
                 
                 if (data.success && data.data) {
                     currentVideo = data.data;
-                    renderVideoDetail(data.data);
+                    renderDetail(data.data);
                     renderEpisodes(data.data.result || []);
                 } else {
-                    throw new Error('Drama tidak ditemukan');
+                    showError('Drama tidak ditemukan');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showError(`Gagal memuat: ${error.message}`);
-            } finally {
-                isLoading = false;
+            } catch (e) {
+                showError('Gagal memuat');
             }
         }
 
-        function renderVideoDetail(video) {
-            document.title = `${escapeHtml(video.name)} - NetShort Sulih Suara`;
+        function renderDetail(video) {
+            document.title = video.name;
+            const isDub = video.name.toLowerCase().includes('sulih suara');
             
-            const html = `
+            document.getElementById('drama-detail').innerHTML = `
                 <div class="row">
-                    <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
-                        <div class="position-sticky" style="top: 90px;">
-                            <img src="${CONFIG.defaultImage}" 
-                                 class="drama-poster mb-4"
-                                 alt="${escapeHtml(video.name)}"
-                                 onerror="this.src='${CONFIG.defaultImage}'">
-                            
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-primary btn-lg py-3" onclick="playFirstEpisode()">
-                                    <i class="bi bi-play-fill me-2"></i>Putar Episode 1
-                                </button>
-                            </div>
-                        </div>
+                    <div class="col-md-4">
+                        <img src="${CONFIG.defaultImage}" class="img-fluid rounded" alt="${video.name}" onerror="this.src='${CONFIG.defaultImage}'">
                     </div>
-                    
-                    <div class="col-lg-8 col-md-7">
-                        <h1 class="drama-title">${escapeHtml(video.name)}</h1>
-                        
-                        <div class="d-flex flex-wrap gap-3 mb-4">
-                            <span class="dubbing-badge-main">
-                                <i class="bi bi-volume-up-fill me-1"></i>Sulih Suara Indonesia
-                            </span>
-                            <span class="badge bg-success badge-episode">
-                                <i class="bi bi-film me-1"></i> ${video.result ? video.result.length : '?'} Episode
-                            </span>
-                        </div>
-                        
-                        <div class="synopsis-box mb-4">
-                            <h5 class="fw-bold mb-3">
-                                <i class="bi bi-info-circle text-primary me-2"></i>Deskripsi
-                            </h5>
-                            <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
-                                Drama short dengan audio sulih suara profesional bahasa Indonesia. 
-                                Cocok untuk penonton yang ingin menikmati cerita tanpa subtitle.
-                                Durasi per episode sekitar 1-3 menit.
-                            </p>
-                        </div>
+                    <div class="col-md-8">
+                        <h2>${video.name}</h2>
+                        ${isDub ? '<span class="badge bg-success mb-3"><i class="bi bi-volume-up-fill"></i> Sulih Suara Indonesia</span>' : ''}
+                        <p class="text-muted">Jumlah Episode: ${video.result?.length || 1}</p>
+                        <p>Drama pendek dengan audio sulih suara Indonesia. Tanpa subtitle.</p>
+                        <button class="btn btn-primary btn-lg" onclick="playFirst()">Putar Episode 1</button>
                     </div>
                 </div>
             `;
-            
-            elements.dramaDetail.innerHTML = html;
         }
 
-        function renderEpisodes(episodes) {
-            if (!episodes || episodes.length === 0) {
-                elements.episodeList.style.display = 'none';
-                elements.noEpisodes.style.display = 'block';
-                elements.countText.textContent = '0 Episode';
+        function renderEpisodes(eps) {
+            if (!eps.length) {
+                document.getElementById('no-episodes').classList.remove('d-none');
                 return;
             }
             
-            episodes.sort((a, b) => a.episodeNo - b.episodeNo);
-            elements.countText.textContent = `${episodes.length} Episode`;
-            elements.episodeList.style.display = 'flex';
-            elements.noEpisodes.style.display = 'none';
-            
-            const html = episodes.map(episode => `
-                <div class="col">
-                    <div class="episode-card">
-                        <button class="episode-btn w-100" 
-                                onclick="playEpisode('${episode.id}', ${episode.episodeNo}, this)"
-                                data-id="${episode.id}"
-                                data-episode="${episode.episodeNo}"
-                                title="Episode ${episode.episodeNo}">
-                            <div class="episode-number">Episode ${episode.episodeNo}</div>
-                            <div class="episode-duration">1-3 menit • Sulih Suara ID</div>
-                        </button>
-                    </div>
+            const html = eps.map(ep => `
+                <div class="col-md-3">
+                    <button class="btn btn-outline-light w-100 py-3" onclick="play(${ep.episodeNo})">
+                        Episode ${ep.episodeNo}
+                    </button>
                 </div>
             `).join('');
             
-            elements.episodeList.innerHTML = html;
+            document.getElementById('episode-list').innerHTML = html;
         }
 
-        async function playEpisode(videoId, episodeNumber, button) {
-            if (!videoId) return alert('Video ID tidak valid');
-            
-            if (button) updateButtonState(button, true);
-            
-            try {
-                let videoUrl = null;
-                
-                if (currentVideo?.result) {
-                    const ep = currentVideo.result.find(e => e.id === videoId && e.episodeNo === episodeNumber);
-                    if (ep?.videoUrl) videoUrl = ep.videoUrl;
-                }
-                
-                if (!videoUrl) {
-                    const res = await fetch(`https://dramabos.asia/api/netshort/api/drama/info/${videoIdFromUrl()}`);
-                    const data = await res.json();
-                    if (data.success && data.data?.result) {
-                        const ep = data.data.result.find(e => e.episodeNo === episodeNumber);
-                        if (ep?.videoUrl) videoUrl = ep.videoUrl;
-                    }
-                }
-                
-                if (videoUrl) {
-                    const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(currentVideo.name)}&episode=${episodeNumber}&audio=sulih-suara-id`;
-                    window.open(playerUrl, '_blank');
-                    saveLastWatched(episodeNumber);
-                } else {
-                    alert('Link video tidak ditemukan');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Gagal memutar: ' + err.message);
-            } finally {
-                if (button) updateButtonState(button, false);
+        function playFirst() {
+            if (currentVideo?.result?.[0]) {
+                play(1);
             }
         }
 
-        function playFirstEpisode() {
-            if (!currentVideo?.result?.length) return alert('Tidak ada episode');
-            const first = currentVideo.result[0];
-            const btn = elements.episodeList.querySelector('.episode-btn');
-            playEpisode(first.id, first.episodeNo, btn);
-        }
-
-        function updateButtonState(btn, loading) {
-            if (loading) {
-                btn.dataset.original = btn.innerHTML;
-                btn.innerHTML = `<div class="spinner-border spinner-border-sm"></div><small>Loading...</small>`;
-                btn.disabled = true;
-                btn.classList.add('playing');
-            } else {
-                btn.innerHTML = btn.dataset.original || `
-                    <div class="episode-number">Episode ${btn.dataset.episode}</div>
-                    <div class="episode-duration">1-3 menit • Sulih Suara ID</div>
-                `;
-                btn.disabled = false;
-                btn.classList.remove('playing');
+        function play(epNo) {
+            const ep = currentVideo.result.find(e => e.episodeNo === epNo);
+            if (ep?.videoUrl) {
+                window.open(`${CONFIG.playerBase}?url=${encodeURIComponent(ep.videoUrl)}&title=${encodeURIComponent(currentVideo.name)}&ep=${epNo}`, '_blank');
             }
-        }
-
-        function saveLastWatched(ep) {
-            const id = videoIdFromUrl();
-            if (id) localStorage.setItem(`last_netshort_${id}`, ep);
-        }
-
-        function videoIdFromUrl() {
-            return new URLSearchParams(window.location.search).get('id');
         }
 
         function showError(msg) {
-            elements.dramaDetail.innerHTML = `
-                <div class="error-box">
-                    <i class="bi bi-exclamation-triangle-fill display-1 text-danger mb-3"></i>
-                    <h4>Terjadi Kesalahan</h4>
-                    <p>${escapeHtml(msg)}</p>
-                    <button onclick="location.reload()" class="btn btn-primary mt-3">
-                        Coba Lagi
-                    </button>
-                </div>
-            `;
+            document.getElementById('drama-detail').innerHTML = `<div class="alert alert-danger">${msg}</div>`;
         }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        window.playEpisode = playEpisode;
-        window.playFirstEpisode = playFirstEpisode;
     </script>
 </body>
 </html>
