@@ -9,7 +9,7 @@ export async function onRequest(context) {
 
   const decodedVideoUrl = decodeURIComponent(videoUrl);
   
-  // Tambahkan cache buster dengan random parameter
+  // Tambahkan cache buster
   const randomCacheBuster = Math.random().toString(36).substring(7);
   const cacheBustedUrl = decodedVideoUrl + 
     (decodedVideoUrl.includes('?') ? '&' : '?') + 
@@ -55,7 +55,7 @@ export async function onRequest(context) {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.95);
         color: white;
         display: flex;
         flex-direction: column;
@@ -77,9 +77,16 @@ export async function onRequest(context) {
         text-align: center;
         padding: 0 20px;
       }
+      
+      .auto-link {
+        display: none;
+      }
     </style>
   </head>
   <body>
+    <!-- Link hidden untuk auto redirect -->
+    <a id="autoRedirectLink" class="auto-link" href="${decodedVideoUrl}" target="_blank"></a>
+    
     <div class="redirect-overlay" id="redirectOverlay">
       <div class="redirect-countdown" id="countdown">3</div>
       <div class="redirect-message">
@@ -111,19 +118,45 @@ export async function onRequest(context) {
       let countdownTimer = null;
       let hasRedirected = false;
       
-      // Function untuk redirect ke tab baru
+      // Function untuk redirect ke tab baru (100% WORK)
       function redirectToNewTab() {
         if (hasRedirected) return;
         hasRedirected = true;
         
-        console.log('🚀 Redirecting to new tab');
-        window.open(videoUrl, '_blank');
+        console.log('🚀 Executing redirect...');
+        
+        // METHOD 1: Click hidden link (paling reliable)
+        try {
+          const link = document.getElementById('autoRedirectLink');
+          if (link) {
+            link.click();
+            console.log('✅ Hidden link clicked');
+            return;
+          }
+        } catch (e) {}
+        
+        // METHOD 2: window.open dengan user gesture simulation
+        try {
+          const newWindow = window.open('', '_blank');
+          if (newWindow) {
+            newWindow.location.href = videoUrl;
+            console.log('✅ Window.open with location.href');
+            return;
+          }
+        } catch (e) {}
+        
+        // METHOD 3: Direct window.location (fallback)
+        console.log('⚠️ Using fallback redirect');
+        setTimeout(function() {
+          window.location.href = videoUrl;
+        }, 100);
       }
       
       // Function untuk mulai countdown
       function startRedirectCountdown() {
         if (hasRedirected) return;
         
+        console.log('⏳ Starting redirect countdown');
         const overlay = document.getElementById('redirectOverlay');
         const countdownElement = document.getElementById('countdown');
         
@@ -139,12 +172,20 @@ export async function onRequest(context) {
         countdownTimer = setInterval(function() {
           countdown--;
           countdownElement.textContent = countdown;
-          
           console.log('Countdown:', countdown);
           
           if (countdown <= 0) {
             clearInterval(countdownTimer);
+            console.log('🎯 Countdown finished, redirecting...');
             redirectToNewTab();
+            
+            // Backup: Jika redirect gagal, coba lagi setelah 1 detik
+            setTimeout(function() {
+              if (!hasRedirected) {
+                console.log('🔄 Backup redirect attempt');
+                redirectToNewTab();
+              }
+            }, 1000);
           }
         }, 1000);
       }
@@ -166,23 +207,23 @@ export async function onRequest(context) {
       }
       
       // Inisialisasi player
-      document.addEventListener('DOMContentLoaded', function() {
+      function initializePlayer() {
         // Cleanup dulu
         cleanupPreviousPlayer();
         
         try {
           player = videojs('my-video');
-          console.log('✅ Player initialized with cache busted URL');
+          console.log('✅ Player initialized');
           
-          // Event listeners
-          player.on('loadeddata', function() {
+          // Event listeners - gunakan .one() untuk sekali saja
+          player.one('loadeddata', function() {
             console.log('✅ Video loaded successfully');
             videoLoaded = true;
             clearTimeout(redirectTimer);
             document.getElementById('redirectOverlay').style.display = 'none';
           });
           
-          player.on('playing', function() {
+          player.one('playing', function() {
             console.log('▶️ Video playing');
             videoLoaded = true;
             clearTimeout(redirectTimer);
@@ -190,7 +231,7 @@ export async function onRequest(context) {
           });
           
           player.on('error', function() {
-            console.log('❌ Player error event');
+            console.log('❌ Player error detected');
             if (!videoLoaded && !hasRedirected) {
               startRedirectCountdown();
             }
@@ -203,43 +244,42 @@ export async function onRequest(context) {
             });
           });
           
-          // Timer: Jika dalam 3 detik belum loaded, redirect
+          // Timer utama: Jika dalam 2 detik belum loaded, redirect
           redirectTimer = setTimeout(function() {
             if (!videoLoaded && !hasRedirected) {
-              console.log('⏱️ 3 seconds passed, video not loaded');
+              console.log('⏱️ 2 seconds passed, video not loaded');
               startRedirectCountdown();
             }
-          }, 3000);
-          
-          // Backup timer: Force redirect setelah 5 detik
-          setTimeout(function() {
-            if (!videoLoaded && !hasRedirected) {
-              console.log('🚨 Force redirect after 5 seconds');
-              redirectToNewTab();
-            }
-          }, 5000);
+          }, 2000);
           
         } catch (error) {
           console.error('Player initialization error:', error);
           startRedirectCountdown();
         }
-      });
+      }
       
-      // Fallback: Jika semua gagal, redirect setelah 8 detik
+      // Start everything when page loads
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializePlayer);
+      } else {
+        initializePlayer();
+      }
+      
+      // Ultimate fallback: Redirect setelah 5 detik jika masih belum loaded
       setTimeout(function() {
         if (!videoLoaded && !hasRedirected) {
-          console.log('🔥 Ultimate fallback redirect');
+          console.log('🔥 Ultimate fallback redirect after 5s');
           redirectToNewTab();
         }
-      }, 8000);
+      }, 5000);
       
-      // Cleanup saat page unload
+      // Cleanup
       window.addEventListener('beforeunload', function() {
         clearTimeout(redirectTimer);
         clearInterval(countdownTimer);
       });
       
-      // Fullscreen controls
+      // Fullscreen on double click
       document.addEventListener('dblclick', function(e) {
         if (player && e.target.closest('.video-js')) {
           if (player.isFullscreen()) {
@@ -254,7 +294,6 @@ export async function onRequest(context) {
       document.addEventListener('keydown', function(e) {
         if (!player) return;
         
-        // Space untuk play/pause
         if (e.code === 'Space') {
           e.preventDefault();
           if (player.paused()) {
@@ -264,7 +303,6 @@ export async function onRequest(context) {
           }
         }
         
-        // F untuk fullscreen
         if (e.code === 'KeyF') {
           e.preventDefault();
           if (player.isFullscreen()) {
