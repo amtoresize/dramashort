@@ -156,16 +156,13 @@
             background: rgba(255, 107, 107, 0.1);
             border: 1px solid #ff6b6b;
             color: #ff6b6b;
-            padding: 0.8rem;
+            padding: 1rem;
             border-radius: 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
         }
         
         .quality-btn:hover {
@@ -177,17 +174,6 @@
         .quality-btn.active {
             background: #ff6b6b;
             color: white;
-        }
-        
-        .quality-btn .badge {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            font-size: 0.7rem;
-        }
-        
-        .quality-btn.vip .badge {
-            background: linear-gradient(135deg, #ffd93d, #ff9f1a);
-            color: #000;
         }
         
         .modal-close-btn {
@@ -282,7 +268,7 @@
             justify-content: center;
             align-items: center;
             padding: 0.5rem;
-            min-height: 0; /* Important for flex child */
+            min-height: 0;
         }
         
         #video-player {
@@ -319,7 +305,7 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.9rem;
-            min-height: 44px; /* Better touch target */
+            min-height: 44px;
         }
         
         .control-btn:hover {
@@ -330,21 +316,6 @@
             opacity: 0.5;
             cursor: not-allowed;
             background: rgba(255, 107, 107, 0.1);
-        }
-        
-        .quality-indicator {
-            background: rgba(255, 107, 107, 0.2);
-            border: 1px solid #ff6b6b;
-            color: #ff6b6b;
-            padding: 0.6rem 0.8rem;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            text-align: center;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         
         .episode-nav {
@@ -382,11 +353,10 @@
             }
             
             .quality-btn {
-                padding: 0.7rem;
-                font-size: 0.9rem;
+                padding: 0.9rem;
+                font-size: 1rem;
             }
             
-            /* VIDEO PLAYER MOBILE OPTIMIZATION */
             .player-header {
                 padding: 0.6rem 0.8rem;
                 min-height: 50px;
@@ -424,13 +394,6 @@
                 justify-content: center;
             }
             
-            .quality-indicator {
-                padding: 0.5rem 0.7rem;
-                font-size: 0.85rem;
-                flex: 1;
-                min-width: 0;
-            }
-            
             .episode-nav {
                 order: 1;
                 width: 100%;
@@ -441,20 +404,13 @@
                 flex: 1;
             }
             
-            .quality-indicator {
-                order: 2;
-                width: 100%;
-                margin-top: 0.3rem;
-            }
-            
             .fullscreen-btn {
-                order: 3;
+                order: 2;
                 width: 100%;
                 margin-top: 0.3rem;
             }
         }
         
-        /* VERY SMALL SCREENS */
         @media (max-width: 480px) {
             .player-title {
                 font-size: 0.8rem;
@@ -464,11 +420,6 @@
                 padding: 0.4rem 0.6rem;
                 font-size: 0.8rem;
                 gap: 0.3rem;
-            }
-            
-            .quality-indicator {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.6rem;
             }
             
             .episode-nav {
@@ -481,7 +432,6 @@
             }
         }
         
-        /* LANDSCAPE MODE */
         @media (max-height: 600px) and (orientation: landscape) {
             .player-header {
                 padding: 0.4rem 0.6rem;
@@ -498,12 +448,6 @@
             }
             
             .control-btn {
-                padding: 0.3rem 0.5rem;
-                font-size: 0.8rem;
-                min-height: 36px;
-            }
-            
-            .quality-indicator {
                 padding: 0.3rem 0.5rem;
                 font-size: 0.8rem;
                 min-height: 36px;
@@ -572,7 +516,7 @@
     <!-- Video Player -->
     <div id="video-player-container" class="video-player-container">
         <div class="player-header">
-            <div id="player-title" class="player-title"></div>
+            <div id="player-title" class="player-title">Episode 1</div>
             <button class="player-close-btn" onclick="closeVideoPlayer()">&times;</button>
         </div>
         
@@ -590,10 +534,6 @@
                 <button class="control-btn" onclick="playNextEpisode()" id="next-btn">
                     <span class="btn-text">Next</span> <i class="bi bi-skip-forward"></i>
                 </button>
-            </div>
-            
-            <div class="quality-indicator" id="current-quality">
-                Quality: -
             </div>
             
             <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
@@ -629,7 +569,6 @@
             videoPlayerContainer: document.getElementById('video-player-container'),
             videoPlayer: document.getElementById('video-player'),
             playerTitle: document.getElementById('player-title'),
-            currentQuality: document.getElementById('current-quality'),
             prevBtn: document.getElementById('prev-btn'),
             nextBtn: document.getElementById('next-btn')
         };
@@ -810,35 +749,28 @@
         function showQualityModal(videos, episodeIndex) {
             if (!videos || videos.length === 0) return;
             
+            // Filter hanya 1080p, 720p, 360p saja
+            const allowedQualities = [1080, 720, 360];
+            const filteredVideos = videos.filter(video => allowedQualities.includes(video.quality));
+            
             // Sort by quality (highest first)
-            const sortedVideos = [...videos].sort((a, b) => b.quality - a.quality);
+            const sortedVideos = [...filteredVideos].sort((a, b) => b.quality - a.quality);
             
             // Update episode info
-            elements.episodeInfo.innerHTML = `
-                <strong>${currentDrama.bookName}</strong> - Episode ${episodeIndex}
-            `;
+            elements.episodeInfo.innerHTML = `Episode ${episodeIndex}`;
             
             // Clear previous buttons
             elements.qualityButtons.innerHTML = '';
             
             // Create quality buttons
             sortedVideos.forEach(video => {
-                const isDefault = video.isDefault === 1;
-                const isVip = video.isVipEquity === 1;
-                const qualityLabel = getQualityLabel(video.quality);
+                const qualityLabel = getSimpleQualityLabel(video.quality);
                 const videoUrl = video.videoPath;
                 
                 const button = document.createElement('button');
-                button.className = `quality-btn ${isDefault ? 'active' : ''} ${isVip ? 'vip' : ''}`;
-                button.innerHTML = `
-                    <span>
-                        ${qualityLabel}
-                        ${isDefault ? ' <small>(Default)</small>' : ''}
-                    </span>
-                    ${isVip ? '<span class="badge">VIP</span>' : ''}
-                `;
+                button.className = 'quality-btn';
+                button.innerHTML = `${qualityLabel}`;
                 
-                // JANGAN gunakan escapeHtml untuk URL! Ini penyebab error
                 button.onclick = () => selectQuality(videoUrl, video.quality, episodeIndex);
                 
                 elements.qualityButtons.appendChild(button);
@@ -858,8 +790,6 @@
         }
         
         function selectQuality(videoUrl, quality, episodeIndex) {
-            console.log('Selected quality:', { videoUrl, quality, episodeIndex });
-            
             if (!videoUrl) {
                 alert('URL video tidak valid');
                 return;
@@ -877,14 +807,15 @@
             closeQualityModal();
         }
         
-        function getQualityLabel(quality) {
+        function getSimpleQualityLabel(quality) {
             const labels = {
-                144: '144p (Lowest)',
-                360: '360p (Low)',
-                540: '540p (Medium)',
-                720: '720p (HD)',
-                1080: '1080p (Full HD)',
-                2160: '4K (Ultra HD)'
+                144: '144p',
+                360: '360p',
+                480: '480p',
+                540: '540p',
+                720: '720p',
+                1080: '1080p',
+                2160: '4K'
             };
             return labels[quality] || `${quality}p`;
         }
@@ -903,14 +834,11 @@
         
         async function playVideoInline(videoUrl, quality, episodeIndex) {
             try {
-                console.log('Playing video:', { videoUrl, quality, episodeIndex });
-                
                 // Set video source
                 videoPlayer.src = videoUrl;
                 
-                // Update UI
-                elements.playerTitle.textContent = `${currentDrama.bookName} - Episode ${episodeIndex}`;
-                elements.currentQuality.textContent = `Quality: ${getQualityLabel(quality)}`;
+                // Update UI - HANYA TAMPILKAN EPISODE SAJA
+                elements.playerTitle.textContent = `Episode ${episodeIndex}`;
                 
                 // Update navigation buttons
                 updateNavigationButtons();
@@ -927,8 +855,7 @@
                 try {
                     await videoPlayer.play();
                 } catch (playError) {
-                    console.log('Autoplay prevented, user needs to tap to play:', playError);
-                    // Tampilkan pesan bahwa user perlu tap untuk play
+                    console.log('Autoplay prevented:', playError);
                 }
                 
                 // Mark episode as playing
@@ -945,13 +872,67 @@
         
         async function playPrevEpisode() {
             if (currentEpisodeIndex > 1) {
-                await playEpisode(currentEpisodeIndex - 1);
+                // Langsung load dan play episode sebelumnya
+                await loadAndPlayEpisode(currentEpisodeIndex - 1);
             }
         }
         
         async function playNextEpisode() {
             if (currentEpisodeIndex < totalEpisodes) {
-                await playEpisode(currentEpisodeIndex + 1);
+                // Langsung load dan play episode berikutnya
+                await loadAndPlayEpisode(currentEpisodeIndex + 1);
+            }
+        }
+        
+        async function loadAndPlayEpisode(index) {
+            try {
+                // Update episode index
+                currentEpisodeIndex = index;
+                
+                // Load video data
+                const res = await fetch(`https://dramabos.asia/api/dramabox/api/watch/${currentDrama.bookId}/${index}?lang=in`);
+                
+                if (!res.ok) {
+                    throw new Error(`Video tidak tersedia`);
+                }
+
+                const data = await res.json();
+
+                if (!data.videos || data.videos.length === 0) {
+                    throw new Error('Video URL tidak ditemukan');
+                }
+                
+                // Cari video dengan kualitas yang sama seperti sebelumnya, atau default 720p
+                let selectedVideo = null;
+                
+                // Coba cari kualitas yang sama dengan sebelumnya
+                if (currentQuality) {
+                    selectedVideo = data.videos.find(v => v.quality === currentQuality);
+                }
+                
+                // Jika tidak ditemukan, cari 720p
+                if (!selectedVideo) {
+                    selectedVideo = data.videos.find(v => v.quality === 720);
+                }
+                
+                // Jika masih tidak ditemukan, ambil yang pertama
+                if (!selectedVideo && data.videos.length > 0) {
+                    selectedVideo = data.videos[0];
+                }
+                
+                if (!selectedVideo) {
+                    throw new Error('Tidak ada kualitas video yang tersedia');
+                }
+                
+                // Play video langsung tanpa modal
+                await playVideoInline(selectedVideo.videoPath, selectedVideo.quality, index);
+                
+                // Simpan history
+                saveLastWatched(index);
+                
+            } catch (error) {
+                console.error('Error loading next episode:', error);
+                alert('Gagal memuat episode: ' + error.message);
             }
         }
         
@@ -970,7 +951,7 @@
             if (currentEpisodeIndex < totalEpisodes) {
                 setTimeout(() => {
                     playNextEpisode();
-                }, 1000); // Delay 1 detik
+                }, 1000);
             }
         }
         
@@ -1010,12 +991,6 @@
             const icon = document.querySelector('.fullscreen-btn i');
             if (icon) {
                 icon.className = isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen';
-            }
-            
-            // Update button text for mobile
-            const btnText = document.querySelector('.fullscreen-btn .btn-text');
-            if (btnText) {
-                btnText.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
             }
         }
         
@@ -1153,17 +1128,6 @@
                         break;
                 }
             }
-        });
-        
-        // Handle mobile orientation change
-        window.addEventListener('orientationchange', function() {
-            // Small delay to allow orientation to complete
-            setTimeout(() => {
-                if (elements.videoPlayerContainer.style.display === 'flex') {
-                    videoPlayer.style.width = '100%';
-                    videoPlayer.style.height = 'auto';
-                }
-            }, 300);
         });
     </script>
 </body>
