@@ -1,185 +1,9 @@
 // ============== CONFIGURATION ==============
 const CONFIG = {
-    apiBase: 'https://dramabos.asia/api/dramabox/api',
+    apiBase: '/api',
+    dramaboxApi: 'https://dramabos.asia/api/dramabox/api',
     itemsPerPage: 12,
     defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
-};
-
-// ============== DRAMA BOX APIS (UPDATED) ==============
-const DRAMA_BOX_APIS = {
-    // API REKOMENDASI (ganti foryou)
-    recommend: async (page = 1) => {
-        try {
-            const response = await fetch(`${CONFIG.apiBase}/recommend/${page}?lang=in`);
-            const data = await response.json();
-            
-            if (data.recommendList && data.recommendList.records) {
-                return {
-                    code: 0,
-                    success: true,
-                    data: data.recommendList.records,
-                    hasMore: data.recommendList.current < data.recommendList.total,
-                    nextPage: page + 1,
-                    total: data.recommendList.total
-                };
-            }
-            return { code: -1, error: 'Invalid response', data: [] };
-        } catch (error) {
-            console.error('DramaBox recommend error:', error);
-            return { code: -1, error: error.message, data: [] };
-        }
-    },
-    
-    // API THEATER/HOME (ganti new)
-    theater: async () => {
-        try {
-            const response = await fetch(`${CONFIG.apiBase}/theater?lang=in`);
-            const data = await response.json();
-            
-            if (data.columnVoList && data.columnVoList.length > 0) {
-                const bookList = data.columnVoList[0].bookList || [];
-                return {
-                    code: 0,
-                    success: true,
-                    data: bookList,
-                    hasMore: false
-                };
-            }
-            return { code: -1, error: 'Invalid response', data: [] };
-        } catch (error) {
-            console.error('DramaBox theater error:', error);
-            return { code: -1, error: error.message, data: [] };
-        }
-    },
-    
-    // API TRENDING (ganti rank)
-    trending: async (page = 1) => {
-        try {
-            const response = await fetch(`${CONFIG.apiBase}/recommend/${page}?lang=in`);
-            const data = await response.json();
-            
-            if (data.recommendList && data.recommendList.records) {
-                // Filter hanya yang punya rankVo (trending)
-                const trendingItems = data.recommendList.records.filter(item => item.rankVo);
-                return {
-                    code: 0,
-                    success: true,
-                    data: trendingItems,
-                    hasMore: data.recommendList.current < data.recommendList.total,
-                    nextPage: page + 1
-                };
-            }
-            return { code: -1, error: 'Invalid response', data: [] };
-        } catch (error) {
-            console.error('DramaBox trending error:', error);
-            return { code: -1, error: error.message, data: [] };
-        }
-    },
-    
-    // API DETAIL DRAMA (updated structure)
-    detail: async (bookId) => {
-        try {
-            const response = await fetch(`${CONFIG.apiBase}/drama/${bookId}?lang=in`);
-            const data = await response.json();
-            
-            if (data.bookId) {
-                return {
-                    code: 0,
-                    success: true,
-                    data: data
-                };
-            }
-            return { code: -1, error: 'Invalid response' };
-        } catch (error) {
-            console.error('DramaBox detail error:', error);
-            return { code: -1, error: error.message };
-        }
-    },
-    
-    // API SEARCH
-    search: async (query, page = 1) => {
-        try {
-            const response = await fetch(`${CONFIG.apiBase}/search/${encodeURIComponent(query)}?lang=in&page=${page}`);
-            const data = await response.json();
-            
-            if (data.searchList) {
-                return {
-                    code: 0,
-                    success: true,
-                    data: data.searchList,
-                    query: data.query,
-                    hasMore: data.searchList.length >= 20,
-                    nextPage: page + 1
-                };
-            }
-            return { code: -1, error: 'Invalid response', data: [] };
-        } catch (error) {
-            console.error('DramaBox search error:', error);
-            return { code: -1, error: error.message, data: [] };
-        }
-    },
-    
-    // API KATEGORI
-    category: async () => {
-        try {
-            const response = await fetch(`${CONFIG.apiBase}/category?lang=in`);
-            const data = await response.json();
-            return {
-                code: 0,
-                success: true,
-                data: data
-            };
-        } catch (error) {
-            console.error('DramaBox category error:', error);
-            return { code: -1, error: error.message, data: [] };
-        }
-    },
-    
-    // API LIST BY GENRE/FILTER
-    list: async (page = 1, genre = '', dub = '', sort = 1) => {
-        try {
-            const url = `${CONFIG.apiBase}/list/${page}?lang=in${genre ? `&genre=${genre}` : ''}${dub ? `&dub=${dub}` : ''}&sort=${sort}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.records) {
-                return {
-                    code: 0,
-                    success: true,
-                    data: data.records,
-                    hasMore: data.records.length >= 20,
-                    nextPage: page + 1
-                };
-            }
-            return { code: -1, error: 'Invalid response', data: [] };
-        } catch (error) {
-            console.error('DramaBox list error:', error);
-            return { code: -1, error: error.message, data: [] };
-        }
-    },
-    
-    // API PLAY VIDEO (NEW)
-    play: async (bookId, chapterIndex = 1) => {
-        try {
-            const response = await fetch(`${CONFIG.apiBase}/watch/${bookId}/${chapterIndex}?lang=in`);
-            const data = await response.json();
-            
-            if (data.videos && data.videos.length > 0) {
-                return {
-                    code: 0,
-                    success: true,
-                    data: data,
-                    chapterId: data.chapterId,
-                    videos: data.videos,
-                    name: data.name || `EP ${chapterIndex}`
-                };
-            }
-            return { code: -1, error: 'No video found' };
-        } catch (error) {
-            console.error('DramaBox play error:', error);
-            return { code: -1, error: error.message };
-        }
-    }
 };
 
 // ============== 3 WORKING APIS ==============
@@ -217,7 +41,180 @@ const WORKING_APIS = {
         }
     },
     
-    dramabox: DRAMA_BOX_APIS,
+    dramabox: {
+        // KEEPS OLD ENDPOINTS FOR COMPATIBILITY
+        foryou: async (page = 1) => {
+            try {
+                // Use new recommend endpoint but transform data to old format
+                const response = await fetch(`${CONFIG.dramaboxApi}/recommend/${page}?lang=in`);
+                const data = await response.json();
+                
+                if (data.recommendList && data.recommendList.records) {
+                    // Transform to old format
+                    const transformedData = data.recommendList.records.map(item => ({
+                        bookId: item.bookId,
+                        bookName: item.bookName,
+                        cover: item.coverWap,
+                        chapterCount: item.chapterCount,
+                        introduction: item.introduction,
+                        tags: item.tags || [],
+                        playCount: item.playCount || '0'
+                    }));
+                    
+                    return {
+                        code: 0,
+                        success: true,
+                        data: transformedData,
+                        hasMore: data.recommendList.current < data.recommendList.total,
+                        nextPage: page + 1,
+                        total: data.recommendList.total
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox foryou error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        latest: async (page = 1) => {
+            try {
+                // Use theater endpoint for latest
+                const response = await fetch(`${CONFIG.dramaboxApi}/theater?lang=in`);
+                const data = await response.json();
+                
+                if (data.columnVoList && data.columnVoList.length > 0 && data.columnVoList[0].bookList) {
+                    const transformedData = data.columnVoList[0].bookList.map(item => ({
+                        bookId: item.bookId,
+                        bookName: item.bookName,
+                        cover: item.coverWap,
+                        chapterCount: item.chapterCount,
+                        introduction: item.introduction,
+                        tags: item.tags || []
+                    }));
+                    
+                    return {
+                        code: 0,
+                        success: true,
+                        data: transformedData,
+                        hasMore: false,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox latest error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        trending: async (page = 1) => {
+            try {
+                // Use recommend endpoint filtered by rankVo
+                const response = await fetch(`${CONFIG.dramaboxApi}/recommend/${page}?lang=in`);
+                const data = await response.json();
+                
+                if (data.recommendList && data.recommendList.records) {
+                    // Filter items with rankVo (trending)
+                    const trendingItems = data.recommendList.records
+                        .filter(item => item.rankVo)
+                        .map(item => ({
+                            bookId: item.bookId,
+                            bookName: item.bookName,
+                            cover: item.coverWap,
+                            chapterCount: item.chapterCount,
+                            introduction: item.introduction,
+                            tags: item.tags || [],
+                            rankVo: item.rankVo
+                        }));
+                    
+                    return {
+                        code: 0,
+                        success: true,
+                        data: trendingItems,
+                        hasMore: data.recommendList.current < data.recommendList.total,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox trending error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        detail: async (bookId) => {
+            try {
+                const response = await fetch(`${CONFIG.dramaboxApi}/drama/${bookId}?lang=in`);
+                const data = await response.json();
+                
+                if (data.bookId) {
+                    // Transform to old format
+                    return {
+                        code: 0,
+                        success: true,
+                        data: {
+                            bookId: data.bookId,
+                            bookName: data.bookName,
+                            cover: data.coverWap,
+                            chapterCount: data.chapterCount,
+                            introduction: data.introduction,
+                            tags: data.tags || [],
+                            tagV3s: data.tagV3s || []
+                        }
+                    };
+                }
+                return { code: -1, error: 'Invalid response' };
+            } catch (error) {
+                console.error('DramaBox detail error:', error);
+                return { code: -1, error: error.message };
+            }
+        },
+        
+        // New API endpoints for future use
+        recommend: async (page = 1) => {
+            try {
+                const response = await fetch(`${CONFIG.dramaboxApi}/recommend/${page}?lang=in`);
+                const data = await response.json();
+                
+                if (data.recommendList && data.recommendList.records) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.recommendList.records,
+                        hasMore: data.recommendList.current < data.recommendList.total,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox recommend error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        },
+        
+        search: async (query, page = 1) => {
+            try {
+                const response = await fetch(`${CONFIG.dramaboxApi}/search/${encodeURIComponent(query)}?lang=in`);
+                const data = await response.json();
+                
+                if (data.searchList) {
+                    return {
+                        code: 0,
+                        success: true,
+                        data: data.searchList,
+                        query: data.query,
+                        hasMore: false,
+                        nextPage: page + 1
+                    };
+                }
+                return { code: -1, error: 'Invalid response', data: [] };
+            } catch (error) {
+                console.error('DramaBox search error:', error);
+                return { code: -1, error: error.message, data: [] };
+            }
+        }
+    },
     
     netshort: {
         explore: async (offset = 0, limit = 20) => {
@@ -288,8 +285,8 @@ let currentPage = 1;
 let isLoading = false;
 let hasMoreData = true;
 let currentView = 'grid';
-let currentSource = 'dramabox';
-let currentMode = 'recommend'; // 'recommend', 'theater', 'trending', 'search'
+let currentSource = 'melolo'; // 'melolo', 'dramabox', 'netshort'
+let currentMode = 'foryou'; // 'foryou', 'latest', 'trending', 'search'
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -305,7 +302,7 @@ const elements = {
 
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 DramaShort Enhanced - API Updated');
+    console.log('🎬 DramaShort Enhanced - Fixed Version');
     
     // Load saved preferences
     const savedView = localStorage.getItem('dramashort_view');
@@ -317,11 +314,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const savedSource = localStorage.getItem('dramashort_source');
     if (savedSource && ['melolo', 'dramabox', 'netshort'].includes(savedSource)) {
         currentSource = savedSource;
-    }
-    
-    const savedMode = localStorage.getItem('dramashort_mode');
-    if (savedMode && ['recommend', 'theater', 'trending'].includes(savedMode)) {
-        currentMode = savedMode;
     }
     
     // Initialize UI components
@@ -387,8 +379,8 @@ function initializeModeSelector() {
     
     const modeHTML = `
         <select id="mode-selector" class="form-select form-select-sm mode-selector" ${currentSource !== 'dramabox' ? 'disabled' : ''}>
-            <option value="recommend" ${currentMode === 'recommend' ? 'selected' : ''}>Rekomendasi</option>
-            <option value="theater" ${currentMode === 'theater' ? 'selected' : ''}>Theater</option>
+            <option value="foryou" ${currentMode === 'foryou' ? 'selected' : ''}>Untuk Kamu</option>
+            <option value="latest" ${currentMode === 'latest' ? 'selected' : ''}>Terbaru</option>
             <option value="trending" ${currentMode === 'trending' ? 'selected' : ''}>Trending</option>
         </select>
     `;
@@ -425,6 +417,7 @@ function updateModeSelector() {
     if (currentSource === 'dramabox') {
         elements.modeSelector.disabled = false;
         elements.modeSelector.style.display = 'inline-block';
+        elements.modeSelector.value = currentMode;
     } else {
         elements.modeSelector.disabled = true;
         elements.modeSelector.style.display = 'none';
@@ -465,15 +458,14 @@ function initializeSearch() {
 }
 
 function performSearch() {
-    if (!elements.searchInput || currentSource !== 'dramabox') return;
+    if (!elements.searchInput) return;
     
     const query = elements.searchInput.value.trim();
-    if (query.length === 0) {
-        // If empty search, return to normal mode
-        currentMode = 'recommend';
-        currentPage = 1;
-        if (elements.modeSelector) elements.modeSelector.value = 'recommend';
-        loadDramas();
+    if (query.length === 0) return;
+    
+    // Only DramaBox supports search
+    if (currentSource !== 'dramabox') {
+        alert('Pencarian hanya tersedia untuk DramaBox');
         return;
     }
     
@@ -563,12 +555,12 @@ async function loadDramas() {
             case 'dramabox':
                 if (currentMode === 'search' && searchQuery) {
                     result = await WORKING_APIS.dramabox.search(searchQuery, currentPage);
-                } else if (currentMode === 'theater') {
-                    result = await WORKING_APIS.dramabox.theater();
+                } else if (currentMode === 'latest') {
+                    result = await WORKING_APIS.dramabox.latest(currentPage);
                 } else if (currentMode === 'trending') {
                     result = await WORKING_APIS.dramabox.trending(currentPage);
                 } else {
-                    result = await WORKING_APIS.dramabox.recommend(currentPage);
+                    result = await WORKING_APIS.dramabox.foryou(currentPage);
                 }
                 break;
                 
@@ -578,17 +570,7 @@ async function loadDramas() {
                 
             case 'melolo':
             default:
-                const apiUrl = `${CONFIG.apiBase}/home?offset=${currentOffset}&count=${CONFIG.itemsPerPage}&lang=id`;
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                
-                if (data.code === 0 && data.data) {
-                    result = {
-                        code: 0,
-                        data: data.data,
-                        hasMore: data.has_more || false
-                    };
-                }
+                result = await WORKING_APIS.melolo.home(currentOffset, CONFIG.itemsPerPage);
                 break;
         }
         
@@ -600,12 +582,13 @@ async function loadDramas() {
             if (result.data.length > 0) {
                 renderDramas(result.data);
                 
-                // Update pagination
+                // Update pagination based on source
                 if (currentSource === 'melolo' || currentSource === 'netshort') {
                     currentOffset = currentOffset + result.data.length;
                     hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
                 } else if (currentSource === 'dramabox') {
                     hasMoreData = result.hasMore || false;
+                    if (hasMoreData) currentPage = result.nextPage || currentPage + 1;
                 } else {
                     hasMoreData = false;
                 }
@@ -636,9 +619,6 @@ async function loadDramas() {
 }
 
 async function loadMoreDramas() {
-    if (currentSource === 'dramabox') {
-        currentPage++;
-    }
     await loadDramas();
 }
 
@@ -652,7 +632,7 @@ function renderDramas(dramas) {
         let dramaData = formatDramaData(drama);
         
         const title = escapeHtml(dramaData.title);
-        const author = 'DramaBox'; // Default author
+        const author = escapeHtml(dramaData.author);
         const intro = escapeHtml(dramaData.intro);
         const episodes = dramaData.episodes;
         const cover = dramaData.cover;
@@ -661,13 +641,12 @@ function renderDramas(dramas) {
         const isDubbing = dramaData.isDubbing;
         const tags = dramaData.tags || [];
         const playCount = dramaData.playCount || '';
-        const corner = dramaData.corner;
         const rankInfo = dramaData.rankVo;
         
         if (currentView === 'list') {
-            return createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount, corner, rankInfo);
+            return createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount, rankInfo);
         } else {
-            return createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount, corner, rankInfo);
+            return createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount, rankInfo);
         }
     }).join('');
     
@@ -692,7 +671,6 @@ function formatDramaData(drama) {
         isDubbing: false,
         tags: [],
         playCount: '',
-        corner: null,
         rankVo: null
     };
     
@@ -712,22 +690,20 @@ function formatDramaData(drama) {
             
         case 'dramabox':
             const title = drama.bookName || drama.title || 'Drama';
-            const isDubbing = title.includes('(Sulih Suara)') || 
-                            (drama.corner && drama.corner.name === 'Sulih Suara');
+            const isDubbing = title.includes('(Sulih Suara)');
             
             formatted = {
                 title: title,
                 author: 'DramaBox',
                 intro: drama.introduction || 'Drama from DramaBox',
                 episodes: drama.chapterCount || 0,
-                cover: drama.coverWap || drama.cover || CONFIG.defaultImage,
+                cover: drama.cover || drama.coverWap || CONFIG.defaultImage,
                 id: drama.bookId || drama.id,
                 watchUrl: `/dramabox.html?id=${drama.bookId || drama.id}`,
                 source: 'dramabox',
                 isDubbing: isDubbing,
                 tags: drama.tags || [],
                 playCount: drama.playCount || '',
-                corner: drama.corner,
                 rankVo: drama.rankVo
             };
             break;
@@ -752,15 +728,10 @@ function formatDramaData(drama) {
 }
 
 // ============== CREATE CARD HTML ==============
-function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '', corner = null, rankInfo = null) {
+function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '', rankInfo = null) {
     const tagsHtml = tags.length > 0 ? 
         `<div class="drama-tags mt-2">
             ${tags.slice(0, 3).map(tag => `<span class="badge bg-secondary me-1 mb-1">${escapeHtml(tag)}</span>`).join('')}
-        </div>` : '';
-    
-    const cornerHtml = corner ? 
-        `<div class="corner-badge" style="background: ${corner.color || '#FF2965'};">
-            ${escapeHtml(corner.name)}
         </div>` : '';
     
     const rankHtml = rankInfo ? 
@@ -782,8 +753,6 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
                          alt="${title}"
                          loading="lazy"
                          onerror="this.src='${CONFIG.defaultImage}'">
-                    
-                    ${cornerHtml}
                     
                     ${episodes > 0 ? `
                     <div class="episode-badge">
@@ -832,16 +801,11 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
     `;
 }
 
-function createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '', corner = null, rankInfo = null) {
+function createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '', rankInfo = null) {
     const tagsHtml = tags.length > 0 ? 
         `<div class="drama-tags mt-2">
             ${tags.map(tag => `<span class="badge bg-secondary me-1 mb-1">${escapeHtml(tag)}</span>`).join('')}
         </div>` : '';
-    
-    const cornerHtml = corner ? 
-        `<span class="badge ms-2" style="background: ${corner.color || '#FF2965'}; color: white;">
-            ${escapeHtml(corner.name)}
-        </span>` : '';
     
     const rankHtml = rankInfo ? 
         `<div class="rank-info mt-2">
@@ -878,10 +842,7 @@ function createListViewHTML(title, author, intro, episodes, cover, dramaId, watc
                     
                     <div class="col-md-9">
                         <div class="card-body h-100 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <h5 class="drama-title mb-1">${title}</h5>
-                                ${cornerHtml}
-                            </div>
+                            <h5 class="drama-title mb-1">${title}</h5>
                             
                             ${rankHtml}
                             
@@ -908,9 +869,6 @@ function createListViewHTML(title, author, intro, episodes, cover, dramaId, watc
                                 </a>
                                 <button class="btn btn-outline-secondary btn-sm" onclick="addToFavorites('${dramaId}', '${currentSource}')">
                                     <i class="bi bi-bookmark"></i> Favorite
-                                </button>
-                                <button class="btn btn-outline-info btn-sm" onclick="showDramaInfo('${dramaId}')">
-                                    <i class="bi bi-info-circle"></i> Info
                                 </button>
                             </div>
                         </div>
@@ -1054,26 +1012,6 @@ window.addToFavorites = function(dramaId, source) {
     }
 };
 
-window.showDramaInfo = async function(dramaId) {
-    if (currentSource !== 'dramabox') return;
-    
-    try {
-        const result = await WORKING_APIS.dramabox.detail(dramaId);
-        if (result.code === 0) {
-            const drama = result.data;
-            const info = `
-Judul: ${drama.bookName}
-Episode: ${drama.chapterCount}
-Tags: ${(drama.tags || []).join(', ')}
-Status: ${drama.reserveStatus === 0 ? 'Aktif' : 'Tidak Aktif'}
-            `;
-            alert(info);
-        }
-    } catch (error) {
-        console.error('Error getting drama info:', error);
-    }
-};
-
 window.switchSource = function(source) {
     if (['melolo', 'dramabox', 'netshort'].includes(source)) {
         currentSource = source;
@@ -1112,7 +1050,7 @@ function showNotification(message) {
     }, 3000);
 }
 
-// ============== CSS STYLES ==============
+// Add CSS styles
 const styles = `
 <style>
     .source-selector, .mode-selector {
@@ -1175,17 +1113,6 @@ const styles = `
         padding: 3px 8px;
         border-radius: 10px;
         font-size: 0.7rem;
-    }
-    
-    .corner-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        color: white;
-        padding: 3px 8px;
-        border-radius: 10px;
-        font-size: 0.7rem;
-        font-weight: bold;
     }
     
     .play-overlay {
@@ -1256,6 +1183,15 @@ const styles = `
     
     .drama-tags {
         font-size: 0.75rem;
+    }
+    
+    .play-count {
+        display: inline-block;
+        margin-left: 10px;
+    }
+    
+    .rank-info {
+        font-size: 0.8rem;
     }
     
     /* List View Specific */
