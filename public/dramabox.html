@@ -123,16 +123,19 @@
             z-index: 9999;
             justify-content: center;
             align-items: center;
+            padding: 15px;
         }
         
         .quality-modal-content {
             background: linear-gradient(145deg, #1a1a2e, #0f0f23);
             border-radius: 16px;
-            padding: 2rem;
-            width: 90%;
+            padding: 1.5rem;
+            width: 100%;
             max-width: 500px;
             border: 2px solid #ff6b6b;
             box-shadow: 0 20px 50px rgba(255, 107, 107, 0.3);
+            max-height: 80vh;
+            overflow-y: auto;
         }
         
         .quality-modal-title {
@@ -153,7 +156,7 @@
             background: rgba(255, 107, 107, 0.1);
             border: 1px solid #ff6b6b;
             color: #ff6b6b;
-            padding: 1rem;
+            padding: 0.8rem;
             border-radius: 10px;
             text-align: center;
             cursor: pointer;
@@ -162,12 +165,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 0.95rem;
         }
         
         .quality-btn:hover {
             background: #ff6b6b;
             color: white;
-            transform: translateY(-3px);
+            transform: translateY(-2px);
         }
         
         .quality-btn.active {
@@ -178,6 +182,7 @@
         .quality-btn .badge {
             background: rgba(255, 255, 255, 0.2);
             color: white;
+            font-size: 0.7rem;
         }
         
         .quality-btn.vip .badge {
@@ -191,10 +196,16 @@
             color: #aaa;
             font-size: 1.5rem;
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 10px;
+            right: 10px;
             cursor: pointer;
             transition: color 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
         }
         
         .modal-close-btn:hover {
@@ -204,11 +215,11 @@
         .episode-info {
             text-align: center;
             margin-bottom: 1.5rem;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #ccc;
         }
         
-        /* Video Player Styles */
+        /* Video Player Styles - FIXED FOR MOBILE */
         .video-player-container {
             display: none;
             position: fixed;
@@ -222,37 +233,47 @@
         }
         
         .player-header {
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.9);
+            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.95);
             border-bottom: 1px solid #444;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            min-height: 60px;
+            flex-shrink: 0;
         }
         
         .player-title {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: bold;
             color: #ff6b6b;
-            max-width: 80%;
+            max-width: 70%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            line-height: 1.3;
         }
         
         .player-close-btn {
-            background: transparent;
-            border: none;
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 50%;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
             transition: background 0.3s ease;
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .player-close-btn:hover {
-            background: rgba(255, 107, 107, 0.2);
+            background: #ff6b6b;
         }
         
         .video-wrapper {
@@ -260,148 +281,240 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1rem;
+            padding: 0.5rem;
+            min-height: 0; /* Important for flex child */
         }
         
         #video-player {
             width: 100%;
             max-width: 1200px;
-            max-height: 80vh;
+            max-height: 100%;
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             background: #000;
+            object-fit: contain;
         }
         
+        /* CONTROLS FIXED AT BOTTOM FOR MOBILE */
         .player-controls {
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.9);
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.95);
             border-top: 1px solid #444;
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
             align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
         
         .control-btn {
             background: rgba(255, 107, 107, 0.2);
             border: 1px solid #ff6b6b;
             color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-size: 0.9rem;
+            min-height: 44px; /* Better touch target */
         }
         
         .control-btn:hover {
             background: #ff6b6b;
         }
         
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(255, 107, 107, 0.1);
+        }
+        
         .quality-indicator {
             background: rgba(255, 107, 107, 0.2);
             border: 1px solid #ff6b6b;
             color: #ff6b6b;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
             font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .episode-nav {
             display: flex;
             gap: 0.5rem;
+            flex: 1;
+            justify-content: center;
         }
         
         .fullscreen-btn {
-            margin-left: auto;
+            min-width: 120px;
         }
 
+        /* MOBILE OPTIMIZATION */
         @media (max-width: 768px) {
-            .drama-title { font-size: 1.8rem; }
-            .drama-poster { max-height: 350px; margin-bottom: 1.5rem; }
+            .drama-title { 
+                font-size: 1.8rem; 
+                line-height: 1.2;
+            }
+            
+            .drama-poster { 
+                max-height: 350px; 
+                margin-bottom: 1.5rem; 
+            }
+            
             .quality-modal-content {
-                width: 95%;
-                padding: 1.5rem;
+                padding: 1.2rem;
+                margin: 0 10px;
             }
+            
+            .quality-modal-title {
+                font-size: 1.3rem;
+                margin-bottom: 1rem;
+                padding-right: 30px;
+            }
+            
+            .quality-btn {
+                padding: 0.7rem;
+                font-size: 0.9rem;
+            }
+            
+            /* VIDEO PLAYER MOBILE OPTIMIZATION */
+            .player-header {
+                padding: 0.6rem 0.8rem;
+                min-height: 50px;
+            }
+            
+            .player-title {
+                font-size: 0.9rem;
+                max-width: 65%;
+            }
+            
+            .player-close-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 1rem;
+                width: 36px;
+                height: 36px;
+            }
+            
+            .video-wrapper {
+                padding: 0.3rem;
+            }
+            
             .player-controls {
-                flex-direction: column;
+                padding: 0.6rem;
                 gap: 0.5rem;
+                position: relative;
+                bottom: 0;
+                width: 100%;
             }
+            
             .control-btn {
-                width: 100%;
+                padding: 0.5rem 0.7rem;
+                font-size: 0.85rem;
+                flex: 1;
+                min-width: 0;
                 justify-content: center;
             }
+            
+            .quality-indicator {
+                padding: 0.5rem 0.7rem;
+                font-size: 0.85rem;
+                flex: 1;
+                min-width: 0;
+            }
+            
             .episode-nav {
+                order: 1;
                 width: 100%;
-                justify-content: center;
+                gap: 0.3rem;
             }
-            .fullscreen-btn {
-                margin-left: 0;
+            
+            .episode-nav .control-btn {
+                flex: 1;
+            }
+            
+            .quality-indicator {
+                order: 2;
                 width: 100%;
+                margin-top: 0.3rem;
+            }
+            
+            .fullscreen-btn {
+                order: 3;
+                width: 100%;
+                margin-top: 0.3rem;
+            }
+        }
+        
+        /* VERY SMALL SCREENS */
+        @media (max-width: 480px) {
+            .player-title {
+                font-size: 0.8rem;
+            }
+            
+            .control-btn {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+                gap: 0.3rem;
+            }
+            
+            .quality-indicator {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.6rem;
+            }
+            
+            .episode-nav {
+                flex-direction: row;
+            }
+            
+            .episode-nav .control-btn {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.6rem;
+            }
+        }
+        
+        /* LANDSCAPE MODE */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .player-header {
+                padding: 0.4rem 0.6rem;
+                min-height: 40px;
+            }
+            
+            .player-title {
+                font-size: 0.8rem;
+            }
+            
+            .player-controls {
+                padding: 0.4rem;
+                flex-wrap: nowrap;
+            }
+            
+            .control-btn {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.8rem;
+                min-height: 36px;
+            }
+            
+            .quality-indicator {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.8rem;
+                min-height: 36px;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class="bi bi-play-btn-fill me-2 text-danger"></i>
-                <span>DramaBox</span>
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a href="/" class="btn btn-outline-light back-btn">
-                    <i class="bi bi-arrow-left me-2"></i>Kembali ke Home
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <main class="container py-5">
-        <section id="drama-detail" class="mb-5">
-            <div class="text-center py-5">
-                <div class="spinner-border loading-spinner text-danger" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <h4 class="mt-3">Memuat detail drama...</h4>
-            </div>
-        </section>
-
-        <section class="mt-5">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold">
-                    <i class="bi bi-play-btn me-2 text-danger"></i>Daftar Episode
-                </h3>
-                <div id="episode-count" class="badge badge-dramabox badge-episode">
-                    <span id="count-text">0 Episode</span>
-                </div>
-            </div>
-           
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list"></div>
-           
-            <div id="no-episodes" class="text-center py-5" style="display: none;">
-                <div class="alert alert-info w-75 mx-auto">
-                    <i class="bi bi-info-circle display-4 d-block mb-3"></i>
-                    <h4>Episode Belum Tersedia</h4>
-                </div>
-            </div>
-        </section>
-    </main>
+    <!-- ... HTML sebelumnya sama ... -->
     
-    <!-- Quality Selection Modal -->
-    <div id="quality-modal" class="quality-modal">
-        <div class="quality-modal-content">
-            <button class="modal-close-btn" onclick="closeQualityModal()">&times;</button>
-            <h3 class="quality-modal-title">
-                <i class="bi bi-hd me-2"></i>Pilih Kualitas Video
-            </h3>
-            <div id="episode-info" class="episode-info"></div>
-            <div id="quality-buttons" class="quality-buttons"></div>
-        </div>
-    </div>
-    
-    <!-- Video Player -->
+    <!-- Video Player dengan layout mobile friendly -->
     <div id="video-player-container" class="video-player-container">
         <div class="player-header">
             <div id="player-title" class="player-title"></div>
@@ -417,10 +530,10 @@
         <div class="player-controls">
             <div class="episode-nav">
                 <button class="control-btn" onclick="playPrevEpisode()" id="prev-btn">
-                    <i class="bi bi-skip-backward"></i> Prev
+                    <i class="bi bi-skip-backward"></i> <span class="btn-text">Prev</span>
                 </button>
                 <button class="control-btn" onclick="playNextEpisode()" id="next-btn">
-                    Next <i class="bi bi-skip-forward"></i>
+                    <span class="btn-text">Next</span> <i class="bi bi-skip-forward"></i>
                 </button>
             </div>
             
@@ -429,7 +542,7 @@
             </div>
             
             <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
-                <i class="bi bi-fullscreen"></i> Fullscreen
+                <i class="bi bi-fullscreen"></i> <span class="btn-text">Fullscreen</span>
             </button>
         </div>
     </div>
@@ -671,11 +784,16 @@
             
             elements.qualityButtons.innerHTML = buttonsHtml;
             elements.qualityModal.style.display = 'flex';
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
         }
         
         function closeQualityModal() {
             elements.qualityModal.style.display = 'none';
             elements.qualityButtons.innerHTML = '';
+            // Restore body scroll
+            document.body.style.overflow = '';
         }
         
         function selectQuality(videoUrl, quality, episodeIndex) {
@@ -720,46 +838,61 @@
             videoPlayer.addEventListener('msfullscreenchange', handleFullscreenChange);
         }
         
-        function playVideoInline(videoUrl, quality, episodeIndex) {
-            // Set video source
-            videoPlayer.src = videoUrl;
-            
-            // Update UI
-            elements.playerTitle.textContent = `${currentDrama.bookName} - Episode ${episodeIndex}`;
-            elements.currentQuality.textContent = `Quality: ${getQualityLabel(quality)}`;
-            
-            // Update navigation buttons
-            updateNavigationButtons();
-            
-            // Show player
-            elements.videoPlayerContainer.style.display = 'flex';
-            
-            // Play video
-            videoPlayer.load();
-            videoPlayer.play().catch(e => {
-                console.log('Autoplay prevented:', e);
-            });
-            
-            // Mark episode as playing
-            markEpisodeAsPlaying(episodeIndex);
+        async function playVideoInline(videoUrl, quality, episodeIndex) {
+            try {
+                // Set video source
+                videoPlayer.src = videoUrl;
+                
+                // Update UI
+                elements.playerTitle.textContent = `${currentDrama.bookName} - Episode ${episodeIndex}`;
+                elements.currentQuality.textContent = `Quality: ${getQualityLabel(quality)}`;
+                
+                // Update navigation buttons
+                updateNavigationButtons();
+                
+                // Show player
+                elements.videoPlayerContainer.style.display = 'flex';
+                
+                // Prevent body scroll when player is open
+                document.body.style.overflow = 'hidden';
+                
+                // Play video
+                videoPlayer.load();
+                await videoPlayer.play().catch(e => {
+                    console.log('Autoplay prevented:', e);
+                    // User might need to tap to play
+                });
+                
+                // Mark episode as playing
+                markEpisodeAsPlaying(episodeIndex);
+                
+                // Focus on video for keyboard controls
+                videoPlayer.focus();
+
+            } catch (error) {
+                console.error('Error playing video:', error);
+                alert('Gagal memutar video: ' + error.message);
+            }
+        }
+        
+        async function playPrevEpisode() {
+            if (currentEpisodeIndex > 1) {
+                await playEpisode(currentEpisodeIndex - 1);
+            }
+        }
+        
+        async function playNextEpisode() {
+            if (currentEpisodeIndex < totalEpisodes) {
+                await playEpisode(currentEpisodeIndex + 1);
+            }
         }
         
         function closeVideoPlayer() {
             elements.videoPlayerContainer.style.display = 'none';
             videoPlayer.pause();
             videoPlayer.src = '';
-        }
-        
-        function playPrevEpisode() {
-            if (currentEpisodeIndex > 1) {
-                playEpisode(currentEpisodeIndex - 1);
-            }
-        }
-        
-        function playNextEpisode() {
-            if (currentEpisodeIndex < totalEpisodes) {
-                playEpisode(currentEpisodeIndex + 1);
-            }
+            // Restore body scroll
+            document.body.style.overflow = '';
         }
         
         function handleVideoEnded() {
@@ -767,20 +900,22 @@
             if (currentEpisodeIndex < totalEpisodes) {
                 setTimeout(() => {
                     playNextEpisode();
-                }, 2000); // Delay 2 detik
+                }, 1000); // Delay 1 detik
             }
         }
         
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
-                if (videoPlayer.requestFullscreen) {
-                    videoPlayer.requestFullscreen();
-                } else if (videoPlayer.webkitRequestFullscreen) {
-                    videoPlayer.webkitRequestFullscreen();
-                } else if (videoPlayer.mozRequestFullScreen) {
-                    videoPlayer.mozRequestFullScreen();
-                } else if (videoPlayer.msRequestFullscreen) {
-                    videoPlayer.msRequestFullscreen();
+                const playerContainer = elements.videoPlayerContainer;
+                
+                if (playerContainer.requestFullscreen) {
+                    playerContainer.requestFullscreen();
+                } else if (playerContainer.webkitRequestFullscreen) {
+                    playerContainer.webkitRequestFullscreen();
+                } else if (playerContainer.mozRequestFullScreen) {
+                    playerContainer.mozRequestFullScreen();
+                } else if (playerContainer.msRequestFullscreen) {
+                    playerContainer.msRequestFullscreen();
                 }
             } else {
                 if (document.exitFullscreen) {
@@ -805,6 +940,12 @@
             const icon = document.querySelector('.fullscreen-btn i');
             if (icon) {
                 icon.className = isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen';
+            }
+            
+            // Update button text for mobile
+            const btnText = document.querySelector('.fullscreen-btn .btn-text');
+            if (btnText) {
+                btnText.textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
             }
         }
         
@@ -877,6 +1018,13 @@
             }
         });
         
+        // Close video player when clicking outside video area
+        elements.videoPlayerContainer.addEventListener('click', function(e) {
+            if (e.target === elements.videoPlayerContainer) {
+                closeVideoPlayer();
+            }
+        });
+        
         // Close modal with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -919,8 +1067,29 @@
                         e.preventDefault();
                         toggleFullscreen();
                         break;
+                    case 'n':
+                    case 'N':
+                        e.preventDefault();
+                        if (!elements.nextBtn.disabled) playNextEpisode();
+                        break;
+                    case 'p':
+                    case 'P':
+                        e.preventDefault();
+                        if (!elements.prevBtn.disabled) playPrevEpisode();
+                        break;
                 }
             }
+        });
+        
+        // Handle mobile orientation change
+        window.addEventListener('orientationchange', function() {
+            // Small delay to allow orientation to complete
+            setTimeout(() => {
+                if (elements.videoPlayerContainer.style.display === 'flex') {
+                    videoPlayer.style.width = '100%';
+                    videoPlayer.style.height = 'auto';
+                }
+            }, 300);
         });
     </script>
 </body>
