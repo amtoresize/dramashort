@@ -73,41 +73,97 @@
             border-left: 4px solid #ff6b6b;
         }
 
-        .episode-card { margin-bottom: 1rem; }
+        .episode-card { 
+            margin-bottom: 1rem;
+            height: 100%;
+        }
+        
         .episode-btn {
             border-radius: 12px;
             transition: all 0.3s ease;
             border: 2px solid #333;
-            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
             color: white;
-            padding: 1.2rem 0.5rem;
+            padding: 0;
             width: 100%;
-            min-height: 100px;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end;
             align-items: center;
             text-align: center;
             cursor: pointer;
             position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
         }
+        
+        .episode-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 70%);
+            z-index: 1;
+        }
+        
         .episode-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.5);
             border-color: #ff6b6b;
-            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
         }
+        
         .episode-btn.playing {
-            background: linear-gradient(145deg, #ff6b6b, #ff4757);
-            border-color: #ff4757;
+            border: 3px solid #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.7);
         }
+        
+        .episode-btn.playing::after {
+            content: '▶ NOW PLAYING';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 107, 107, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 3;
+        }
+        
         .episode-btn.loading {
             opacity: 0.7;
             cursor: wait;
         }
 
-        .episode-number { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
-        .episode-duration { font-size: 0.85rem; opacity: 0.8; }
+        .episode-content {
+            position: relative;
+            z-index: 2;
+            padding: 15px;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+        .episode-number { 
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            margin-bottom: 0.3rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+        
+        .episode-duration { 
+            font-size: 0.85rem; 
+            opacity: 0.9;
+            background: rgba(0,0,0,0.6);
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
 
         .loading-spinner { width: 4rem; height: 4rem; }
         .error-box {
@@ -128,6 +184,25 @@
         .badge-episode {
             font-size: 1.1rem;
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Episode Number Badge */
+        .episode-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 107, 107, 0.9);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            z-index: 3;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
         }
 
         /* Quality Modal Styles */
@@ -219,7 +294,7 @@
             color: #ccc;
         }
         
-        /* Video Player Styles - SAMA SEPERTI DRAMABOX */
+        /* Video Player Styles */
         .video-player-container {
             display: none;
             position: fixed;
@@ -423,6 +498,15 @@
                 width: 100%;
                 margin-top: 0.3rem;
             }
+            
+            /* Episode button mobile */
+            .episode-btn {
+                min-height: 160px;
+            }
+            
+            .episode-number {
+                font-size: 1.2rem;
+            }
         }
         
         @media (max-width: 480px) {
@@ -571,7 +655,8 @@
         let currentQuality = '';
         let totalEpisodes = 0;
         let videoPlayer = null;
-        let episodeVideos = []; // Array of video objects: {vid: string, episode: number, duration: number}
+        let episodeVideos = [];
+        let dramaCover = '';
 
         const elements = {
             dramaDetail: document.getElementById('drama-detail'),
@@ -618,9 +703,9 @@
                 currentDrama = detailData;
                 episodeVideos = detailData.videos || [];
                 totalEpisodes = episodeVideos.length;
+                dramaCover = detailData.cover || CONFIG.defaultImage;
+                
                 renderDramaDetail(detailData);
-
-                // Generate episode list
                 renderEpisodes(episodeVideos);
 
             } catch (err) {
@@ -639,7 +724,7 @@
                 <div class="row">
                     <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
                         <div class="position-sticky" style="top: 90px;">
-                            <img src="${drama.cover || CONFIG.defaultImage}"
+                            <img src="${dramaCover}"
                                  class="drama-poster mb-4"
                                  alt="${escapeHtml(drama.title)}"
                                  onerror="this.src='${CONFIG.defaultImage}'">
@@ -690,15 +775,22 @@
                 const episodeNum = video.episode || (index + 1);
                 const duration = formatDuration(video.duration || 0);
                 
+                // Buat efek gradient berdasarkan episode
+                const episodeColor = getEpisodeColor(episodeNum);
+                
                 return `
                     <div class="col">
                         <div class="episode-card">
                             <button class="episode-btn w-100"
                                     onclick="playEpisode(${episodeNum})"
                                     data-index="${episodeNum}"
-                                    title="Episode ${episodeNum}">
-                                <div class="episode-number">Episode ${episodeNum}</div>
-                                <div class="episode-duration">${duration}</div>
+                                    title="Episode ${episodeNum}"
+                                    style="background-image: url('${dramaCover}'); background-color: ${episodeColor};">
+                                <div class="episode-badge">${episodeNum}</div>
+                                <div class="episode-content">
+                                    <div class="episode-number">Episode ${episodeNum}</div>
+                                    <div class="episode-duration">${duration}</div>
+                                </div>
                             </button>
                         </div>
                     </div>
@@ -706,6 +798,21 @@
             }).join('');
 
             elements.episodeList.innerHTML = html;
+        }
+
+        // Function untuk mendapatkan warna berbeda untuk setiap episode
+        function getEpisodeColor(episodeNum) {
+            // Buat array warna yang berbeda-beda
+            const colors = [
+                '#ff6b6b', '#1e90ff', '#2ed573', '#ffa502', '#a55eea',
+                '#45aaf2', '#26de81', '#fed330', '#fc5c65', '#4b7bec',
+                '#a29bfe', '#fd79a8', '#00cec9', '#fab1a0', '#74b9ff',
+                '#55efc4', '#ffeaa7', '#d63031', '#0984e3', '#00b894'
+            ];
+            
+            // Gunakan episode number untuk memilih warna (agar konsisten)
+            const colorIndex = (episodeNum - 1) % colors.length;
+            return colors[colorIndex];
         }
 
         // ============== PLAY FUNCTIONS ==============
