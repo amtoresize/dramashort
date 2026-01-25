@@ -72,6 +72,8 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            cursor: pointer;
+            position: relative;
         }
         .episode-btn:hover {
             transform: translateY(-5px);
@@ -81,6 +83,10 @@
         .episode-btn.playing {
             background: linear-gradient(145deg, #ff6b6b, #ff4757);
             border-color: #ff4757;
+        }
+        .episode-btn.loading {
+            opacity: 0.7;
+            cursor: wait;
         }
 
         .episode-number { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
@@ -105,9 +111,110 @@
             border-radius: 8px;
         }
 
+        /* Quality Modal Styles */
+        .quality-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .quality-modal-content {
+            background: linear-gradient(145deg, #1a1a2e, #0f0f23);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            border: 2px solid #ff6b6b;
+            box-shadow: 0 20px 50px rgba(255, 107, 107, 0.3);
+        }
+        
+        .quality-modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #ff6b6b;
+            text-align: center;
+        }
+        
+        .quality-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quality-btn {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .quality-btn:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        .quality-btn.active {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .quality-btn .badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .quality-btn.vip .badge {
+            background: linear-gradient(135deg, #ffd93d, #ff9f1a);
+            color: #000;
+        }
+        
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .modal-close-btn:hover {
+            color: #ff6b6b;
+        }
+        
+        .episode-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+
         @media (max-width: 768px) {
             .drama-title { font-size: 1.8rem; }
             .drama-poster { max-height: 350px; margin-bottom: 1.5rem; }
+            .quality-modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -156,6 +263,18 @@
             </div>
         </section>
     </main>
+    
+    <!-- Quality Selection Modal -->
+    <div id="quality-modal" class="quality-modal">
+        <div class="quality-modal-content">
+            <button class="modal-close-btn" onclick="closeQualityModal()">&times;</button>
+            <h3 class="quality-modal-title">
+                <i class="bi bi-hd me-2"></i>Pilih Kualitas Video
+            </h3>
+            <div id="episode-info" class="episode-info"></div>
+            <div id="quality-buttons" class="quality-buttons"></div>
+        </div>
+    </div>
 
     <script>
         // ============== CONFIG & STATE ==============
@@ -166,13 +285,18 @@
 
         let currentDrama = null;
         let isLoading = false;
+        let currentEpisodeIndex = 1;
+        let currentVideoData = null;
 
         const elements = {
             dramaDetail: document.getElementById('drama-detail'),
             episodeList: document.getElementById('episode-list'),
             episodeCount: document.getElementById('episode-count'),
             countText: document.getElementById('count-text'),
-            noEpisodes: document.getElementById('no-episodes')
+            noEpisodes: document.getElementById('no-episodes'),
+            qualityModal: document.getElementById('quality-modal'),
+            qualityButtons: document.getElementById('quality-buttons'),
+            episodeInfo: document.getElementById('episode-info')
         };
 
         // ============== INIT ==============
@@ -190,7 +314,7 @@
             isLoading = true;
 
             try {
-                // 1. Detail Drama menggunakan API baru
+                // Load Drama Detail menggunakan API baru
                 const detailRes = await fetch(`https://dramabos.asia/api/dramabox/api/drama/${dramaId}?lang=in`);
                 if (!detailRes.ok) throw new Error(`Detail HTTP ${detailRes.status}`);
                 const detailData = await detailRes.json();
@@ -200,7 +324,7 @@
                 currentDrama = detailData;
                 renderDramaDetail(currentDrama);
 
-                // 2. Generate episode list berdasarkan chapterCount
+                // Generate episode list berdasarkan chapterCount
                 const episodeCount = currentDrama.chapterCount || 0;
                 renderEpisodes(episodeCount);
 
@@ -226,7 +350,7 @@
                                  onerror="this.src='${CONFIG.defaultImage}'">
                            
                             <div class="d-grid gap-2">
-                                <button class="btn btn-danger btn-lg py-3" onclick="playFirstEpisode()">
+                                <button class="btn btn-danger btn-lg py-3" onclick="playEpisode(1)">
                                     <i class="bi bi-play-fill me-2"></i>Putar Episode 1
                                 </button>
                             </div>
@@ -274,7 +398,7 @@
                     <div class="col">
                         <div class="episode-card">
                             <button class="episode-btn w-100"
-                                    onclick="playEpisode(${episodeNum}, this)"
+                                    onclick="playEpisode(${episodeNum})"
                                     data-index="${episodeNum}"
                                     title="Episode ${episodeNum}">
                                 <div class="episode-number">Episode ${episodeNum}</div>
@@ -289,49 +413,151 @@
         }
 
         // ============== PLAY FUNCTIONS ==============
-        async function playEpisode(index, btn) {
-            if (!currentDrama) return alert('Data drama belum siap');
+        async function playEpisode(index) {
+            if (!currentDrama) {
+                alert('Data drama belum siap');
+                return;
+            }
 
-            updateButtonState(btn, true);
-
+            currentEpisodeIndex = index;
+            
             try {
-                // GUNAKAN URL PLAY LAMA YANG MASIH BEKERJA
-                const playerUrl = `${CONFIG.playerBase}?bookId=${currentDrama.bookId}&index=${index - 1}&lang=in`;
-                window.open(playerUrl, '_blank');
+                // Tampilkan loading state di button
+                const btn = elements.episodeList.querySelector(`[data-index="${index}"]`);
+                if (btn) {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+                }
 
+                // Load video data dari API baru
+                const res = await fetch(`https://dramabos.asia/api/dramabox/api/watch/${currentDrama.bookId}/${index}?lang=in`);
+                
+                if (!res.ok) {
+                    throw new Error(`Video tidak tersedia (HTTP ${res.status})`);
+                }
+
+                const data = await res.json();
+                currentVideoData = data;
+
+                if (!data.videos || data.videos.length === 0) {
+                    throw new Error('Video URL tidak ditemukan');
+                }
+
+                // Tampilkan modal pilihan kualitas
+                showQualityModal(data.videos, index);
+                
+                // Simpan history tontonan
                 saveLastWatched(index);
 
             } catch (err) {
-                alert('Gagal memutar: ' + err.message);
+                console.error('Play error:', err);
+                alert('Gagal memuat video: ' + err.message);
+                
+                // Fallback ke URL lama jika API baru gagal
+                const playerUrl = `${CONFIG.playerBase}?bookId=${currentDrama.bookId}&index=${index - 1}&lang=in`;
+                window.open(playerUrl, '_blank');
+                
             } finally {
-                updateButtonState(btn, false);
+                // Reset button state
+                const btn = elements.episodeList.querySelector(`[data-index="${index}"]`);
+                if (btn) {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
             }
         }
-
+        
         function playFirstEpisode() {
-            if (!currentDrama) return alert('Data drama belum siap');
-            const btn = elements.episodeList.querySelector('[data-index="1"]');
-            playEpisode(1, btn);
+            playEpisode(1);
         }
 
-        // ============== HELPERS ==============
-        function updateButtonState(btn, loading) {
-            if (!btn) return;
-            if (loading) {
-                btn.dataset.original = btn.innerHTML;
-                btn.innerHTML = `<div class="spinner-border spinner-border-sm"></div> Loading...`;
-                btn.disabled = true;
-                btn.classList.add('playing');
-            } else {
-                btn.innerHTML = btn.dataset.original || btn.innerHTML;
-                btn.disabled = false;
-                btn.classList.remove('playing');
+        // ============== QUALITY MODAL FUNCTIONS ==============
+        function showQualityModal(videos, episodeIndex) {
+            if (!videos || videos.length === 0) return;
+            
+            // Sort by quality (highest first)
+            const sortedVideos = [...videos].sort((a, b) => b.quality - a.quality);
+            
+            // Update episode info
+            elements.episodeInfo.innerHTML = `
+                <strong>${currentDrama.bookName}</strong> - Episode ${episodeIndex}
+            `;
+            
+            // Create quality buttons
+            const buttonsHtml = sortedVideos.map(video => {
+                const isDefault = video.isDefault === 1;
+                const isVip = video.isVipEquity === 1;
+                const qualityLabel = getQualityLabel(video.quality);
+                const videoUrl = video.videoPath;
+                
+                return `
+                    <button class="quality-btn ${isDefault ? 'active' : ''} ${isVip ? 'vip' : ''}"
+                            onclick="selectQuality('${escapeHtml(videoUrl)}', ${video.quality}, ${episodeIndex})">
+                        <span>
+                            ${qualityLabel}
+                            ${isDefault ? ' <small>(Default)</small>' : ''}
+                        </span>
+                        ${isVip ? '<span class="badge">VIP</span>' : ''}
+                    </button>
+                `;
+            }).join('');
+            
+            elements.qualityButtons.innerHTML = buttonsHtml;
+            elements.qualityModal.style.display = 'flex';
+        }
+        
+        function closeQualityModal() {
+            elements.qualityModal.style.display = 'none';
+            elements.qualityButtons.innerHTML = '';
+        }
+        
+        function selectQuality(videoUrl, quality, episodeIndex) {
+            if (!videoUrl) {
+                alert('URL video tidak valid');
+                return;
             }
+            
+            // Langsung buka URL video di new tab (SAMA DENGAN VERSI AWAL)
+            window.open(videoUrl, '_blank');
+            
+            // Tambahkan log untuk debugging
+            console.log('Playing video:', {
+                url: videoUrl,
+                quality: quality,
+                episode: episodeIndex,
+                drama: currentDrama.bookName
+            });
+            
+            // Tutup modal
+            closeQualityModal();
+        }
+        
+        function getQualityLabel(quality) {
+            const labels = {
+                144: '144p (Lowest)',
+                360: '360p (Low)',
+                540: '540p (Medium)',
+                720: '720p (HD)',
+                1080: '1080p (Full HD)',
+                2160: '4K (Ultra HD)'
+            };
+            return labels[quality] || `${quality}p`;
         }
 
+        // ============== HELPER FUNCTIONS ==============
         function saveLastWatched(index) {
             if (currentDrama?.bookId) {
                 localStorage.setItem(`last_dramabox_${currentDrama.bookId}`, index);
+                
+                // Update UI untuk menunjukkan episode terakhir ditonton
+                const episodeButtons = elements.episodeList.querySelectorAll('.episode-btn');
+                episodeButtons.forEach(btn => {
+                    btn.classList.remove('playing');
+                    const btnIndex = parseInt(btn.dataset.index);
+                    if (btnIndex === index) {
+                        btn.classList.add('playing');
+                    }
+                });
             }
         }
 
@@ -359,8 +585,25 @@
             return div.innerHTML;
         }
 
+        // ============== GLOBAL FUNCTIONS ==============
         window.playEpisode = playEpisode;
         window.playFirstEpisode = playFirstEpisode;
+        window.selectQuality = selectQuality;
+        window.closeQualityModal = closeQualityModal;
+        
+        // Close modal when clicking outside
+        elements.qualityModal.addEventListener('click', function(e) {
+            if (e.target === elements.qualityModal) {
+                closeQualityModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && elements.qualityModal.style.display === 'flex') {
+                closeQualityModal();
+            }
+        });
     </script>
 </body>
 </html>
