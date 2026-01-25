@@ -557,175 +557,225 @@
     </div>
 
     <script>
-        // ============== CONFIG & STATE ==============
-        const CONFIG = {
-            // GUNAKAN PROXY SAMA SEPERTI app.js
-            apiBase: '/api',
-            defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
-        };
+// ============== CONFIG & STATE ==============
+const CONFIG = {
+    apiBase: '/api',
+    defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
+};
 
-        let currentDrama = null;
-        let isLoading = false;
-        let currentEpisodeIndex = 1;
-        let currentVideoData = null;
-        let currentVideoUrl = '';
-        let currentQuality = '';
-        let totalEpisodes = 0;
-        let videoPlayer = null;
-        let episodeVideos = [];
+let currentDrama = null;
+let isLoading = false;
+let currentEpisodeIndex = 1;
+let currentVideoData = null;
+let currentVideoUrl = '';
+let currentQuality = '';
+let totalEpisodes = 0;
+let videoPlayer = null;
+let episodeVideos = [];
+let dramaCover = CONFIG.defaultImage; // Variabel untuk cover
 
-        const elements = {
-            dramaDetail: document.getElementById('drama-detail'),
-            episodeList: document.getElementById('episode-list'),
-            episodeCount: document.getElementById('episode-count'),
-            countText: document.getElementById('count-text'),
-            noEpisodes: document.getElementById('no-episodes'),
-            qualityModal: document.getElementById('quality-modal'),
-            qualityButtons: document.getElementById('quality-buttons'),
-            episodeInfo: document.getElementById('episode-info'),
-            videoPlayerContainer: document.getElementById('video-player-container'),
-            videoPlayer: document.getElementById('video-player'),
-            playerTitle: document.getElementById('player-title'),
-            prevBtn: document.getElementById('prev-btn'),
-            nextBtn: document.getElementById('next-btn')
-        };
+// ============== MAIN LOAD ==============
+async function loadDramaDetail(dramaId) {
+    if (isLoading) return;
+    isLoading = true;
 
-        // ============== INIT ==============
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dramaId = urlParams.get('id');
-            if (!dramaId) return window.location.href = '/';
+    try {
+        console.log('Loading drama ID:', dramaId);
+        
+        // 1. LOAD DETAIL DATA DARI PROXY (untuk episode dll)
+        const detailRes = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
+        if (!detailRes.ok) throw new Error(`Detail HTTP ${detailRes.status}`);
+        
+        const detailData = await detailRes.json();
+        const drama = detailData.data || detailData;
+        
+        if (!drama || detailData.code !== 0) throw new Error('Drama tidak ditemukan');
 
-            loadDramaDetail(dramaId);
+        currentDrama = drama;
+        episodeVideos = drama.videos || [];
+        totalEpisodes = episodeVideos.length;
+        
+        console.log('Drama detail loaded:', drama);
+        console.log('Cover from detail API:', drama.cover);
+        
+        // 2. LOAD HOME API UNTUK DAPATKAN GAMBAR YANG BAGUS
+        await loadDramaCoverFromHome(dramaId, drama);
+        
+        // 3. RENDER DENGAN GAMBAR YANG SUDAH DIPERBAIKI
+        renderDramaDetail(drama);
+        renderEpisodes(episodeVideos);
+
+    } catch (err) {
+        console.error('Load error:', err);
+        showError(`Gagal memuat: ${err.message}`);
+    } finally {
+        isLoading = false;
+    }
+}
+
+// ============== LOAD COVER FROM HOME API ==============
+async function loadDramaCoverFromHome(dramaId, dramaDetail) {
+    try {
+        console.log('Trying to get cover from home API...');
+        
+        // Coba load home API untuk dapatkan gambar yang valid
+        const homeRes = await fetch(`${CONFIG.apiBase}/home?offset=0&count=50&lang=id`);
+        if (!homeRes.ok) {
+            console.warn('Home API failed, using detail cover');
+            dramaCover = dramaDetail.cover || CONFIG.defaultImage;
+            return;
+        }
+        
+        const homeData = await homeRes.json();
+        console.log('Home API loaded, items:', homeData.data?.length || 0);
+        
+        if (homeData.code === 0 && homeData.data && homeData.data.length > 0) {
+            // Cari drama dengan ID yang sama di home API
+            const homeDrama = homeData.data.find(item => item.id === dramaId || item.id === dramaDetail.id);
             
-            // Initialize video player
-            videoPlayer = elements.videoPlayer;
-            setupVideoPlayer();
-        });
-
-        // ============== MAIN LOAD ==============
-        async function loadDramaDetail(dramaId) {
-            if (isLoading) return;
-            isLoading = true;
-
-            try {
-                // DEBUG: Log informasi
-                console.log('Loading drama ID:', dramaId);
-                console.log('API Base:', CONFIG.apiBase);
-                console.log('Full URL:', `${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
+            if (homeDrama && homeDrama.cover) {
+                console.log('Found in home API! Cover:', homeDrama.cover);
+                dramaCover = homeDrama.cover;
                 
-                // GUNAKAN PROXY SAMA SEPERTI app.js
-                const detailRes = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
+                // Cek apakah gambar .heic, convert ke .jpg jika perlu
+                if (dramaCover.includes('.heic')) {
+                    dramaCover = dramaCover.replace('.heic', '.jpg');
+                    console.log('Converted HEIC to JPG:', dramaCover);
+                }
+            } else {
+                console.log('Drama not found in home API, using detail cover');
+                dramaCover = dramaDetail.cover || CONFIG.defaultImage;
                 
-                // DEBUG: Log response status
-                console.log('Response Status:', detailRes.status);
-                
-                if (!detailRes.ok) throw new Error(`Detail HTTP ${detailRes.status}`);
-                
-                const detailData = await detailRes.json();
-                
-                // DEBUG: Log response data
-                console.log('API Response:', detailData);
-                
-                // PROXY MELOLO MENGEMBALIKAN:
-                // 1. Field "data" yang berisi detail drama
-                // 2. Atau langsung detail drama di root
-                const drama = detailData.data || detailData;
-                
-                if (!drama || detailData.code !== 0) throw new Error('Drama tidak ditemukan');
-
-                currentDrama = drama;
-                episodeVideos = drama.videos || [];
-                totalEpisodes = episodeVideos.length;
-                
-                renderDramaDetail(drama);
-                renderEpisodes(episodeVideos);
-
-            } catch (err) {
-                console.error('Load error:', err);
-                showError(`Gagal memuat: ${err.message}`);
-            } finally {
-                isLoading = false;
+                // Coba convert .heic ke .jpg
+                if (dramaCover.includes('.heic')) {
+                    dramaCover = dramaCover.replace('.heic', '.jpg');
+                }
+            }
+        } else {
+            dramaCover = dramaDetail.cover || CONFIG.defaultImage;
+            if (dramaCover.includes('.heic')) {
+                dramaCover = dramaCover.replace('.heic', '.jpg');
             }
         }
+        
+        console.log('Final cover URL:', dramaCover);
+        
+    } catch (err) {
+        console.warn('Error loading home API:', err);
+        // Fallback ke cover dari detail
+        dramaCover = dramaDetail.cover || CONFIG.defaultImage;
+        if (dramaCover.includes('.heic')) {
+            dramaCover = dramaCover.replace('.heic', '.jpg');
+        }
+    }
+}
 
-        // ============== RENDER DETAIL ==============
-        function renderDramaDetail(drama) {
-            document.title = `${escapeHtml(drama.title || drama.name || 'Drama')} - DramaShort`;
+// ============== RENDER DETAIL ==============
+function renderDramaDetail(drama) {
+    document.title = `${escapeHtml(drama.title || drama.name || 'Drama')} - DramaShort`;
 
-            const html = `
-                <div class="row">
-                    <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
-                        <div class="position-sticky" style="top: 90px;">
-                            <!-- GUNAKAN COVER DARI DRAMA, JIKA TIDAK ADA GUNAKAN DEFAULT -->
-                            <img src="${drama.cover || CONFIG.defaultImage}"
-                                 class="drama-poster mb-4"
-                                 alt="${escapeHtml(drama.title || drama.name || 'Drama')}"
-                                 onerror="this.src='${CONFIG.defaultImage}'">
+    const html = `
+        <div class="row">
+            <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
+                <div class="position-sticky" style="top: 90px;">
+                    <!-- GUNAKAN dramaCover YANG SUDAH DIPERBAIKI -->
+                    <img src="${dramaCover}"
+                         class="drama-poster mb-4"
+                         alt="${escapeHtml(drama.title || drama.name || 'Drama')}"
+                         onerror="handleImageError(this)">
                            
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-danger btn-lg py-3" onclick="playEpisode(1)">
-                                    <i class="bi bi-play-fill me-2"></i>Putar Episode 1
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                   
-                    <div class="col-lg-8 col-md-7">
-                        <h1 class="drama-title">${escapeHtml(drama.title || drama.name || 'Unknown')}</h1>
-                       
-                        <div class="d-flex flex-wrap gap-3 mb-4">
-                            <span class="badge badge-melolo">
-                                <i class="bi bi-film me-1"></i>${totalEpisodes} Episode
-                            </span>
-                            ${drama.episodes ? `
-                            <span class="badge badge-melolo">
-                                <i class="bi bi-collection me-1"></i>Total ${drama.episodes}
-                            </span>` : ''}
-                        </div>
-                       
-                        <div class="synopsis-box mb-4">
-                            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-danger me-2"></i>Sinopsis</h5>
-                            <p>${escapeHtml(drama.intro || drama.introduction || 'Tidak ada sinopsis tersedia.')}</p>
-                        </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-danger btn-lg py-3" onclick="playEpisode(1)">
+                            <i class="bi bi-play-fill me-2"></i>Putar Episode 1
+                        </button>
                     </div>
                 </div>
-            `;
-            elements.dramaDetail.innerHTML = html;
-        }
+            </div>
+           
+            <div class="col-lg-8 col-md-7">
+                <h1 class="drama-title">${escapeHtml(drama.title || drama.name || 'Unknown')}</h1>
+               
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <span class="badge badge-melolo">
+                        <i class="bi bi-film me-1"></i>${totalEpisodes} Episode
+                    </span>
+                    ${drama.episodes ? `
+                    <span class="badge badge-melolo">
+                        <i class="bi bi-collection me-1"></i>Total ${drama.episodes}
+                    </span>` : ''}
+                </div>
+               
+                <div class="synopsis-box mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-danger me-2"></i>Sinopsis</h5>
+                    <p>${escapeHtml(drama.intro || drama.introduction || 'Tidak ada sinopsis tersedia.')}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    elements.dramaDetail.innerHTML = html;
+}
 
-        // ============== RENDER EPISODES ==============
-        function renderEpisodes(videos) {
-            if (!videos || videos.length === 0) {
-                showNoEpisodes();
-                return;
-            }
+// ============== HANDLE IMAGE ERROR ==============
+function handleImageError(imgElement) {
+    console.warn('Image failed to load, trying fallbacks...');
+    
+    // 1. Coba ganti domain
+    if (dramaCover.includes('fizzopic.org')) {
+        const fallbackUrl = dramaCover
+            .replace('fizzopic.org', 'ibyteimg.com')
+            .replace('/novel-sign-sg/', '/novel-images-sg/');
+        imgElement.src = fallbackUrl;
+        console.log('Trying fallback URL:', fallbackUrl);
+        return;
+    }
+    
+    // 2. Coba extract filename dan buat URL baru
+    const match = dramaCover.match(/[\w~-]+\.(jpg|jpeg|png|webp)/i);
+    if (match) {
+        const filename = match[0];
+        const newUrl = `https://p16-novel-sg.ibyteimg.com/img/novel-images-sg/${filename}`;
+        imgElement.src = newUrl;
+        console.log('Trying reconstructed URL:', newUrl);
+        return;
+    }
+    
+    // 3. Fallback ke default
+    imgElement.src = CONFIG.defaultImage;
+    console.log('Using default image');
+}
 
-            elements.countText.textContent = `${videos.length} Episode`;
-            elements.episodeList.style.display = 'flex';
-            elements.noEpisodes.style.display = 'none';
+// ============== RENDER EPISODES ==============
+function renderEpisodes(videos) {
+    if (!videos || videos.length === 0) {
+        showNoEpisodes();
+        return;
+    }
 
-            const html = videos.map((video, index) => {
-                const episodeNum = video.episode || (index + 1);
-                const duration = formatDuration(video.duration || 0);
-                
-                return `
-                    <div class="col">
-                        <div class="episode-card">
-                            <button class="episode-btn w-100"
-                                    onclick="playEpisode(${episodeNum})"
-                                    data-index="${episodeNum}"
-                                    title="Episode ${episodeNum}">
-                                <div class="episode-number">Episode ${episodeNum}</div>
-                                <div class="episode-duration">${duration}</div>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+    elements.countText.textContent = `${videos.length} Episode`;
+    elements.episodeList.style.display = 'flex';
+    elements.noEpisodes.style.display = 'none';
 
-            elements.episodeList.innerHTML = html;
-        }
+    const html = videos.map((video, index) => {
+        const episodeNum = video.episode || (index + 1);
+        const duration = formatDuration(video.duration || 0);
+        
+        return `
+            <div class="col">
+                <div class="episode-card">
+                    <button class="episode-btn w-100"
+                            onclick="playEpisode(${episodeNum})"
+                            data-index="${episodeNum}"
+                            title="Episode ${episodeNum}">
+                        <div class="episode-number">Episode ${episodeNum}</div>
+                        <div class="episode-duration">${duration}</div>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    elements.episodeList.innerHTML = html;
+}
 
         // ============== PLAY FUNCTIONS ==============
         async function playEpisode(episodeNumber) {
