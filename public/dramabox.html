@@ -750,7 +750,7 @@
             if (!videos || videos.length === 0) return;
             
             // Filter hanya 1080p, 720p, 360p saja
-            const allowedQualities = [1080, 720, 360];
+            const allowedQualities = [1080, 720, 540, 360];
             const filteredVideos = videos.filter(video => allowedQualities.includes(video.quality));
             
             // Sort by quality (highest first)
