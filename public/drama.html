@@ -557,225 +557,190 @@
     </div>
 
     <script>
-// ============== CONFIG & STATE ==============
-const CONFIG = {
-    apiBase: '/api',
-    defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
-};
+        // ============== CONFIG & STATE ==============
+        const CONFIG = {
+            apiBase: '/api',
+            defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
+        };
 
-let currentDrama = null;
-let isLoading = false;
-let currentEpisodeIndex = 1;
-let currentVideoData = null;
-let currentVideoUrl = '';
-let currentQuality = '';
-let totalEpisodes = 0;
-let videoPlayer = null;
-let episodeVideos = [];
-let dramaCover = CONFIG.defaultImage; // Variabel untuk cover
+        let currentDrama = null;
+        let isLoading = false;
+        let currentEpisodeIndex = 1;
+        let currentVideoData = null;
+        let currentVideoUrl = '';
+        let currentQuality = '';
+        let totalEpisodes = 0;
+        let videoPlayer = null;
+        let episodeVideos = [];
+        let dramaCover = CONFIG.defaultImage;
 
-// ============== MAIN LOAD ==============
-async function loadDramaDetail(dramaId) {
-    if (isLoading) return;
-    isLoading = true;
+        const elements = {
+            dramaDetail: document.getElementById('drama-detail'),
+            episodeList: document.getElementById('episode-list'),
+            episodeCount: document.getElementById('episode-count'),
+            countText: document.getElementById('count-text'),
+            noEpisodes: document.getElementById('no-episodes'),
+            qualityModal: document.getElementById('quality-modal'),
+            qualityButtons: document.getElementById('quality-buttons'),
+            episodeInfo: document.getElementById('episode-info'),
+            videoPlayerContainer: document.getElementById('video-player-container'),
+            videoPlayer: document.getElementById('video-player'),
+            playerTitle: document.getElementById('player-title'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn')
+        };
 
-    try {
-        console.log('Loading drama ID:', dramaId);
-        
-        // 1. LOAD DETAIL DATA DARI PROXY (untuk episode dll)
-        const detailRes = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
-        if (!detailRes.ok) throw new Error(`Detail HTTP ${detailRes.status}`);
-        
-        const detailData = await detailRes.json();
-        const drama = detailData.data || detailData;
-        
-        if (!drama || detailData.code !== 0) throw new Error('Drama tidak ditemukan');
+        // ============== INIT ==============
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dramaId = urlParams.get('id');
+            if (!dramaId) return window.location.href = '/';
 
-        currentDrama = drama;
-        episodeVideos = drama.videos || [];
-        totalEpisodes = episodeVideos.length;
-        
-        console.log('Drama detail loaded:', drama);
-        console.log('Cover from detail API:', drama.cover);
-        
-        // 2. LOAD HOME API UNTUK DAPATKAN GAMBAR YANG BAGUS
-        await loadDramaCoverFromHome(dramaId, drama);
-        
-        // 3. RENDER DENGAN GAMBAR YANG SUDAH DIPERBAIKI
-        renderDramaDetail(drama);
-        renderEpisodes(episodeVideos);
-
-    } catch (err) {
-        console.error('Load error:', err);
-        showError(`Gagal memuat: ${err.message}`);
-    } finally {
-        isLoading = false;
-    }
-}
-
-// ============== LOAD COVER FROM HOME API ==============
-async function loadDramaCoverFromHome(dramaId, dramaDetail) {
-    try {
-        console.log('Trying to get cover from home API...');
-        
-        // Coba load home API untuk dapatkan gambar yang valid
-        const homeRes = await fetch(`${CONFIG.apiBase}/home?offset=0&count=50&lang=id`);
-        if (!homeRes.ok) {
-            console.warn('Home API failed, using detail cover');
-            dramaCover = dramaDetail.cover || CONFIG.defaultImage;
-            return;
-        }
-        
-        const homeData = await homeRes.json();
-        console.log('Home API loaded, items:', homeData.data?.length || 0);
-        
-        if (homeData.code === 0 && homeData.data && homeData.data.length > 0) {
-            // Cari drama dengan ID yang sama di home API
-            const homeDrama = homeData.data.find(item => item.id === dramaId || item.id === dramaDetail.id);
+            loadDramaDetail(dramaId);
             
-            if (homeDrama && homeDrama.cover) {
-                console.log('Found in home API! Cover:', homeDrama.cover);
-                dramaCover = homeDrama.cover;
+            // Initialize video player
+            videoPlayer = elements.videoPlayer;
+            setupVideoPlayer();
+        });
+
+        // ============== MAIN LOAD ==============
+        async function loadDramaDetail(dramaId) {
+            if (isLoading) return;
+            isLoading = true;
+
+            try {
+                console.log('🚀 Loading drama ID:', dramaId);
                 
-                // Cek apakah gambar .heic, convert ke .jpg jika perlu
+                // 1. LOAD DETAIL DATA DARI PROXY
+                console.log('📋 Loading detail data...');
+                const detailRes = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
+                
+                if (!detailRes.ok) {
+                    console.error('❌ Detail API failed:', detailRes.status);
+                    throw new Error(`Detail HTTP ${detailRes.status}`);
+                }
+                
+                const detailData = await detailRes.json();
+                console.log('📦 Detail API response:', detailData);
+                
+                // Handle proxy response structure
+                const drama = detailData.data || detailData;
+                
+                if (!drama || detailData.code !== 0) {
+                    console.error('❌ Drama not found in response');
+                    throw new Error('Drama tidak ditemukan');
+                }
+
+                currentDrama = drama;
+                episodeVideos = drama.videos || [];
+                totalEpisodes = episodeVideos.length;
+                
+                console.log('✅ Drama loaded:', {
+                    id: drama.id || dramaId,
+                    title: drama.title || drama.name,
+                    cover: drama.cover,
+                    episodes: totalEpisodes
+                });
+                
+                // 2. GET COVER IMAGE - SIMPLE VERSION
+                dramaCover = drama.cover || CONFIG.defaultImage;
+                console.log('🖼️ Cover URL:', dramaCover);
+                
+                // Try to fix HEIC format
                 if (dramaCover.includes('.heic')) {
                     dramaCover = dramaCover.replace('.heic', '.jpg');
-                    console.log('Converted HEIC to JPG:', dramaCover);
+                    console.log('🔄 Converted HEIC to JPG:', dramaCover);
                 }
-            } else {
-                console.log('Drama not found in home API, using detail cover');
-                dramaCover = dramaDetail.cover || CONFIG.defaultImage;
                 
-                // Coba convert .heic ke .jpg
-                if (dramaCover.includes('.heic')) {
-                    dramaCover = dramaCover.replace('.heic', '.jpg');
-                }
-            }
-        } else {
-            dramaCover = dramaDetail.cover || CONFIG.defaultImage;
-            if (dramaCover.includes('.heic')) {
-                dramaCover = dramaCover.replace('.heic', '.jpg');
+                // 3. RENDER IMMEDIATELY
+                renderDramaDetail(drama);
+                renderEpisodes(episodeVideos);
+
+            } catch (err) {
+                console.error('❌ Load error:', err);
+                showError(`Gagal memuat: ${err.message}`);
+            } finally {
+                isLoading = false;
+                console.log('🏁 Loading finished');
             }
         }
-        
-        console.log('Final cover URL:', dramaCover);
-        
-    } catch (err) {
-        console.warn('Error loading home API:', err);
-        // Fallback ke cover dari detail
-        dramaCover = dramaDetail.cover || CONFIG.defaultImage;
-        if (dramaCover.includes('.heic')) {
-            dramaCover = dramaCover.replace('.heic', '.jpg');
-        }
-    }
-}
 
-// ============== RENDER DETAIL ==============
-function renderDramaDetail(drama) {
-    document.title = `${escapeHtml(drama.title || drama.name || 'Drama')} - DramaShort`;
+        // ============== RENDER DETAIL ==============
+        function renderDramaDetail(drama) {
+            document.title = `${escapeHtml(drama.title || drama.name || 'Drama')} - DramaShort`;
 
-    const html = `
-        <div class="row">
-            <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
-                <div class="position-sticky" style="top: 90px;">
-                    <!-- GUNAKAN dramaCover YANG SUDAH DIPERBAIKI -->
-                    <img src="${dramaCover}"
-                         class="drama-poster mb-4"
-                         alt="${escapeHtml(drama.title || drama.name || 'Drama')}"
-                         onerror="handleImageError(this)">
+            const html = `
+                <div class="row">
+                    <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
+                        <div class="position-sticky" style="top: 90px;">
+                            <img src="${dramaCover}"
+                                 class="drama-poster mb-4"
+                                 alt="${escapeHtml(drama.title || drama.name || 'Drama')}"
+                                 onerror="this.onerror=null; this.src='${CONFIG.defaultImage}';">
                            
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-danger btn-lg py-3" onclick="playEpisode(1)">
-                            <i class="bi bi-play-fill me-2"></i>Putar Episode 1
-                        </button>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-danger btn-lg py-3" onclick="playEpisode(1)">
+                                    <i class="bi bi-play-fill me-2"></i>Putar Episode 1
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <div class="col-lg-8 col-md-7">
+                        <h1 class="drama-title">${escapeHtml(drama.title || drama.name || 'Unknown')}</h1>
+                       
+                        <div class="d-flex flex-wrap gap-3 mb-4">
+                            <span class="badge badge-melolo">
+                                <i class="bi bi-film me-1"></i>${totalEpisodes} Episode
+                            </span>
+                            ${drama.episodes ? `
+                            <span class="badge badge-melolo">
+                                <i class="bi bi-collection me-1"></i>Total ${drama.episodes}
+                            </span>` : ''}
+                        </div>
+                       
+                        <div class="synopsis-box mb-4">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-danger me-2"></i>Sinopsis</h5>
+                            <p>${escapeHtml(drama.intro || drama.introduction || 'Tidak ada sinopsis tersedia.')}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-           
-            <div class="col-lg-8 col-md-7">
-                <h1 class="drama-title">${escapeHtml(drama.title || drama.name || 'Unknown')}</h1>
-               
-                <div class="d-flex flex-wrap gap-3 mb-4">
-                    <span class="badge badge-melolo">
-                        <i class="bi bi-film me-1"></i>${totalEpisodes} Episode
-                    </span>
-                    ${drama.episodes ? `
-                    <span class="badge badge-melolo">
-                        <i class="bi bi-collection me-1"></i>Total ${drama.episodes}
-                    </span>` : ''}
-                </div>
-               
-                <div class="synopsis-box mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-danger me-2"></i>Sinopsis</h5>
-                    <p>${escapeHtml(drama.intro || drama.introduction || 'Tidak ada sinopsis tersedia.')}</p>
-                </div>
-            </div>
-        </div>
-    `;
-    elements.dramaDetail.innerHTML = html;
-}
+            `;
+            elements.dramaDetail.innerHTML = html;
+        }
 
-// ============== HANDLE IMAGE ERROR ==============
-function handleImageError(imgElement) {
-    console.warn('Image failed to load, trying fallbacks...');
-    
-    // 1. Coba ganti domain
-    if (dramaCover.includes('fizzopic.org')) {
-        const fallbackUrl = dramaCover
-            .replace('fizzopic.org', 'ibyteimg.com')
-            .replace('/novel-sign-sg/', '/novel-images-sg/');
-        imgElement.src = fallbackUrl;
-        console.log('Trying fallback URL:', fallbackUrl);
-        return;
-    }
-    
-    // 2. Coba extract filename dan buat URL baru
-    const match = dramaCover.match(/[\w~-]+\.(jpg|jpeg|png|webp)/i);
-    if (match) {
-        const filename = match[0];
-        const newUrl = `https://p16-novel-sg.ibyteimg.com/img/novel-images-sg/${filename}`;
-        imgElement.src = newUrl;
-        console.log('Trying reconstructed URL:', newUrl);
-        return;
-    }
-    
-    // 3. Fallback ke default
-    imgElement.src = CONFIG.defaultImage;
-    console.log('Using default image');
-}
+        // ============== RENDER EPISODES ==============
+        function renderEpisodes(videos) {
+            if (!videos || videos.length === 0) {
+                showNoEpisodes();
+                return;
+            }
 
-// ============== RENDER EPISODES ==============
-function renderEpisodes(videos) {
-    if (!videos || videos.length === 0) {
-        showNoEpisodes();
-        return;
-    }
+            elements.countText.textContent = `${videos.length} Episode`;
+            elements.episodeList.style.display = 'flex';
+            elements.noEpisodes.style.display = 'none';
 
-    elements.countText.textContent = `${videos.length} Episode`;
-    elements.episodeList.style.display = 'flex';
-    elements.noEpisodes.style.display = 'none';
+            const html = videos.map((video, index) => {
+                const episodeNum = video.episode || (index + 1);
+                const duration = formatDuration(video.duration || 0);
+                
+                return `
+                    <div class="col">
+                        <div class="episode-card">
+                            <button class="episode-btn w-100"
+                                    onclick="playEpisode(${episodeNum})"
+                                    data-index="${episodeNum}"
+                                    title="Episode ${episodeNum}">
+                                <div class="episode-number">Episode ${episodeNum}</div>
+                                <div class="episode-duration">${duration}</div>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
-    const html = videos.map((video, index) => {
-        const episodeNum = video.episode || (index + 1);
-        const duration = formatDuration(video.duration || 0);
-        
-        return `
-            <div class="col">
-                <div class="episode-card">
-                    <button class="episode-btn w-100"
-                            onclick="playEpisode(${episodeNum})"
-                            data-index="${episodeNum}"
-                            title="Episode ${episodeNum}">
-                        <div class="episode-number">Episode ${episodeNum}</div>
-                        <div class="episode-duration">${duration}</div>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    elements.episodeList.innerHTML = html;
-}
+            elements.episodeList.innerHTML = html;
+        }
 
         // ============== PLAY FUNCTIONS ==============
         async function playEpisode(episodeNumber) {
@@ -787,20 +752,18 @@ function renderEpisodes(videos) {
             currentEpisodeIndex = episodeNumber;
             
             try {
-                // Tampilkan loading state di button
                 const btn = elements.episodeList.querySelector(`[data-index="${episodeNumber}"]`);
                 if (btn) {
                     btn.classList.add('loading');
                     btn.disabled = true;
                 }
 
-                // Cari video ID berdasarkan episode number
                 const videoData = episodeVideos.find(v => v.episode === episodeNumber);
                 if (!videoData || !videoData.vid) {
                     throw new Error('Video ID tidak ditemukan untuk episode ini');
                 }
 
-                // Load video data dari API Melolo - GUNAKAN PROXY JUGA
+                console.log('🎬 Playing episode', episodeNumber, 'Video ID:', videoData.vid);
                 const res = await fetch(`${CONFIG.apiBase}/video/${videoData.vid}?lang=id`);
                 
                 if (!res.ok) {
@@ -810,10 +773,8 @@ function renderEpisodes(videos) {
                 const data = await res.json();
                 currentVideoData = data;
 
-                // Buat video list dari response Melolo
                 const videoSources = [];
                 
-                // Main URL (720p)
                 if (data.url) {
                     videoSources.push({
                         quality: 720,
@@ -822,7 +783,6 @@ function renderEpisodes(videos) {
                     });
                 }
                 
-                // Backup URL
                 if (data.backup) {
                     videoSources.push({
                         quality: 720,
@@ -831,7 +791,6 @@ function renderEpisodes(videos) {
                     });
                 }
                 
-                // List URLs
                 if (data.list && data.list.length > 0) {
                     data.list.forEach((item, idx) => {
                         videoSources.push({
@@ -846,18 +805,13 @@ function renderEpisodes(videos) {
                     throw new Error('Video URL tidak ditemukan');
                 }
 
-                // Tampilkan modal pilihan kualitas
                 showQualityModal(videoSources, episodeNumber);
-                
-                // Simpan history tontonan
                 saveLastWatched(episodeNumber);
 
             } catch (err) {
                 console.error('Play error:', err);
                 alert('Gagal memuat video: ' + err.message);
-                
             } finally {
-                // Reset button state
                 const btn = elements.episodeList.querySelector(`[data-index="${episodeNumber}"]`);
                 if (btn) {
                     btn.classList.remove('loading');
@@ -876,13 +830,9 @@ function renderEpisodes(videos) {
         function showQualityModal(videoSources, episodeIndex) {
             if (!videoSources || videoSources.length === 0) return;
             
-            // Update episode info
             elements.episodeInfo.innerHTML = `Episode ${episodeIndex}`;
-            
-            // Clear previous buttons
             elements.qualityButtons.innerHTML = '';
             
-            // Create quality buttons
             videoSources.forEach((source, idx) => {
                 const button = document.createElement('button');
                 button.className = 'quality-btn';
@@ -894,15 +844,12 @@ function renderEpisodes(videos) {
             });
             
             elements.qualityModal.style.display = 'flex';
-            
-            // Prevent body scroll
             document.body.style.overflow = 'hidden';
         }
         
         function closeQualityModal() {
             elements.qualityModal.style.display = 'none';
             elements.qualityButtons.innerHTML = '';
-            // Restore body scroll
             document.body.style.overflow = '';
         }
         
@@ -912,24 +859,18 @@ function renderEpisodes(videos) {
                 return;
             }
             
-            // Set video URL dan quality
             currentVideoUrl = videoUrl;
             currentQuality = quality;
             currentEpisodeIndex = episodeIndex;
             
-            // Play video di player inline
             playVideoInline(videoUrl, quality, episodeIndex);
-            
-            // Tutup modal
             closeQualityModal();
         }
 
         // ============== VIDEO PLAYER FUNCTIONS ==============
         function setupVideoPlayer() {
-            // Setup event listeners
             videoPlayer.addEventListener('ended', handleVideoEnded);
             
-            // Fullscreen support
             videoPlayer.addEventListener('fullscreenchange', handleFullscreenChange);
             videoPlayer.addEventListener('webkitfullscreenchange', handleFullscreenChange);
             videoPlayer.addEventListener('mozfullscreenchange', handleFullscreenChange);
@@ -938,22 +879,12 @@ function renderEpisodes(videos) {
         
         async function playVideoInline(videoUrl, quality, episodeIndex) {
             try {
-                // Set video source
                 videoPlayer.src = videoUrl;
-                
-                // Update UI
                 elements.playerTitle.textContent = `Episode ${episodeIndex}`;
-                
-                // Update navigation buttons
                 updateNavigationButtons();
-                
-                // Show player
                 elements.videoPlayerContainer.style.display = 'flex';
-                
-                // Prevent body scroll when player is open
                 document.body.style.overflow = 'hidden';
                 
-                // Play video
                 videoPlayer.load();
                 
                 try {
@@ -962,10 +893,7 @@ function renderEpisodes(videos) {
                     console.log('Autoplay prevented:', playError);
                 }
                 
-                // Mark episode as playing
                 markEpisodeAsPlaying(episodeIndex);
-                
-                // Focus on video for keyboard controls
                 videoPlayer.focus();
 
             } catch (error) {
@@ -976,30 +904,25 @@ function renderEpisodes(videos) {
         
         async function playPrevEpisode() {
             if (currentEpisodeIndex > 1) {
-                // Langsung load dan play episode sebelumnya
                 await loadAndPlayEpisode(currentEpisodeIndex - 1);
             }
         }
         
         async function playNextEpisode() {
             if (currentEpisodeIndex < totalEpisodes) {
-                // Langsung load dan play episode berikutnya
                 await loadAndPlayEpisode(currentEpisodeIndex + 1);
             }
         }
         
         async function loadAndPlayEpisode(episodeNumber) {
             try {
-                // Update episode index
                 currentEpisodeIndex = episodeNumber;
                 
-                // Cari video ID berdasarkan episode number
                 const videoData = episodeVideos.find(v => v.episode === episodeNumber);
                 if (!videoData || !videoData.vid) {
                     throw new Error('Video ID tidak ditemukan');
                 }
                 
-                // Load video data dari PROXY
                 const res = await fetch(`${CONFIG.apiBase}/video/${videoData.vid}?lang=id`);
                 
                 if (!res.ok) {
@@ -1008,15 +931,12 @@ function renderEpisodes(videos) {
 
                 const data = await res.json();
 
-                // Cari video dengan URL utama
                 let selectedVideoUrl = data.url;
                 
-                // Jika tidak ada URL utama, coba backup
                 if (!selectedVideoUrl && data.backup) {
                     selectedVideoUrl = data.backup;
                 }
                 
-                // Jika masih tidak ada, coba dari list
                 if (!selectedVideoUrl && data.list && data.list.length > 0) {
                     selectedVideoUrl = data.list[0].url;
                 }
@@ -1025,10 +945,7 @@ function renderEpisodes(videos) {
                     throw new Error('Tidak ada URL video yang tersedia');
                 }
                 
-                // Play video langsung tanpa modal
                 await playVideoInline(selectedVideoUrl, 720, episodeNumber);
-                
-                // Simpan history
                 saveLastWatched(episodeNumber);
                 
             } catch (error) {
@@ -1043,12 +960,10 @@ function renderEpisodes(videos) {
                 videoPlayer.pause();
                 videoPlayer.src = '';
             }
-            // Restore body scroll
             document.body.style.overflow = '';
         }
         
         function handleVideoEnded() {
-            // Auto play next episode jika ada
             if (currentEpisodeIndex < totalEpisodes) {
                 setTimeout(() => {
                     playNextEpisode();
@@ -1083,7 +998,6 @@ function renderEpisodes(videos) {
         }
         
         function handleFullscreenChange() {
-            // Update fullscreen button icon
             const isFullscreen = document.fullscreenElement || 
                                document.webkitFullscreenElement || 
                                document.mozFullScreenElement || 
@@ -1096,13 +1010,11 @@ function renderEpisodes(videos) {
         }
         
         function updateNavigationButtons() {
-            // Update prev button
             if (elements.prevBtn) {
                 elements.prevBtn.disabled = currentEpisodeIndex <= 1;
                 elements.prevBtn.style.opacity = currentEpisodeIndex <= 1 ? '0.5' : '1';
             }
             
-            // Update next button
             if (elements.nextBtn) {
                 elements.nextBtn.disabled = currentEpisodeIndex >= totalEpisodes;
                 elements.nextBtn.style.opacity = currentEpisodeIndex >= totalEpisodes ? '0.5' : '1';
