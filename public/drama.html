@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -19,10 +21,12 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
         }
         
-        /* ========== NAVBAR ========== */
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
+        .navbar-brand { 
+            font-weight: bold; 
+            font-size: 1.5rem; 
+            background: linear-gradient(90deg, #fff, #0dcaf0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .back-btn {
@@ -30,53 +34,48 @@
             padding: 0.5rem 1.5rem;
             font-weight: 600;
             transition: all 0.3s;
+            border: 2px solid #0dcaf0;
+            color: #0dcaf0;
+            background: transparent;
         }
         
         .back-btn:hover {
             transform: translateX(-5px);
-            background: rgba(255,255,255,0.1);
+            background: rgba(13, 202, 240, 0.1);
+            color: #0dcaf0;
+            border-color: #0dcaf0;
         }
-        
-        /* ========== DRAMA DETAIL ========== */
+
         .drama-poster {
             border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.7);
             width: 100%;
             height: auto;
             max-height: 500px;
             object-fit: cover;
-            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border: 3px solid #0dcaf0;
         }
-        
+
         .drama-title {
             font-size: 2.5rem;
             font-weight: 800;
             background: linear-gradient(90deg, #fff, #0dcaf0);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        
+
         .synopsis-box {
-            background: rgba(30, 30, 30, 0.7);
+            background: rgba(30,30,30,0.7);
             border: 1px solid #444;
             border-radius: 12px;
             padding: 1.5rem;
             line-height: 1.8;
+            border-left: 4px solid #0dcaf0;
         }
-        
-        .badge-episode {
-            font-size: 0.9rem;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-        }
-        
-        /* ========== EPISODE CARDS ========== */
-        .episode-card {
-            margin-bottom: 1rem;
-        }
-        
+
+        .episode-card { margin-bottom: 1rem; }
         .episode-btn {
             border-radius: 12px;
             transition: all 0.3s ease;
@@ -91,94 +90,358 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            cursor: pointer;
+            position: relative;
         }
-        
         .episode-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
-            border-color: #0d6efd;
-            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            box-shadow: 0 10px 25px rgba(13, 202, 240, 0.4);
+            border-color: #0dcaf0;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
         }
-        
         .episode-btn.playing {
-            background: linear-gradient(145deg, #0d6efd, #0b5ed7);
-            border-color: #0b5ed7;
-            color: white;
+            background: linear-gradient(145deg, #0dcaf0, #0ba5d8);
+            border-color: #0ba5d8;
         }
-        
-        .episode-number {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
+        .episode-btn.loading {
+            opacity: 0.7;
+            cursor: wait;
         }
-        
-        .episode-duration {
-            font-size: 0.85rem;
-            opacity: 0.8;
-        }
-        
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
-            .drama-title {
-                font-size: 1.8rem;
-            }
-            
-            .drama-poster {
-                max-height: 350px;
-                margin-bottom: 1.5rem;
-            }
-            
-            .episode-btn {
-                min-height: 80px;
-                padding: 1rem 0.3rem;
-            }
-            
-            .episode-number {
-                font-size: 1rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .drama-title {
-                font-size: 1.5rem;
-            }
-            
-            .episode-btn {
-                min-height: 70px;
-                padding: 0.8rem 0.2rem;
-            }
-            
-            .synopsis-box {
-                padding: 1rem;
-            }
-        }
-        
-        /* ========== LOADING & STATES ========== */
-        .loading-spinner {
-            width: 4rem;
-            height: 4rem;
-        }
-        
+
+        .episode-number { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .episode-duration { font-size: 0.85rem; opacity: 0.8; }
+
+        .loading-spinner { width: 4rem; height: 4rem; }
         .error-box {
-            background: rgba(220, 53, 69, 0.1);
+            background: rgba(220,53,69,0.1);
             border: 1px solid #dc3545;
             border-radius: 12px;
             padding: 2rem;
             text-align: center;
         }
+
+        .badge-melolo { 
+            background: linear-gradient(135deg, #0dcaf0, #0ba5d8);
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+        }
         
-        /* ========== UTILITIES ========== */
-        .total-duration {
-            background: linear-gradient(135deg, #6f42c1, #d63384);
+        .badge-episode {
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);
+        }
+        
+        .tag-badge {
+            background: rgba(13, 202, 240, 0.2);
+            border: 1px solid #0dcaf0;
+            color: #0dcaf0;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+        
+        /* Quality Modal Styles */
+        .quality-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        
+        .quality-modal-content {
+            background: linear-gradient(145deg, #1a1a2e, #0f0f23);
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #0dcaf0;
+            box-shadow: 0 20px 50px rgba(13, 202, 240, 0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .quality-modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #0dcaf0;
+            text-align: center;
+        }
+        
+        .quality-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .quality-btn {
+            background: rgba(13, 202, 240, 0.1);
+            border: 1px solid #0dcaf0;
+            color: #0dcaf0;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .quality-btn:hover {
+            background: #0dcaf0;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .modal-close-btn:hover {
+            color: #0dcaf0;
+        }
+        
+        .episode-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            color: #ccc;
+        }
+        
+        /* Video Player Styles - SAMA SEPERTI DRAMABOX */
+        .video-player-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            flex-direction: column;
+        }
+        
+        .player-header {
+            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.95);
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            min-height: 60px;
+            flex-shrink: 0;
+        }
+        
+        .player-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #0dcaf0;
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.3;
+        }
+        
+        .player-close-btn {
+            background: rgba(13, 202, 240, 0.2);
+            border: 1px solid #0dcaf0;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .player-close-btn:hover {
+            background: #0dcaf0;
+        }
+        
+        .video-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem;
+            min-height: 0;
+        }
+        
+        #video-player {
+            width: 100%;
+            max-width: 1200px;
+            max-height: 100%;
+            border-radius: 8px;
+            background: #000;
+            object-fit: contain;
+        }
+        
+        /* CONTROLS FIXED AT BOTTOM FOR MOBILE */
+        .player-controls {
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 1px solid #444;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .control-btn {
+            background: rgba(13, 202, 240, 0.2);
+            border: 1px solid #0dcaf0;
+            color: white;
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            min-height: 44px;
+        }
+        
+        .control-btn:hover {
+            background: #0dcaf0;
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(13, 202, 240, 0.1);
+        }
+        
+        .episode-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .fullscreen-btn {
+            min-width: 120px;
+        }
+
+        /* MOBILE OPTIMIZATION */
+        @media (max-width: 768px) {
+            .drama-title { 
+                font-size: 1.8rem; 
+                line-height: 1.2;
+            }
+            
+            .drama-poster { 
+                max-height: 350px; 
+                margin-bottom: 1.5rem; 
+            }
+            
+            .quality-modal-content {
+                padding: 1.2rem;
+                margin: 0 10px;
+            }
+            
+            .quality-modal-title {
+                font-size: 1.3rem;
+                margin-bottom: 1rem;
+                padding-right: 30px;
+            }
+            
+            .quality-btn {
+                padding: 0.9rem;
+                font-size: 1rem;
+            }
+            
+            .player-header {
+                padding: 0.6rem 0.8rem;
+                min-height: 50px;
+            }
+            
+            .player-title {
+                font-size: 0.9rem;
+                max-width: 65%;
+            }
+            
+            .player-close-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 1rem;
+                width: 36px;
+                height: 36px;
+            }
+            
+            .video-wrapper {
+                padding: 0.3rem;
+            }
+            
+            .player-controls {
+                padding: 0.6rem;
+                gap: 0.5rem;
+                position: relative;
+                bottom: 0;
+                width: 100%;
+            }
+            
+            .control-btn {
+                padding: 0.5rem 0.7rem;
+                font-size: 0.85rem;
+                flex: 1;
+                min-width: 0;
+                justify-content: center;
+            }
+            
+            .episode-nav {
+                order: 1;
+                width: 100%;
+                gap: 0.3rem;
+            }
+            
+            .episode-nav .control-btn {
+                flex: 1;
+            }
+            
+            .fullscreen-btn {
+                order: 2;
+                width: 100%;
+                margin-top: 0.3rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- ========== NAVIGATION ========== -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class=""></i>
+                <i class="bi bi-play-circle me-2"></i>
                 <span>DramaShort</span>
             </a>
             <div class="navbar-nav ms-auto">
@@ -189,371 +452,586 @@
         </div>
     </nav>
 
-    <!-- ========== MAIN CONTENT ========== -->
     <main class="container py-5">
-        <!-- Drama Detail Section -->
         <section id="drama-detail" class="mb-5">
-            <!-- Content akan diisi oleh JavaScript -->
             <div class="text-center py-5">
-                <div class="spinner-border loading-spinner text-primary" role="status">
+                <div class="spinner-border loading-spinner text-info" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <h4 class="mt-3">Memuat detail drama...</h4>
-                <p class="text-muted">Mohon tunggu sebentar</p>
             </div>
         </section>
 
-        <!-- Episodes Section -->
         <section class="mt-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold">
-                    <i class="bi bi-play-btn me-2"></i>Daftar Episode
+                    <i class="bi bi-play-btn me-2 text-info"></i>Daftar Episode
                 </h3>
-                <div id="episode-count" class="badge bg-primary badge-episode">
+                <div id="episode-count" class="badge badge-melolo badge-episode">
                     <span id="count-text">0 Episode</span>
                 </div>
             </div>
-            
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list">
-                <!-- Episodes akan diisi oleh JavaScript -->
-            </div>
-            
-            <!-- Episode Not Found -->
+           
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list"></div>
+           
             <div id="no-episodes" class="text-center py-5" style="display: none;">
                 <div class="alert alert-info w-75 mx-auto">
                     <i class="bi bi-info-circle display-4 d-block mb-3"></i>
                     <h4>Episode Belum Tersedia</h4>
-                    <p class="mb-0">Episode untuk drama ini sedang dalam proses upload.</p>
                 </div>
             </div>
         </section>
     </main>
     
-    <!-- ========== JAVASCRIPT ========== -->
+    <!-- Quality Selection Modal -->
+    <div id="quality-modal" class="quality-modal">
+        <div class="quality-modal-content">
+            <button class="modal-close-btn" onclick="closeQualityModal()">&times;</button>
+            <h3 class="quality-modal-title">
+                <i class="bi bi-hd me-2"></i>Pilih Kualitas Video
+            </h3>
+            <div id="episode-info" class="episode-info"></div>
+            <div id="quality-buttons" class="quality-buttons"></div>
+        </div>
+    </div>
+    
+    <!-- Video Player -->
+    <div id="video-player-container" class="video-player-container">
+        <div class="player-header">
+            <div id="player-title" class="player-title">Episode 1</div>
+            <button class="player-close-btn" onclick="closeVideoPlayer()">&times;</button>
+        </div>
+        
+        <div class="video-wrapper">
+            <video id="video-player" controls playsinline>
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <div class="player-controls">
+            <div class="episode-nav">
+                <button class="control-btn" onclick="playPrevEpisode()" id="prev-btn">
+                    <i class="bi bi-skip-backward"></i> <span class="btn-text">Prev</span>
+                </button>
+                <button class="control-btn" onclick="playNextEpisode()" id="next-btn">
+                    <span class="btn-text">Next</span> <i class="bi bi-skip-forward"></i>
+                </button>
+            </div>
+            
+            <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
+                <i class="bi bi-fullscreen"></i> <span class="btn-text">Fullscreen</span>
+            </button>
+        </div>
+    </div>
+
     <script>
-        // ============== CONFIGURATION ==============
+        // ============== CONFIG & STATE ==============
         const CONFIG = {
-            apiBase: '/api',
-            playerBase: '/player',
+            apiBase: 'https://dramabos.asia/api/melolo/api/v1',
             defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
         };
 
-        // ============== STATE MANAGEMENT ==============
         let currentDrama = null;
         let isLoading = false;
+        let currentEpisodeIndex = 1;
+        let currentVideoData = null;
+        let currentVideoUrl = '';
+        let currentQuality = '';
+        let totalEpisodes = 0;
+        let videoPlayer = null;
+        let episodeListData = [];
 
-        // ============== DOM ELEMENTS ==============
         const elements = {
             dramaDetail: document.getElementById('drama-detail'),
             episodeList: document.getElementById('episode-list'),
             episodeCount: document.getElementById('episode-count'),
             countText: document.getElementById('count-text'),
-            noEpisodes: document.getElementById('no-episodes')
+            noEpisodes: document.getElementById('no-episodes'),
+            qualityModal: document.getElementById('quality-modal'),
+            qualityButtons: document.getElementById('quality-buttons'),
+            episodeInfo: document.getElementById('episode-info'),
+            videoPlayerContainer: document.getElementById('video-player-container'),
+            videoPlayer: document.getElementById('video-player'),
+            playerTitle: document.getElementById('player-title'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn')
         };
 
-        // ============== INITIALIZATION ==============
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DramaDetail initialized (No Modal Version)');
-            
-            // Get drama ID from URL
+        // ============== INIT ==============
+        document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const dramaId = urlParams.get('id');
-            
-            if (!dramaId) {
-                window.location.href = '/';
-                return;
-            }
-            
-            // Load drama details
+            if (!dramaId) return window.location.href = '/';
+
             loadDramaDetail(dramaId);
+            
+            // Initialize video player
+            videoPlayer = elements.videoPlayer;
+            setupVideoPlayer();
         });
 
-        // ============== MAIN FUNCTIONS ==============
-
-        /**
-         * Load drama detail from API
-         */
+        // ============== MAIN LOAD ==============
         async function loadDramaDetail(dramaId) {
             if (isLoading) return;
-            
             isLoading = true;
-            
+
             try {
-                const apiUrl = `${CONFIG.apiBase}/detail/${dramaId}?lang=id`;
-                
-                const response = await fetch(apiUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.code === 0) {
-                    currentDrama = data;
-                    renderDramaDetail(data);
-                    renderEpisodes(data.videos || []);
-                } else {
-                    throw new Error('Drama tidak ditemukan');
-                }
-            } catch (error) {
-                console.error('Error loading drama detail:', error);
-                showError(`Gagal memuat detail drama: ${error.message}`);
+                // Load Drama Detail
+                const detailRes = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
+                if (!detailRes.ok) throw new Error(`Detail HTTP ${detailRes.status}`);
+                const detailData = await detailRes.json();
+
+                if (!detailData.data || detailData.code !== 0) throw new Error('Drama tidak ditemukan');
+
+                currentDrama = detailData.data;
+                episodeListData = currentDrama.episode_list || [];
+                totalEpisodes = episodeListData.length;
+                renderDramaDetail(currentDrama);
+
+                // Generate episode list
+                renderEpisodes(episodeListData);
+
+            } catch (err) {
+                console.error(err);
+                showError(`Gagal memuat: ${err.message}`);
             } finally {
                 isLoading = false;
             }
         }
 
-        /**
-         * Render drama detail to the page
-         */
+        // ============== RENDER DETAIL ==============
         function renderDramaDetail(drama) {
-            // Update page title
-            document.title = `${escapeHtml(drama.title)} - DramaShort`;
-            
-            // Calculate total duration
-            const totalDuration = drama.videos ? 
-                drama.videos.reduce((sum, ep) => sum + ep.duration, 0) : 0;
-            const totalMinutes = Math.floor(totalDuration / 60);
-            const totalHours = Math.floor(totalMinutes / 60);
-            
-            // Create HTML
+            document.title = `${escapeHtml(drama.name || 'Drama')} - DramaShort`;
+
             const html = `
                 <div class="row">
-                    <!-- Poster Column -->
                     <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
                         <div class="position-sticky" style="top: 90px;">
-                            <img src="${drama.cover}" 
+                            <img src="${drama.cover || CONFIG.defaultImage}"
                                  class="drama-poster mb-4"
-                                 alt="${escapeHtml(drama.title)}"
-                                 onerror="this.onerror=null; this.src='${CONFIG.defaultImage}'">
-                            
-                            <!-- Quick Actions -->
+                                 alt="${escapeHtml(drama.name)}"
+                                 onerror="this.src='${CONFIG.defaultImage}'">
+                           
                             <div class="d-grid gap-2">
-                                <button class="btn btn-primary btn-lg py-3" onclick="playFirstEpisode()" id="playFirstBtn">
+                                <button class="btn btn-info btn-lg py-3" onclick="playFirstEpisode()">
                                     <i class="bi bi-play-fill me-2"></i>Putar Episode 1
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Details Column -->
+                   
                     <div class="col-lg-8 col-md-7">
-                        <h1 class="drama-title">${escapeHtml(drama.title)}</h1>
-                        
-                        <!-- Badges -->
+                        <h1 class="drama-title">${escapeHtml(drama.name || 'Unknown')}</h1>
+                       
                         <div class="d-flex flex-wrap gap-3 mb-4">
-                            <span class="badge bg-primary badge-episode">
-                                <i class="bi bi-film me-1"></i> ${drama.episodes} Episode
+                            <span class="badge badge-melolo">
+                                <i class="bi bi-film me-1"></i>${totalEpisodes} Episode
                             </span>
-                            
-                            ${totalHours > 0 ? `
-                                <span class="badge total-duration badge-episode">
-                                    <i class="bi bi-clock-history me-1"></i> ${totalHours} Jam ${totalMinutes % 60} Menit
-                                </span>
-                            ` : totalMinutes > 0 ? `
-                                <span class="badge total-duration badge-episode">
-                                    <i class="bi bi-clock-history me-1"></i> ${totalMinutes} Menit
-                                </span>
-                            ` : ''}
+                            ${drama.tags && drama.tags.length > 0 ? `
+                            <span class="badge badge-melolo">
+                                <i class="bi bi-tags me-1"></i>${drama.tags.slice(0, 3).join(', ')}
+                            </span>` : ''}
+                            ${drama.is_dubbing ? `
+                            <span class="badge badge-melolo">
+                                <i class="bi bi-volume-up me-1"></i>Sulih Suara
+                            </span>` : ''}
                         </div>
-                        
-                        <!-- Synopsis -->
+                       
                         <div class="synopsis-box mb-4">
-                            <h5 class="fw-bold mb-3">
-                                <i class="bi bi-info-circle text-primary me-2"></i>Sinopsis
-                            </h5>
-                            <p class="mb-0" style="line-height: 1.8; font-size: 1.05rem;">
-                                ${escapeHtml(drama.intro)}
-                            </p>
+                            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-info me-2"></i>Sinopsis</h5>
+                            <p>${escapeHtml(drama.intro || 'Tidak ada sinopsis tersedia.')}</p>
                         </div>
                     </div>
                 </div>
             `;
-            
             elements.dramaDetail.innerHTML = html;
         }
 
-        /**
-         * Render episodes list
-         */
+        // ============== RENDER EPISODES ==============
         function renderEpisodes(episodes) {
             if (!episodes || episodes.length === 0) {
-                elements.episodeList.style.display = 'none';
-                elements.noEpisodes.style.display = 'block';
-                elements.countText.textContent = '0 Episode';
+                showNoEpisodes();
                 return;
             }
-            
-            // Sort episodes by number
-            episodes.sort((a, b) => a.episode - b.episode);
-            
-            // Update count
+
             elements.countText.textContent = `${episodes.length} Episode`;
             elements.episodeList.style.display = 'flex';
             elements.noEpisodes.style.display = 'none';
-            
-            // Create episode cards
-            const episodesHtml = episodes.map(episode => `
-                <div class="col">
-                    <div class="episode-card">
-                        <button class="episode-btn w-100" 
-                                onclick="playEpisode('${episode.vid}', ${episode.episode}, this)"
-                                data-vid="${episode.vid}"
-                                data-episode="${episode.episode}"
-                                title="Episode ${episode.episode} - ${formatDuration(episode.duration)}">
-                            <div class="episode-number">Episode ${episode.episode}</div>
-                            <div class="episode-duration">${formatDuration(episode.duration)}</div>
-                        </button>
+
+            const html = episodes.map((episode, index) => {
+                const episodeNum = index + 1;
+                const duration = formatDuration(episode.duration || 0);
+                
+                return `
+                    <div class="col">
+                        <div class="episode-card">
+                            <button class="episode-btn w-100"
+                                    onclick="playEpisode('${episode.id}', ${episodeNum})"
+                                    data-index="${episodeNum}"
+                                    title="Episode ${episodeNum}">
+                                <div class="episode-number">Episode ${episodeNum}</div>
+                                <div class="episode-duration">${duration}</div>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
-            
-            elements.episodeList.innerHTML = episodesHtml;
+                `;
+            }).join('');
+
+            elements.episodeList.innerHTML = html;
         }
 
-        /**
-         * Play a specific episode (OPEN IN NEW TAB)
-         */
-        async function playEpisode(videoId, episodeNumber, buttonElement) {
+        // ============== PLAY FUNCTIONS ==============
+        async function playEpisode(videoId, index) {
             if (!videoId) {
                 alert('Video ID tidak valid');
                 return;
             }
-            
-            console.log('Playing episode:', episodeNumber, 'Video ID:', videoId);
-            
-            // Update button state
-            if (buttonElement) {
-                updateButtonState(buttonElement, true);
-            }
+
+            currentEpisodeIndex = index;
             
             try {
-                // Get video URL from API
-                const apiUrl = `${CONFIG.apiBase}/video/${videoId}?lang=id`;
-                
-                const response = await fetch(apiUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                // Tampilkan loading state di button
+                const btn = elements.episodeList.querySelector(`[data-index="${index}"]`);
+                if (btn) {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
                 }
+
+                // Load video data dari API Melolo
+                const res = await fetch(`${CONFIG.apiBase}/video/${videoId}?lang=id`);
                 
-                const data = await response.json();
-                
-                if (data.url) {
-                    // Generate player URL
-                    const playerUrl = `${CONFIG.playerBase}?url=${encodeURIComponent(data.url)}`;
-                    
-                    // OPEN IN NEW TAB (NO MODAL)
-                    window.open(playerUrl, '_blank');
-                    
-                    // Save last watched episode
-                    saveLastWatched(episodeNumber);
-                    
-                } else {
+                if (!res.ok) {
+                    throw new Error(`Video tidak tersedia (HTTP ${res.status})`);
+                }
+
+                const data = await res.json();
+                currentVideoData = data;
+
+                if (!data.url && (!data.list || data.list.length === 0)) {
                     throw new Error('Video URL tidak ditemukan');
                 }
-            } catch (error) {
-                console.error('Error playing video:', error);
-                alert('Gagal memutar video: ' + error.message);
+
+                // Tampilkan modal pilihan kualitas
+                showQualityModal(data, index);
+                
+                // Simpan history tontonan
+                saveLastWatched(index);
+
+            } catch (err) {
+                console.error('Play error:', err);
+                alert('Gagal memuat video: ' + err.message);
+                
             } finally {
-                // Restore button state
-                if (buttonElement) {
-                    updateButtonState(buttonElement, false);
+                // Reset button state
+                const btn = elements.episodeList.querySelector(`[data-index="${index}"]`);
+                if (btn) {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
                 }
             }
         }
-
-        /**
-         * Play the first episode
-         */
+        
         function playFirstEpisode() {
-            if (!currentDrama || !currentDrama.videos || currentDrama.videos.length === 0) {
+            if (episodeListData.length > 0) {
+                playEpisode(episodeListData[0].id, 1);
+            } else {
                 alert('Tidak ada episode yang tersedia');
+            }
+        }
+
+        // ============== QUALITY MODAL FUNCTIONS ==============
+        function showQualityModal(videoData, episodeIndex) {
+            // Buat daftar kualitas dari response Melolo
+            const qualityOptions = [];
+            
+            // Add main URL (default quality)
+            if (videoData.url) {
+                qualityOptions.push({
+                    quality: 720, // Default quality
+                    url: videoData.url,
+                    label: '720p'
+                });
+            }
+            
+            // Add backup URL
+            if (videoData.backup) {
+                qualityOptions.push({
+                    quality: 720,
+                    url: videoData.backup,
+                    label: '720p (Backup)'
+                });
+            }
+            
+            // Add from list if available
+            if (videoData.list && videoData.list.length > 0) {
+                videoData.list.forEach((item, idx) => {
+                    qualityOptions.push({
+                        quality: 720, // Default for Melolo
+                        url: item.url,
+                        label: item.definition || `Quality ${idx + 1}`
+                    });
+                });
+            }
+            
+            if (qualityOptions.length === 0) return;
+            
+            // Update episode info
+            elements.episodeInfo.innerHTML = `Episode ${episodeIndex}`;
+            
+            // Clear previous buttons
+            elements.qualityButtons.innerHTML = '';
+            
+            // Create quality buttons
+            qualityOptions.forEach((option, idx) => {
+                const button = document.createElement('button');
+                button.className = 'quality-btn';
+                button.innerHTML = `${option.label}`;
+                
+                button.onclick = () => selectQuality(option.url, option.quality, episodeIndex);
+                
+                elements.qualityButtons.appendChild(button);
+            });
+            
+            elements.qualityModal.style.display = 'flex';
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeQualityModal() {
+            elements.qualityModal.style.display = 'none';
+            elements.qualityButtons.innerHTML = '';
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+        
+        function selectQuality(videoUrl, quality, episodeIndex) {
+            if (!videoUrl) {
+                alert('URL video tidak valid');
                 return;
             }
             
-            const firstEpisode = currentDrama.videos[0];
-            const firstButton = elements.episodeList.querySelector('.episode-btn');
-            playEpisode(firstEpisode.vid, firstEpisode.episode, firstButton);
+            // Set video URL dan quality
+            currentVideoUrl = videoUrl;
+            currentQuality = quality;
+            currentEpisodeIndex = episodeIndex;
+            
+            // Play video di player inline
+            playVideoInline(videoUrl, quality, episodeIndex);
+            
+            // Tutup modal
+            closeQualityModal();
         }
 
-        // ============== UI HELPER FUNCTIONS ==============
-
-        /**
-         * Update button loading state
-         */
-        function updateButtonState(button, isLoading) {
-            if (isLoading) {
-                // Save original content
-                button.dataset.originalContent = button.innerHTML;
+        // ============== VIDEO PLAYER FUNCTIONS ==============
+        function setupVideoPlayer() {
+            // Setup event listeners
+            videoPlayer.addEventListener('ended', handleVideoEnded);
+            
+            // Fullscreen support
+            videoPlayer.addEventListener('fullscreenchange', handleFullscreenChange);
+            videoPlayer.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            videoPlayer.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            videoPlayer.addEventListener('msfullscreenchange', handleFullscreenChange);
+        }
+        
+        async function playVideoInline(videoUrl, quality, episodeIndex) {
+            try {
+                // Set video source
+                videoPlayer.src = videoUrl;
                 
-                // Show loading
-                button.innerHTML = `
-                    <div class="spinner-border spinner-border-sm text-light" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <small class="mt-1">Loading...</small>
-                `;
-                button.disabled = true;
-                button.classList.add('playing');
-            } else {
-                // Restore original content
-                if (button.dataset.originalContent) {
-                    button.innerHTML = button.dataset.originalContent;
-                } else {
-                    const episode = button.dataset.episode;
-                    const duration = button.querySelector('.episode-duration')?.textContent || '';
-                    button.innerHTML = `
-                        <div class="episode-number">Episode ${episode}</div>
-                        <div class="episode-duration">${duration}</div>
-                    `;
+                // Update UI - HANYA TAMPILKAN EPISODE SAJA
+                elements.playerTitle.textContent = `Episode ${episodeIndex}`;
+                
+                // Update navigation buttons
+                updateNavigationButtons();
+                
+                // Show player
+                elements.videoPlayerContainer.style.display = 'flex';
+                
+                // Prevent body scroll when player is open
+                document.body.style.overflow = 'hidden';
+                
+                // Play video
+                videoPlayer.load();
+                
+                try {
+                    await videoPlayer.play();
+                } catch (playError) {
+                    console.log('Autoplay prevented:', playError);
                 }
-                button.disabled = false;
-                button.classList.remove('playing');
+                
+                // Mark episode as playing
+                markEpisodeAsPlaying(episodeIndex);
+                
+                // Focus on video for keyboard controls
+                videoPlayer.focus();
+
+            } catch (error) {
+                console.error('Error playing video:', error);
+                alert('Gagal memutar video: ' + error.message);
+            }
+        }
+        
+        async function playPrevEpisode() {
+            if (currentEpisodeIndex > 1) {
+                // Langsung load dan play episode sebelumnya
+                await loadAndPlayEpisode(currentEpisodeIndex - 1);
+            }
+        }
+        
+        async function playNextEpisode() {
+            if (currentEpisodeIndex < totalEpisodes) {
+                // Langsung load dan play episode berikutnya
+                await loadAndPlayEpisode(currentEpisodeIndex + 1);
+            }
+        }
+        
+        async function loadAndPlayEpisode(index) {
+            try {
+                // Update episode index
+                currentEpisodeIndex = index;
+                
+                // Cari video ID dari episode list
+                const episodeData = episodeListData[index - 1];
+                if (!episodeData || !episodeData.id) {
+                    throw new Error('Data episode tidak ditemukan');
+                }
+                
+                // Load video data
+                const res = await fetch(`${CONFIG.apiBase}/video/${episodeData.id}?lang=id`);
+                
+                if (!res.ok) {
+                    throw new Error(`Video tidak tersedia`);
+                }
+
+                const data = await res.json();
+
+                if (!data.url) {
+                    throw new Error('Video URL tidak ditemukan');
+                }
+                
+                // Play video langsung tanpa modal
+                await playVideoInline(data.url, 720, index);
+                
+                // Simpan history
+                saveLastWatched(index);
+                
+            } catch (error) {
+                console.error('Error loading next episode:', error);
+                alert('Gagal memuat episode: ' + error.message);
+            }
+        }
+        
+        function closeVideoPlayer() {
+            elements.videoPlayerContainer.style.display = 'none';
+            if (videoPlayer) {
+                videoPlayer.pause();
+                videoPlayer.src = '';
+            }
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+        
+        function handleVideoEnded() {
+            // Auto play next episode jika ada
+            if (currentEpisodeIndex < totalEpisodes) {
+                setTimeout(() => {
+                    playNextEpisode();
+                }, 1000);
+            }
+        }
+        
+        function toggleFullscreen() {
+            const playerContainer = elements.videoPlayerContainer;
+            
+            if (!document.fullscreenElement) {
+                if (playerContainer.requestFullscreen) {
+                    playerContainer.requestFullscreen();
+                } else if (playerContainer.webkitRequestFullscreen) {
+                    playerContainer.webkitRequestFullscreen();
+                } else if (playerContainer.mozRequestFullScreen) {
+                    playerContainer.mozRequestFullScreen();
+                } else if (playerContainer.msRequestFullscreen) {
+                    playerContainer.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        function handleFullscreenChange() {
+            // Update fullscreen button icon
+            const isFullscreen = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement || 
+                               document.msFullscreenElement;
+            
+            const icon = document.querySelector('.fullscreen-btn i');
+            if (icon) {
+                icon.className = isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen';
+            }
+        }
+        
+        function updateNavigationButtons() {
+            // Update prev button
+            if (elements.prevBtn) {
+                elements.prevBtn.disabled = currentEpisodeIndex <= 1;
+                elements.prevBtn.style.opacity = currentEpisodeIndex <= 1 ? '0.5' : '1';
+            }
+            
+            // Update next button
+            if (elements.nextBtn) {
+                elements.nextBtn.disabled = currentEpisodeIndex >= totalEpisodes;
+                elements.nextBtn.style.opacity = currentEpisodeIndex >= totalEpisodes ? '0.5' : '1';
+            }
+        }
+        
+        function markEpisodeAsPlaying(index) {
+            const episodeButtons = elements.episodeList.querySelectorAll('.episode-btn');
+            episodeButtons.forEach(btn => {
+                btn.classList.remove('playing');
+                const btnIndex = parseInt(btn.dataset.index);
+                if (btnIndex === index) {
+                    btn.classList.add('playing');
+                }
+            });
+        }
+
+        // ============== HELPER FUNCTIONS ==============
+        function saveLastWatched(index) {
+            if (currentDrama?.id) {
+                localStorage.setItem(`last_melolo_${currentDrama.id}`, index);
             }
         }
 
-        /**
-         * Save last watched episode
-         */
-        function saveLastWatched(episodeNumber) {
-            if (currentDrama) {
-                localStorage.setItem(`last_watched_${currentDrama.id}`, episodeNumber);
-                localStorage.setItem('last_watched_time', Date.now());
-            }
+        function showNoEpisodes() {
+            elements.episodeList.style.display = 'none';
+            elements.noEpisodes.style.display = 'block';
+            elements.countText.textContent = '0 Episode';
         }
 
-        /**
-         * Show error message
-         */
-        function showError(message) {
+        function showError(msg) {
             elements.dramaDetail.innerHTML = `
                 <div class="error-box">
-                    <div class="d-flex align-items-center flex-column">
-                        <i class="bi bi-exclamation-triangle-fill display-1 text-danger mb-3"></i>
-                        <h4 class="text-center">Terjadi Kesalahan</h4>
-                        <p class="text-center mb-4">${escapeHtml(message)}</p>
-                        <div class="d-flex gap-2">
-                            <button onclick="window.location.href='/'" class="btn btn-outline-danger">
-                                <i class="bi bi-house me-1"></i> Kembali ke Home
-                            </button>
-                            <button onclick="location.reload()" class="btn btn-primary">
-                                <i class="bi bi-arrow-clockwise me-1"></i> Coba Lagi
-                            </button>
-                        </div>
-                    </div>
+                    <i class="bi bi-exclamation-triangle-fill display-1 text-danger mb-3"></i>
+                    <h4>Terjadi Kesalahan</h4>
+                    <p>${escapeHtml(msg)}</p>
+                    <button onclick="location.reload()" class="btn btn-danger mt-3">Coba Lagi</button>
                 </div>
             `;
         }
 
-        // ============== UTILITY FUNCTIONS ==============
-
-        /**
-         * Format duration from seconds
-         */
         function formatDuration(seconds) {
-            if (!seconds) return '0:00';
+            if (!seconds || seconds === 0) return '0:00';
             
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
@@ -566,9 +1044,6 @@
             }
         }
 
-        /**
-         * Escape HTML to prevent XSS
-         */
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -576,9 +1051,85 @@
             return div.innerHTML;
         }
 
-        // ============== GLOBAL EXPORTS ==============
+        // ============== GLOBAL FUNCTIONS ==============
         window.playEpisode = playEpisode;
         window.playFirstEpisode = playFirstEpisode;
+        window.selectQuality = selectQuality;
+        window.closeQualityModal = closeQualityModal;
+        window.closeVideoPlayer = closeVideoPlayer;
+        window.playPrevEpisode = playPrevEpisode;
+        window.playNextEpisode = playNextEpisode;
+        window.toggleFullscreen = toggleFullscreen;
+        
+        // Close modal when clicking outside
+        elements.qualityModal.addEventListener('click', function(e) {
+            if (e.target === elements.qualityModal) {
+                closeQualityModal();
+            }
+        });
+        
+        // Close video player when clicking outside video area
+        elements.videoPlayerContainer.addEventListener('click', function(e) {
+            if (e.target === elements.videoPlayerContainer) {
+                closeVideoPlayer();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (elements.qualityModal.style.display === 'flex') {
+                    closeQualityModal();
+                } else if (elements.videoPlayerContainer.style.display === 'flex') {
+                    closeVideoPlayer();
+                }
+            }
+            
+            // Keyboard shortcuts for video player
+            if (elements.videoPlayerContainer.style.display === 'flex') {
+                switch(e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        if (videoPlayer.paused) {
+                            videoPlayer.play();
+                        } else {
+                            videoPlayer.pause();
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        videoPlayer.currentTime -= 10;
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        videoPlayer.currentTime += 10;
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        videoPlayer.volume = Math.min(videoPlayer.volume + 0.1, 1);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        videoPlayer.volume = Math.max(videoPlayer.volume - 0.1, 0);
+                        break;
+                    case 'f':
+                    case 'F':
+                        e.preventDefault();
+                        toggleFullscreen();
+                        break;
+                    case 'n':
+                    case 'N':
+                        e.preventDefault();
+                        if (elements.nextBtn && !elements.nextBtn.disabled) playNextEpisode();
+                        break;
+                    case 'p':
+                    case 'P':
+                        e.preventDefault();
+                        if (elements.prevBtn && !elements.prevBtn.disabled) playPrevEpisode();
+                        break;
+                }
+            }
+        });
     </script>
 </body>
 </html>
