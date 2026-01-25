@@ -424,10 +424,10 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
                         ${currentSource.toUpperCase()}
                     </div>
                     
-                    ${isDubbing ? `
-                    <div class="badge bg-success position-absolute top-0 end-0 m-2">
-                        <i class="bi bi-volume-up-fill"></i> Dub ID
-                    </div>` : ''}
+${isDubbing ? `
+<div class="badge bg-success position-absolute bottom-0 start-0 m-2">
+    <i class="bi bi-volume-up-fill"></i> Dub ID
+</div>` : ''}
                     
                     <div class="play-overlay">
                         <a href="${watchUrl}" class="play-btn">
