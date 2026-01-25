@@ -42,7 +42,7 @@ const WORKING_APIS = {
     },
     
     dramabox: {
-        // KEEPS OLD ENDPOINTS FOR COMPATIBILITY
+        // Hanya gunakan rekomendasi saja (foryou)
         foryou: async (page = 1) => {
             try {
                 // Use new recommend endpoint but transform data to old format
@@ -77,72 +77,6 @@ const WORKING_APIS = {
             }
         },
         
-        latest: async (page = 1) => {
-            try {
-                // Use theater endpoint for latest
-                const response = await fetch(`${CONFIG.dramaboxApi}/theater?lang=in`);
-                const data = await response.json();
-                
-                if (data.columnVoList && data.columnVoList.length > 0 && data.columnVoList[0].bookList) {
-                    const transformedData = data.columnVoList[0].bookList.map(item => ({
-                        bookId: item.bookId,
-                        bookName: item.bookName,
-                        cover: item.coverWap,
-                        chapterCount: item.chapterCount,
-                        introduction: item.introduction,
-                        tags: item.tags || []
-                    }));
-                    
-                    return {
-                        code: 0,
-                        success: true,
-                        data: transformedData,
-                        hasMore: false,
-                        nextPage: page + 1
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('DramaBox latest error:', error);
-                return { code: -1, error: error.message, data: [] };
-            }
-        },
-        
-        trending: async (page = 1) => {
-            try {
-                // Use recommend endpoint filtered by rankVo
-                const response = await fetch(`${CONFIG.dramaboxApi}/recommend/${page}?lang=in`);
-                const data = await response.json();
-                
-                if (data.recommendList && data.recommendList.records) {
-                    // Filter items with rankVo (trending)
-                    const trendingItems = data.recommendList.records
-                        .filter(item => item.rankVo)
-                        .map(item => ({
-                            bookId: item.bookId,
-                            bookName: item.bookName,
-                            cover: item.coverWap,
-                            chapterCount: item.chapterCount,
-                            introduction: item.introduction,
-                            tags: item.tags || [],
-                            rankVo: item.rankVo
-                        }));
-                    
-                    return {
-                        code: 0,
-                        success: true,
-                        data: trendingItems,
-                        hasMore: data.recommendList.current < data.recommendList.total,
-                        nextPage: page + 1
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('DramaBox trending error:', error);
-                return { code: -1, error: error.message, data: [] };
-            }
-        },
-        
         detail: async (bookId) => {
             try {
                 const response = await fetch(`${CONFIG.dramaboxApi}/drama/${bookId}?lang=in`);
@@ -168,50 +102,6 @@ const WORKING_APIS = {
             } catch (error) {
                 console.error('DramaBox detail error:', error);
                 return { code: -1, error: error.message };
-            }
-        },
-        
-        // New API endpoints for future use
-        recommend: async (page = 1) => {
-            try {
-                const response = await fetch(`${CONFIG.dramaboxApi}/recommend/${page}?lang=in`);
-                const data = await response.json();
-                
-                if (data.recommendList && data.recommendList.records) {
-                    return {
-                        code: 0,
-                        success: true,
-                        data: data.recommendList.records,
-                        hasMore: data.recommendList.current < data.recommendList.total,
-                        nextPage: page + 1
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('DramaBox recommend error:', error);
-                return { code: -1, error: error.message, data: [] };
-            }
-        },
-        
-        search: async (query, page = 1) => {
-            try {
-                const response = await fetch(`${CONFIG.dramaboxApi}/search/${encodeURIComponent(query)}?lang=in`);
-                const data = await response.json();
-                
-                if (data.searchList) {
-                    return {
-                        code: 0,
-                        success: true,
-                        data: data.searchList,
-                        query: data.query,
-                        hasMore: false,
-                        nextPage: page + 1
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('DramaBox search error:', error);
-                return { code: -1, error: error.message, data: [] };
             }
         }
     },
@@ -286,7 +176,6 @@ let isLoading = false;
 let hasMoreData = true;
 let currentView = 'grid';
 let currentSource = 'melolo'; // 'melolo', 'dramabox', 'netshort'
-let currentMode = 'foryou'; // 'foryou', 'latest', 'trending', 'search'
 
 // ============== DOM ELEMENTS ==============
 const elements = {
@@ -294,15 +183,12 @@ const elements = {
     loadMoreBtn: document.getElementById('load-more'),
     loadingIndicator: document.getElementById('loading'),
     emptyState: document.getElementById('empty-state'),
-    sourceSelector: null,
-    modeSelector: null,
-    searchInput: null,
-    searchBtn: null
+    sourceSelector: null
 };
 
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 DramaShort Enhanced - Fixed Version');
+    console.log('🎬 DramaShort Enhanced - Simplified Version');
     
     // Load saved preferences
     const savedView = localStorage.getItem('dramashort_view');
@@ -316,10 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSource = savedSource;
     }
     
-    // Initialize UI components
+    // Initialize UI components (HANYA source selector dan view toggle)
     initializeSourceSelector();
-    initializeModeSelector();
-    initializeSearch();
     initializeViewToggle();
     addScrollToTopButton();
     
@@ -336,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ============== SOURCE SELECTOR ==============
+// ============== SOURCE SELECTOR (SIMPLE) ==============
 function initializeSourceSelector() {
     const header = document.querySelector('.d-flex.justify-content-between');
     if (!header) return;
@@ -365,118 +249,10 @@ function initializeSourceSelector() {
                 elements.dramaList.innerHTML = '';
             }
             
-            updateModeSelector();
             await loadDramas();
             updatePageTitle();
         });
     }
-}
-
-// ============== MODE SELECTOR (DramaBox only) ==============
-function initializeModeSelector() {
-    const header = document.querySelector('.d-flex.justify-content-between');
-    if (!header) return;
-    
-    const modeHTML = `
-        <select id="mode-selector" class="form-select form-select-sm mode-selector" ${currentSource !== 'dramabox' ? 'disabled' : ''}>
-            <option value="foryou" ${currentMode === 'foryou' ? 'selected' : ''}>Untuk Kamu</option>
-            <option value="latest" ${currentMode === 'latest' ? 'selected' : ''}>Terbaru</option>
-            <option value="trending" ${currentMode === 'trending' ? 'selected' : ''}>Trending</option>
-        </select>
-    `;
-    
-    const buttonContainer = header.querySelector('.d-flex');
-    if (buttonContainer) {
-        const sourceSelector = buttonContainer.querySelector('.source-selector');
-        if (sourceSelector) {
-            sourceSelector.insertAdjacentHTML('afterend', modeHTML);
-            elements.modeSelector = document.getElementById('mode-selector');
-            
-            elements.modeSelector.addEventListener('change', async function() {
-                if (currentSource !== 'dramabox') return;
-                
-                currentMode = this.value;
-                currentPage = 1;
-                currentOffset = 0;
-                
-                localStorage.setItem('dramashort_mode', currentMode);
-                
-                if (elements.dramaList) {
-                    elements.dramaList.innerHTML = '';
-                }
-                
-                await loadDramas();
-            });
-        }
-    }
-}
-
-function updateModeSelector() {
-    if (!elements.modeSelector) return;
-    
-    if (currentSource === 'dramabox') {
-        elements.modeSelector.disabled = false;
-        elements.modeSelector.style.display = 'inline-block';
-        elements.modeSelector.value = currentMode;
-    } else {
-        elements.modeSelector.disabled = true;
-        elements.modeSelector.style.display = 'none';
-    }
-}
-
-// ============== SEARCH FUNCTIONALITY ==============
-function initializeSearch() {
-    const header = document.querySelector('.d-flex.justify-content-between');
-    if (!header) return;
-    
-    const searchHTML = `
-        <div class="input-group input-group-sm ms-2" style="width: 200px;">
-            <input type="text" id="search-input" class="form-control" placeholder="Cari drama..." value="">
-            <button id="search-btn" class="btn btn-outline-secondary" type="button">
-                <i class="bi bi-search"></i>
-            </button>
-        </div>
-    `;
-    
-    const buttonContainer = header.querySelector('.d-flex');
-    if (buttonContainer) {
-        buttonContainer.insertAdjacentHTML('beforeend', searchHTML);
-        
-        elements.searchInput = document.getElementById('search-input');
-        elements.searchBtn = document.getElementById('search-btn');
-        
-        // Search button click
-        elements.searchBtn.addEventListener('click', performSearch);
-        
-        // Enter key in search input
-        elements.searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
-        });
-    }
-}
-
-function performSearch() {
-    if (!elements.searchInput) return;
-    
-    const query = elements.searchInput.value.trim();
-    if (query.length === 0) return;
-    
-    // Only DramaBox supports search
-    if (currentSource !== 'dramabox') {
-        alert('Pencarian hanya tersedia untuk DramaBox');
-        return;
-    }
-    
-    currentMode = 'search';
-    currentPage = 1;
-    
-    if (elements.dramaList) {
-        elements.dramaList.innerHTML = `<div class="col-12"><div class="alert alert-info">Mencari: <strong>${escapeHtml(query)}</strong></div></div>`;
-    }
-    
-    loadDramas();
 }
 
 // ============== VIEW TOGGLE FUNCTIONS ==============
@@ -549,19 +325,11 @@ async function loadDramas() {
     
     try {
         let result;
-        const searchQuery = elements.searchInput ? elements.searchInput.value.trim() : '';
         
         switch(currentSource) {
             case 'dramabox':
-                if (currentMode === 'search' && searchQuery) {
-                    result = await WORKING_APIS.dramabox.search(searchQuery, currentPage);
-                } else if (currentMode === 'latest') {
-                    result = await WORKING_APIS.dramabox.latest(currentPage);
-                } else if (currentMode === 'trending') {
-                    result = await WORKING_APIS.dramabox.trending(currentPage);
-                } else {
-                    result = await WORKING_APIS.dramabox.foryou(currentPage);
-                }
+                // HANYA gunakan foryou (rekomendasi)
+                result = await WORKING_APIS.dramabox.foryou(currentPage);
                 break;
                 
             case 'netshort':
@@ -641,12 +409,11 @@ function renderDramas(dramas) {
         const isDubbing = dramaData.isDubbing;
         const tags = dramaData.tags || [];
         const playCount = dramaData.playCount || '';
-        const rankInfo = dramaData.rankVo;
         
         if (currentView === 'list') {
-            return createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount, rankInfo);
+            return createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount);
         } else {
-            return createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount, rankInfo);
+            return createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags, playCount);
         }
     }).join('');
     
@@ -670,8 +437,7 @@ function formatDramaData(drama) {
         source: currentSource,
         isDubbing: false,
         tags: [],
-        playCount: '',
-        rankVo: null
+        playCount: ''
     };
     
     switch(currentSource) {
@@ -703,8 +469,7 @@ function formatDramaData(drama) {
                 source: 'dramabox',
                 isDubbing: isDubbing,
                 tags: drama.tags || [],
-                playCount: drama.playCount || '',
-                rankVo: drama.rankVo
+                playCount: drama.playCount || ''
             };
             break;
             
@@ -728,15 +493,10 @@ function formatDramaData(drama) {
 }
 
 // ============== CREATE CARD HTML ==============
-function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '', rankInfo = null) {
+function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '') {
     const tagsHtml = tags.length > 0 ? 
         `<div class="drama-tags mt-2">
             ${tags.slice(0, 3).map(tag => `<span class="badge bg-secondary me-1 mb-1">${escapeHtml(tag)}</span>`).join('')}
-        </div>` : '';
-    
-    const rankHtml = rankInfo ? 
-        `<div class="rank-info mt-2">
-            <small class="text-warning"><i class="bi bi-fire"></i> ${escapeHtml(rankInfo.recCopy || 'Trending')}</small>
         </div>` : '';
     
     const playCountHtml = playCount ? 
@@ -780,8 +540,6 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
                 <div class="card-body">
                     <h6 class="drama-title">${title}</h6>
                     
-                    ${rankHtml}
-                    
                     <div class="drama-meta">
                         <small><i class="bi bi-person"></i> ${author}</small>
                         ${playCountHtml}
@@ -801,17 +559,10 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
     `;
 }
 
-function createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '', rankInfo = null) {
+function createListViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '') {
     const tagsHtml = tags.length > 0 ? 
         `<div class="drama-tags mt-2">
             ${tags.map(tag => `<span class="badge bg-secondary me-1 mb-1">${escapeHtml(tag)}</span>`).join('')}
-        </div>` : '';
-    
-    const rankHtml = rankInfo ? 
-        `<div class="rank-info mt-2">
-            <span class="badge bg-warning text-dark">
-                <i class="bi bi-trophy"></i> ${escapeHtml(rankInfo.recCopy || 'Trending')}
-            </span>
         </div>` : '';
     
     return `
@@ -843,8 +594,6 @@ function createListViewHTML(title, author, intro, episodes, cover, dramaId, watc
                     <div class="col-md-9">
                         <div class="card-body h-100 d-flex flex-column">
                             <h5 class="drama-title mb-1">${title}</h5>
-                            
-                            ${rankHtml}
                             
                             <div class="drama-meta mt-2">
                                 <small><i class="bi bi-person"></i> ${author}</small>
@@ -911,7 +660,7 @@ function showEmptyState(message) {
             <div class="text-center py-5">
                 <i class="bi bi-emoji-frown display-1 text-muted"></i>
                 <h4 class="mt-3">${escapeHtml(message)}</h4>
-                <p class="text-muted">Coba ganti sumber, mode, atau refresh</p>
+                <p class="text-muted">Coba ganti sumber atau refresh</p>
                 <button onclick="location.reload()" class="btn btn-primary mt-3">
                     <i class="bi bi-arrow-clockwise"></i> Refresh
                 </button>
@@ -1022,7 +771,6 @@ window.switchSource = function(source) {
         
         if (elements.dramaList) elements.dramaList.innerHTML = '';
         
-        updateModeSelector();
         updatePageTitle();
         loadDramas();
     }
@@ -1053,7 +801,7 @@ function showNotification(message) {
 // Add CSS styles
 const styles = `
 <style>
-    .source-selector, .mode-selector {
+    .source-selector {
         width: 140px !important;
         margin-right: 10px;
     }
@@ -1190,10 +938,6 @@ const styles = `
         margin-left: 10px;
     }
     
-    .rank-info {
-        font-size: 0.8rem;
-    }
-    
     /* List View Specific */
     .list-view-card {
         height: auto;
@@ -1216,7 +960,7 @@ const styles = `
             width: 100%;
         }
         
-        .source-selector, .mode-selector {
+        .source-selector {
             width: 120px !important;
             margin-bottom: 5px;
         }
