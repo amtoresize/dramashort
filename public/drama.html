@@ -603,67 +603,126 @@
             setupVideoPlayer();
         });
 
-        // ============== MAIN LOAD ==============
-        async function loadDramaDetail(dramaId) {
-            if (isLoading) return;
-            isLoading = true;
+// ============== MAIN LOAD ==============
+async function loadDramaDetail(dramaId) {
+    if (isLoading) return;
+    isLoading = true;
 
-            try {
-                console.log('🚀 Loading drama ID:', dramaId);
-                
-                // 1. LOAD DETAIL DATA DARI PROXY
-                console.log('📋 Loading detail data...');
-                const detailRes = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
-                
-                if (!detailRes.ok) {
-                    console.error('❌ Detail API failed:', detailRes.status);
-                    throw new Error(`Detail HTTP ${detailRes.status}`);
-                }
-                
-                const detailData = await detailRes.json();
-                console.log('📦 Detail API response:', detailData);
-                
-                // Handle proxy response structure
-                const drama = detailData.data || detailData;
-                
-                if (!drama || detailData.code !== 0) {
-                    console.error('❌ Drama not found in response');
-                    throw new Error('Drama tidak ditemukan');
-                }
+    try {
+        console.log('🚀 Loading drama ID:', dramaId);
+        
+        // 1. LOAD DETAIL DATA DARI PROXY (untuk episode, sinopsis)
+        console.log('📋 Loading detail data...');
+        const detailRes = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
+        
+        if (!detailRes.ok) {
+            console.error('❌ Detail API failed:', detailRes.status);
+            throw new Error(`Detail HTTP ${detailRes.status}`);
+        }
+        
+        const detailData = await detailRes.json();
+        console.log('📦 Detail API response:', detailData);
+        
+        // Handle proxy response structure
+        const drama = detailData.data || detailData;
+        
+        if (!drama || detailData.code !== 0) {
+            console.error('❌ Drama not found in response');
+            throw new Error('Drama tidak ditemukan');
+        }
 
-                currentDrama = drama;
-                episodeVideos = drama.videos || [];
-                totalEpisodes = episodeVideos.length;
-                
-                console.log('✅ Drama loaded:', {
-                    id: drama.id || dramaId,
-                    title: drama.title || drama.name,
-                    cover: drama.cover,
-                    episodes: totalEpisodes
-                });
-                
-                // 2. GET COVER IMAGE - SIMPLE VERSION
-                dramaCover = drama.cover || CONFIG.defaultImage;
-                console.log('🖼️ Cover URL:', dramaCover);
-                
-                // Try to fix HEIC format
-                if (dramaCover.includes('.heic')) {
-                    dramaCover = dramaCover.replace('.heic', '.jpg');
-                    console.log('🔄 Converted HEIC to JPG:', dramaCover);
-                }
-                
-                // 3. RENDER IMMEDIATELY
-                renderDramaDetail(drama);
-                renderEpisodes(episodeVideos);
+        currentDrama = drama;
+        episodeVideos = drama.videos || [];
+        totalEpisodes = episodeVideos.length;
+        
+        console.log('✅ Drama loaded:', {
+            id: drama.id || dramaId,
+            title: drama.title || drama.name,
+            episodes: totalEpisodes
+        });
+        
+        // 2. GET COVER IMAGE DARI HOME API (BUKAN DARI DETAIL API!)
+        console.log('🖼️ Getting cover from HOME API...');
+        dramaCover = await getCoverFromHomeApi(dramaId, drama);
+        console.log('🎯 Final cover URL:', dramaCover);
+        
+        // 3. RENDER IMMEDIATELY
+        renderDramaDetail(drama);
+        renderEpisodes(episodeVideos);
 
-            } catch (err) {
-                console.error('❌ Load error:', err);
-                showError(`Gagal memuat: ${err.message}`);
-            } finally {
-                isLoading = false;
-                console.log('🏁 Loading finished');
+    } catch (err) {
+        console.error('❌ Load error:', err);
+        showError(`Gagal memuat: ${err.message}`);
+    } finally {
+        isLoading = false;
+        console.log('🏁 Loading finished');
+    }
+}
+
+// ============== GET COVER FROM HOME API ==============
+async function getCoverFromHomeApi(dramaId, dramaDetail) {
+    try {
+        console.log('🌐 Loading home API for cover...');
+        const homeRes = await fetch(`${CONFIG.apiBase}/home?offset=0&count=50&lang=id`);
+        
+        if (!homeRes.ok) {
+            console.warn('⚠️ Home API failed, using detail cover');
+            return getSafeCoverUrl(dramaDetail.cover);
+        }
+        
+        const homeData = await homeRes.json();
+        console.log('📊 Home API loaded, items:', homeData.data?.length || 0);
+        
+        if (homeData.code === 0 && homeData.data && homeData.data.length > 0) {
+            // Cari drama dengan ID yang sama di home API
+            const homeDrama = homeData.data.find(item => item.id === dramaId);
+            
+            if (homeDrama && homeDrama.cover) {
+                console.log('✅ Found cover in home API:', homeDrama.cover);
+                return homeDrama.cover; // Ini .jpg, ibyteimg.com
+            } else {
+                console.log('❌ Drama not found in home API');
             }
         }
+        
+        // Fallback: gunakan cover dari detail API
+        console.log('🔄 Using detail API cover as fallback');
+        return getSafeCoverUrl(dramaDetail.cover);
+        
+    } catch (err) {
+        console.warn('⚠️ Home API error, using fallback:', err);
+        return getSafeCoverUrl(dramaDetail.cover);
+    }
+}
+
+// ============== SAFE COVER URL ==============
+function getSafeCoverUrl(coverUrl) {
+    if (!coverUrl) {
+        console.log('📛 No cover URL, using default');
+        return CONFIG.defaultImage;
+    }
+    
+    console.log('🔧 Processing cover URL:', coverUrl);
+    
+    // 1. Convert HEIC to JPG
+    if (coverUrl.includes('.heic')) {
+        const jpgUrl = coverUrl.replace('.heic', '.jpg');
+        console.log('🔄 Converted HEIC to JPG:', jpgUrl);
+        return jpgUrl;
+    }
+    
+    // 2. Fix domain jika fizzopic.org
+    if (coverUrl.includes('fizzopic.org')) {
+        // Coba ganti ke ibyteimg.com (domain yang work di home API)
+        const fixedUrl = coverUrl
+            .replace('fizzopic.org', 'ibyteimg.com')
+            .replace('/novel-sign-sg/', '/novel-images-sg/');
+        console.log('🌍 Fixed domain URL:', fixedUrl);
+        return fixedUrl;
+    }
+    
+    return coverUrl;
+}
 
         // ============== RENDER DETAIL ==============
         function renderDramaDetail(drama) {
