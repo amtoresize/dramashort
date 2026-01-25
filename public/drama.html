@@ -129,15 +129,6 @@
             font-size: 1.1rem;
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
-        
-        .tag-badge {
-            background: rgba(255, 107, 107, 0.2);
-            border: 1px solid #ff6b6b;
-            color: #ff6b6b;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            font-size: 0.8rem;
-        }
 
         /* Quality Modal Styles */
         .quality-modal {
@@ -580,7 +571,7 @@
         let currentQuality = '';
         let totalEpisodes = 0;
         let videoPlayer = null;
-        let episodeListData = [];
+        let episodeVideos = []; // Array of video objects: {vid: string, episode: number, duration: number}
 
         const elements = {
             dramaDetail: document.getElementById('drama-detail'),
@@ -622,15 +613,15 @@
                 if (!detailRes.ok) throw new Error(`Detail HTTP ${detailRes.status}`);
                 const detailData = await detailRes.json();
 
-                if (!detailData.data || detailData.code !== 0) throw new Error('Drama tidak ditemukan');
+                if (!detailData || detailData.code !== 0) throw new Error('Drama tidak ditemukan');
 
-                currentDrama = detailData.data;
-                episodeListData = currentDrama.episode_list || [];
-                totalEpisodes = episodeListData.length;
-                renderDramaDetail(currentDrama);
+                currentDrama = detailData;
+                episodeVideos = detailData.videos || [];
+                totalEpisodes = episodeVideos.length;
+                renderDramaDetail(detailData);
 
                 // Generate episode list
-                renderEpisodes(episodeListData);
+                renderEpisodes(episodeVideos);
 
             } catch (err) {
                 console.error(err);
@@ -642,7 +633,7 @@
 
         // ============== RENDER DETAIL ==============
         function renderDramaDetail(drama) {
-            document.title = `${escapeHtml(drama.name || 'Drama')} - DramaShort`;
+            document.title = `${escapeHtml(drama.title || 'Drama')} - DramaShort`;
 
             const html = `
                 <div class="row">
@@ -650,11 +641,11 @@
                         <div class="position-sticky" style="top: 90px;">
                             <img src="${drama.cover || CONFIG.defaultImage}"
                                  class="drama-poster mb-4"
-                                 alt="${escapeHtml(drama.name)}"
+                                 alt="${escapeHtml(drama.title)}"
                                  onerror="this.src='${CONFIG.defaultImage}'">
                            
                             <div class="d-grid gap-2">
-                                <button class="btn btn-danger btn-lg py-3" onclick="playFirstEpisode()">
+                                <button class="btn btn-danger btn-lg py-3" onclick="playEpisode(1)">
                                     <i class="bi bi-play-fill me-2"></i>Putar Episode 1
                                 </button>
                             </div>
@@ -662,19 +653,15 @@
                     </div>
                    
                     <div class="col-lg-8 col-md-7">
-                        <h1 class="drama-title">${escapeHtml(drama.name || 'Unknown')}</h1>
+                        <h1 class="drama-title">${escapeHtml(drama.title || 'Unknown')}</h1>
                        
                         <div class="d-flex flex-wrap gap-3 mb-4">
                             <span class="badge badge-melolo">
                                 <i class="bi bi-film me-1"></i>${totalEpisodes} Episode
                             </span>
-                            ${drama.tags && drama.tags.length > 0 ? `
+                            ${drama.episodes ? `
                             <span class="badge badge-melolo">
-                                <i class="bi bi-tags me-1"></i>${drama.tags.slice(0, 3).join(', ')}
-                            </span>` : ''}
-                            ${drama.is_dubbing ? `
-                            <span class="badge badge-melolo">
-                                <i class="bi bi-volume-up me-1"></i>Sulih Suara
+                                <i class="bi bi-collection me-1"></i>Total ${drama.episodes}
                             </span>` : ''}
                         </div>
                        
@@ -689,19 +676,19 @@
         }
 
         // ============== RENDER EPISODES ==============
-        function renderEpisodes(episodes) {
-            if (!episodes || episodes.length === 0) {
+        function renderEpisodes(videos) {
+            if (!videos || videos.length === 0) {
                 showNoEpisodes();
                 return;
             }
 
-            elements.countText.textContent = `${episodes.length} Episode`;
+            elements.countText.textContent = `${videos.length} Episode`;
             elements.episodeList.style.display = 'flex';
             elements.noEpisodes.style.display = 'none';
 
-            const html = episodes.map((episode, index) => {
-                const episodeNum = index + 1;
-                const duration = formatDuration(episode.duration || 0);
+            const html = videos.map((video, index) => {
+                const episodeNum = video.episode || (index + 1);
+                const duration = formatDuration(video.duration || 0);
                 
                 return `
                     <div class="col">
@@ -722,30 +709,30 @@
         }
 
         // ============== PLAY FUNCTIONS ==============
-        async function playEpisode(index) {
-            if (!episodeListData || episodeListData.length === 0) {
+        async function playEpisode(episodeNumber) {
+            if (!episodeVideos || episodeVideos.length === 0) {
                 alert('Data episode tidak tersedia');
                 return;
             }
 
-            currentEpisodeIndex = index;
+            currentEpisodeIndex = episodeNumber;
             
             try {
                 // Tampilkan loading state di button
-                const btn = elements.episodeList.querySelector(`[data-index="${index}"]`);
+                const btn = elements.episodeList.querySelector(`[data-index="${episodeNumber}"]`);
                 if (btn) {
                     btn.classList.add('loading');
                     btn.disabled = true;
                 }
 
-                // Get video ID dari episode list
-                const episodeData = episodeListData[index - 1];
-                if (!episodeData || !episodeData.id) {
-                    throw new Error('Video ID tidak ditemukan');
+                // Cari video ID berdasarkan episode number
+                const videoData = episodeVideos.find(v => v.episode === episodeNumber);
+                if (!videoData || !videoData.vid) {
+                    throw new Error('Video ID tidak ditemukan untuk episode ini');
                 }
 
                 // Load video data dari API Melolo
-                const res = await fetch(`${CONFIG.apiBase}/video/${episodeData.id}?lang=id`);
+                const res = await fetch(`${CONFIG.apiBase}/video/${videoData.vid}?lang=id`);
                 
                 if (!res.ok) {
                     throw new Error(`Video tidak tersedia (HTTP ${res.status})`);
@@ -754,12 +741,12 @@
                 const data = await res.json();
                 currentVideoData = data;
 
-                // Buat video list dari response Melolo (format menyesuaikan)
-                const videoList = [];
+                // Buat video list dari response Melolo
+                const videoSources = [];
                 
-                // Main URL
+                // Main URL (720p)
                 if (data.url) {
-                    videoList.push({
+                    videoSources.push({
                         quality: 720,
                         videoPath: data.url,
                         label: '720p'
@@ -768,7 +755,7 @@
                 
                 // Backup URL
                 if (data.backup) {
-                    videoList.push({
+                    videoSources.push({
                         quality: 720,
                         videoPath: data.backup,
                         label: '720p (Backup)'
@@ -778,23 +765,23 @@
                 // List URLs
                 if (data.list && data.list.length > 0) {
                     data.list.forEach((item, idx) => {
-                        videoList.push({
+                        videoSources.push({
                             quality: 720,
                             videoPath: item.url,
-                            label: item.definition || `Quality ${idx + 1}`
+                            label: item.definition || `Kualitas ${idx + 1}`
                         });
                     });
                 }
 
-                if (videoList.length === 0) {
+                if (videoSources.length === 0) {
                     throw new Error('Video URL tidak ditemukan');
                 }
 
                 // Tampilkan modal pilihan kualitas
-                showQualityModal(videoList, index);
+                showQualityModal(videoSources, episodeNumber);
                 
                 // Simpan history tontonan
-                saveLastWatched(index);
+                saveLastWatched(episodeNumber);
 
             } catch (err) {
                 console.error('Play error:', err);
@@ -802,7 +789,7 @@
                 
             } finally {
                 // Reset button state
-                const btn = elements.episodeList.querySelector(`[data-index="${index}"]`);
+                const btn = elements.episodeList.querySelector(`[data-index="${episodeNumber}"]`);
                 if (btn) {
                     btn.classList.remove('loading');
                     btn.disabled = false;
@@ -811,15 +798,14 @@
         }
         
         function playFirstEpisode() {
-            playEpisode(1);
+            if (episodeVideos.length > 0) {
+                playEpisode(episodeVideos[0].episode || 1);
+            }
         }
 
         // ============== QUALITY MODAL FUNCTIONS ==============
-        function showQualityModal(videos, episodeIndex) {
-            if (!videos || videos.length === 0) return;
-            
-            // Sort by quality (highest first)
-            const sortedVideos = [...videos].sort((a, b) => b.quality - a.quality);
+        function showQualityModal(videoSources, episodeIndex) {
+            if (!videoSources || videoSources.length === 0) return;
             
             // Update episode info
             elements.episodeInfo.innerHTML = `Episode ${episodeIndex}`;
@@ -828,12 +814,12 @@
             elements.qualityButtons.innerHTML = '';
             
             // Create quality buttons
-            sortedVideos.forEach(video => {
+            videoSources.forEach((source, idx) => {
                 const button = document.createElement('button');
                 button.className = 'quality-btn';
-                button.innerHTML = `${video.label}`;
+                button.innerHTML = `${source.label}`;
                 
-                button.onclick = () => selectQuality(video.videoPath, video.quality, episodeIndex);
+                button.onclick = () => selectQuality(source.videoPath, source.quality, episodeIndex);
                 
                 elements.qualityButtons.appendChild(button);
             });
@@ -868,19 +854,6 @@
             // Tutup modal
             closeQualityModal();
         }
-        
-        function getSimpleQualityLabel(quality) {
-            const labels = {
-                144: '144p',
-                360: '360p',
-                480: '480p',
-                540: '540p',
-                720: '720p',
-                1080: '1080p',
-                2160: '4K'
-            };
-            return labels[quality] || `${quality}p`;
-        }
 
         // ============== VIDEO PLAYER FUNCTIONS ==============
         function setupVideoPlayer() {
@@ -899,7 +872,7 @@
                 // Set video source
                 videoPlayer.src = videoUrl;
                 
-                // Update UI - HANYA TAMPILKAN EPISODE SAJA
+                // Update UI
                 elements.playerTitle.textContent = `Episode ${episodeIndex}`;
                 
                 // Update navigation buttons
@@ -946,19 +919,19 @@
             }
         }
         
-        async function loadAndPlayEpisode(index) {
+        async function loadAndPlayEpisode(episodeNumber) {
             try {
                 // Update episode index
-                currentEpisodeIndex = index;
+                currentEpisodeIndex = episodeNumber;
                 
-                // Get video ID dari episode list
-                const episodeData = episodeListData[index - 1];
-                if (!episodeData || !episodeData.id) {
+                // Cari video ID berdasarkan episode number
+                const videoData = episodeVideos.find(v => v.episode === episodeNumber);
+                if (!videoData || !videoData.vid) {
                     throw new Error('Video ID tidak ditemukan');
                 }
                 
                 // Load video data
-                const res = await fetch(`${CONFIG.apiBase}/video/${episodeData.id}?lang=id`);
+                const res = await fetch(`${CONFIG.apiBase}/video/${videoData.vid}?lang=id`);
                 
                 if (!res.ok) {
                     throw new Error(`Video tidak tersedia`);
@@ -984,10 +957,10 @@
                 }
                 
                 // Play video langsung tanpa modal
-                await playVideoInline(selectedVideoUrl, 720, index);
+                await playVideoInline(selectedVideoUrl, 720, episodeNumber);
                 
                 // Simpan history
-                saveLastWatched(index);
+                saveLastWatched(episodeNumber);
                 
             } catch (error) {
                 console.error('Error loading next episode:', error);
@@ -1105,15 +1078,10 @@
         function formatDuration(seconds) {
             if (!seconds || seconds === 0) return '0:00';
             
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
+            const minutes = Math.floor(seconds / 60);
             const secs = seconds % 60;
             
-            if (hours > 0) {
-                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            } else {
-                return `${minutes}:${secs.toString().padStart(2, '0')}`;
-            }
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
         }
 
         function escapeHtml(text) {
