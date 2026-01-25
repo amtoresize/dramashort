@@ -207,6 +207,115 @@
             font-size: 1.1rem;
             color: #ccc;
         }
+        
+        /* Video Player Styles */
+        .video-player-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            flex-direction: column;
+        }
+        
+        .player-header {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.9);
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .player-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            max-width: 80%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .player-close-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .player-close-btn:hover {
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+        .video-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        
+        #video-player {
+            width: 100%;
+            max-width: 1200px;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: #000;
+        }
+        
+        .player-controls {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid #444;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .control-btn {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .control-btn:hover {
+            background: #ff6b6b;
+        }
+        
+        .quality-indicator {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        
+        .episode-nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .fullscreen-btn {
+            margin-left: auto;
+        }
 
         @media (max-width: 768px) {
             .drama-title { font-size: 1.8rem; }
@@ -214,6 +323,22 @@
             .quality-modal-content {
                 width: 95%;
                 padding: 1.5rem;
+            }
+            .player-controls {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .control-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .episode-nav {
+                width: 100%;
+                justify-content: center;
+            }
+            .fullscreen-btn {
+                margin-left: 0;
+                width: 100%;
             }
         }
     </style>
@@ -275,11 +400,43 @@
             <div id="quality-buttons" class="quality-buttons"></div>
         </div>
     </div>
+    
+    <!-- Video Player -->
+    <div id="video-player-container" class="video-player-container">
+        <div class="player-header">
+            <div id="player-title" class="player-title"></div>
+            <button class="player-close-btn" onclick="closeVideoPlayer()">&times;</button>
+        </div>
+        
+        <div class="video-wrapper">
+            <video id="video-player" controls playsinline>
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <div class="player-controls">
+            <div class="episode-nav">
+                <button class="control-btn" onclick="playPrevEpisode()" id="prev-btn">
+                    <i class="bi bi-skip-backward"></i> Prev
+                </button>
+                <button class="control-btn" onclick="playNextEpisode()" id="next-btn">
+                    Next <i class="bi bi-skip-forward"></i>
+                </button>
+            </div>
+            
+            <div class="quality-indicator" id="current-quality">
+                Quality: -
+            </div>
+            
+            <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
+                <i class="bi bi-fullscreen"></i> Fullscreen
+            </button>
+        </div>
+    </div>
 
     <script>
         // ============== CONFIG & STATE ==============
         const CONFIG = {
-            playerBase: '/player',
             defaultImage: 'https://www.svgrepo.com/show/475529/cinema.svg'
         };
 
@@ -287,6 +444,10 @@
         let isLoading = false;
         let currentEpisodeIndex = 1;
         let currentVideoData = null;
+        let currentVideoUrl = '';
+        let currentQuality = '';
+        let totalEpisodes = 0;
+        let videoPlayer = null;
 
         const elements = {
             dramaDetail: document.getElementById('drama-detail'),
@@ -296,7 +457,13 @@
             noEpisodes: document.getElementById('no-episodes'),
             qualityModal: document.getElementById('quality-modal'),
             qualityButtons: document.getElementById('quality-buttons'),
-            episodeInfo: document.getElementById('episode-info')
+            episodeInfo: document.getElementById('episode-info'),
+            videoPlayerContainer: document.getElementById('video-player-container'),
+            videoPlayer: document.getElementById('video-player'),
+            playerTitle: document.getElementById('player-title'),
+            currentQuality: document.getElementById('current-quality'),
+            prevBtn: document.getElementById('prev-btn'),
+            nextBtn: document.getElementById('next-btn')
         };
 
         // ============== INIT ==============
@@ -306,6 +473,10 @@
             if (!dramaId) return window.location.href = '/';
 
             loadDramaDetail(dramaId);
+            
+            // Initialize video player
+            videoPlayer = elements.videoPlayer;
+            setupVideoPlayer();
         });
 
         // ============== MAIN LOAD ==============
@@ -322,11 +493,11 @@
                 if (!detailData.bookId) throw new Error('Drama tidak ditemukan');
 
                 currentDrama = detailData;
+                totalEpisodes = currentDrama.chapterCount || 0;
                 renderDramaDetail(currentDrama);
 
-                // Generate episode list berdasarkan chapterCount
-                const episodeCount = currentDrama.chapterCount || 0;
-                renderEpisodes(episodeCount);
+                // Generate episode list
+                renderEpisodes(totalEpisodes);
 
             } catch (err) {
                 console.error(err);
@@ -362,7 +533,7 @@
                        
                         <div class="d-flex flex-wrap gap-3 mb-4">
                             <span class="badge badge-dramabox">
-                                <i class="bi bi-film me-1"></i>${drama.chapterCount || 0} Episode
+                                <i class="bi bi-film me-1"></i>${totalEpisodes} Episode
                             </span>
                             ${drama.tags && drama.tags.length > 0 ? `
                             <span class="badge badge-dramabox">
@@ -453,10 +624,6 @@
                 console.error('Play error:', err);
                 alert('Gagal memuat video: ' + err.message);
                 
-                // Fallback ke URL lama jika API baru gagal
-                const playerUrl = `${CONFIG.playerBase}?bookId=${currentDrama.bookId}&index=${index - 1}&lang=in`;
-                window.open(playerUrl, '_blank');
-                
             } finally {
                 // Reset button state
                 const btn = elements.episodeList.querySelector(`[data-index="${index}"]`);
@@ -517,16 +684,13 @@
                 return;
             }
             
-            // Langsung buka URL video di new tab (SAMA DENGAN VERSI AWAL)
-            window.open(videoUrl, '_blank');
+            // Set video URL dan quality
+            currentVideoUrl = videoUrl;
+            currentQuality = quality;
+            currentEpisodeIndex = episodeIndex;
             
-            // Tambahkan log untuk debugging
-            console.log('Playing video:', {
-                url: videoUrl,
-                quality: quality,
-                episode: episodeIndex,
-                drama: currentDrama.bookName
-            });
+            // Play video di player inline
+            playVideoInline(videoUrl, quality, episodeIndex);
             
             // Tutup modal
             closeQualityModal();
@@ -544,20 +708,131 @@
             return labels[quality] || `${quality}p`;
         }
 
+        // ============== VIDEO PLAYER FUNCTIONS ==============
+        function setupVideoPlayer() {
+            // Setup event listeners
+            videoPlayer.addEventListener('ended', handleVideoEnded);
+            
+            // Fullscreen support
+            videoPlayer.addEventListener('fullscreenchange', handleFullscreenChange);
+            videoPlayer.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            videoPlayer.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            videoPlayer.addEventListener('msfullscreenchange', handleFullscreenChange);
+        }
+        
+        function playVideoInline(videoUrl, quality, episodeIndex) {
+            // Set video source
+            videoPlayer.src = videoUrl;
+            
+            // Update UI
+            elements.playerTitle.textContent = `${currentDrama.bookName} - Episode ${episodeIndex}`;
+            elements.currentQuality.textContent = `Quality: ${getQualityLabel(quality)}`;
+            
+            // Update navigation buttons
+            updateNavigationButtons();
+            
+            // Show player
+            elements.videoPlayerContainer.style.display = 'flex';
+            
+            // Play video
+            videoPlayer.load();
+            videoPlayer.play().catch(e => {
+                console.log('Autoplay prevented:', e);
+            });
+            
+            // Mark episode as playing
+            markEpisodeAsPlaying(episodeIndex);
+        }
+        
+        function closeVideoPlayer() {
+            elements.videoPlayerContainer.style.display = 'none';
+            videoPlayer.pause();
+            videoPlayer.src = '';
+        }
+        
+        function playPrevEpisode() {
+            if (currentEpisodeIndex > 1) {
+                playEpisode(currentEpisodeIndex - 1);
+            }
+        }
+        
+        function playNextEpisode() {
+            if (currentEpisodeIndex < totalEpisodes) {
+                playEpisode(currentEpisodeIndex + 1);
+            }
+        }
+        
+        function handleVideoEnded() {
+            // Auto play next episode jika ada
+            if (currentEpisodeIndex < totalEpisodes) {
+                setTimeout(() => {
+                    playNextEpisode();
+                }, 2000); // Delay 2 detik
+            }
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                if (videoPlayer.requestFullscreen) {
+                    videoPlayer.requestFullscreen();
+                } else if (videoPlayer.webkitRequestFullscreen) {
+                    videoPlayer.webkitRequestFullscreen();
+                } else if (videoPlayer.mozRequestFullScreen) {
+                    videoPlayer.mozRequestFullScreen();
+                } else if (videoPlayer.msRequestFullscreen) {
+                    videoPlayer.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        function handleFullscreenChange() {
+            // Update fullscreen button icon
+            const isFullscreen = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.mozFullScreenElement || 
+                               document.msFullscreenElement;
+            
+            const icon = document.querySelector('.fullscreen-btn i');
+            if (icon) {
+                icon.className = isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen';
+            }
+        }
+        
+        function updateNavigationButtons() {
+            // Update prev button
+            elements.prevBtn.disabled = currentEpisodeIndex <= 1;
+            elements.prevBtn.style.opacity = currentEpisodeIndex <= 1 ? '0.5' : '1';
+            
+            // Update next button
+            elements.nextBtn.disabled = currentEpisodeIndex >= totalEpisodes;
+            elements.nextBtn.style.opacity = currentEpisodeIndex >= totalEpisodes ? '0.5' : '1';
+        }
+        
+        function markEpisodeAsPlaying(index) {
+            const episodeButtons = elements.episodeList.querySelectorAll('.episode-btn');
+            episodeButtons.forEach(btn => {
+                btn.classList.remove('playing');
+                const btnIndex = parseInt(btn.dataset.index);
+                if (btnIndex === index) {
+                    btn.classList.add('playing');
+                }
+            });
+        }
+
         // ============== HELPER FUNCTIONS ==============
         function saveLastWatched(index) {
             if (currentDrama?.bookId) {
                 localStorage.setItem(`last_dramabox_${currentDrama.bookId}`, index);
-                
-                // Update UI untuk menunjukkan episode terakhir ditonton
-                const episodeButtons = elements.episodeList.querySelectorAll('.episode-btn');
-                episodeButtons.forEach(btn => {
-                    btn.classList.remove('playing');
-                    const btnIndex = parseInt(btn.dataset.index);
-                    if (btnIndex === index) {
-                        btn.classList.add('playing');
-                    }
-                });
             }
         }
 
@@ -590,6 +865,10 @@
         window.playFirstEpisode = playFirstEpisode;
         window.selectQuality = selectQuality;
         window.closeQualityModal = closeQualityModal;
+        window.closeVideoPlayer = closeVideoPlayer;
+        window.playPrevEpisode = playPrevEpisode;
+        window.playNextEpisode = playNextEpisode;
+        window.toggleFullscreen = toggleFullscreen;
         
         // Close modal when clicking outside
         elements.qualityModal.addEventListener('click', function(e) {
@@ -600,8 +879,47 @@
         
         // Close modal with Escape key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && elements.qualityModal.style.display === 'flex') {
-                closeQualityModal();
+            if (e.key === 'Escape') {
+                if (elements.qualityModal.style.display === 'flex') {
+                    closeQualityModal();
+                } else if (elements.videoPlayerContainer.style.display === 'flex') {
+                    closeVideoPlayer();
+                }
+            }
+            
+            // Keyboard shortcuts for video player
+            if (elements.videoPlayerContainer.style.display === 'flex') {
+                switch(e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        if (videoPlayer.paused) {
+                            videoPlayer.play();
+                        } else {
+                            videoPlayer.pause();
+                        }
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        videoPlayer.currentTime -= 10;
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        videoPlayer.currentTime += 10;
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        videoPlayer.volume = Math.min(videoPlayer.volume + 0.1, 1);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        videoPlayer.volume = Math.max(videoPlayer.volume - 0.1, 0);
+                        break;
+                    case 'f':
+                    case 'F':
+                        e.preventDefault();
+                        toggleFullscreen();
+                        break;
+                }
             }
         });
     </script>
