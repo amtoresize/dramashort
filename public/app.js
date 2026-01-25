@@ -207,7 +207,7 @@ function initializeSourceSelector() {
     const selectorHTML = `
         <div class="d-flex align-items-center gap-2">
             <label class="fw-bold text-white mb-0">Sumber:</label>
-            <select id="source-selector" class="form-select form-select-md" style="width: 180px; min-width: 160px;">
+            <select id="source-selector" class="form-select form-select-md" style="width: auto; min-width: auto;">
                 <option value="melolo" ${currentSource === 'melolo' ? 'selected' : ''}>Melolo™</option>
                 <option value="dramabox" ${currentSource === 'dramabox' ? 'selected' : ''}>DramaBox</option>
                 <option value="netshort" ${currentSource === 'netshort' ? 'selected' : ''}>NetShort</option>
