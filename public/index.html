@@ -391,62 +391,35 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Navigation sederhana (hanya logo + dropdown sumber) -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class=""></i>
                 DramaShort
             </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <i class="bi bi-list"></i>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Trending</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Genres</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Latest</a>
-                    </li>
-                </ul>
-            </div>
+
+            <!-- Dropdown sumber akan dimasukkan oleh app.js di sini -->
+            <!-- Tidak perlu navbar-toggler atau collapse karena tidak ada menu lain -->
         </div>
     </nav>
 
-    <!-- Main Content (Hero Section Dihapus) -->
+    <!-- Main Content -->
     <main class="container pb-5 mt-5 pt-4">
-        <!-- Drama Grid Header -->
+        <!-- Header daftar drama (tanpa toggle grid/list) -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold mb-0">
-                <i class=""></i>
-                💗
+                Drama Terbaru
             </h2>
-            <div class="d-flex gap-2">
-                <button id="view-grid" class="btn btn-primary btn-sm view-toggle" data-view="grid">
-                    <i class="bi bi-grid-fill"></i> Grid
-                </button>
-                <button id="view-list" class="btn btn-outline-secondary btn-sm view-toggle" data-view="list">
-                    <i class="bi bi-list"></i> List
-                </button>
-            </div>
+            <!-- Dropdown sumber akan muncul otomatis di sini oleh JS -->
         </div>
 
-        <!-- Drama List -->
+        <!-- Drama Grid -->
         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4" id="drama-list">
-            <!-- Content will be loaded by app.js -->
+            <!-- Content loaded by app.js -->
         </div>
 
         <!-- Loading Indicator -->
-        <div class="loading-indicator" id="loading" style="display: none;">
+        <div class="loading-indicator text-center py-5" id="loading" style="display: none;">
             <div class="spinner-grow text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
@@ -454,22 +427,23 @@
         </div>
 
         <!-- Empty State -->
-        <div class="empty-state" id="empty-state" style="display: none;">
-            <i class="bi bi-emoji-frown"></i>
+        <div class="empty-state text-center py-5" id="empty-state" style="display: none;">
+            <i class="bi bi-emoji-frown display-1 text-muted"></i>
             <h4 class="mb-3">Belum ada drama tersedia</h4>
-            <p class="text-muted mb-4">Coba refresh halaman atau kunjungi lagi nanti</p>
+            <p class="text-muted mb-4">Coba ganti sumber atau refresh</p>
             <button onclick="location.reload()" class="btn btn-primary">
                 <i class="bi bi-arrow-clockwise me-2"></i>Refresh Halaman
             </button>
         </div>
 
         <!-- Load More Button -->
-        <div class="text-center">
-            <button id="load-more" class="btn load-more-btn">
-                <i class="bi bi-plus-circle"></i> Load More Drama
+        <div class="text-center mt-5">
+            <button id="load-more" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-plus-circle me-2"></i> Load More
             </button>
         </div>
     </main>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/app.js"></script>
