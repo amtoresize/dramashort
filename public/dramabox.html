@@ -512,9 +512,64 @@
     </style>
 </head>
 <body>
-    <!-- ... HTML sebelumnya sama ... -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black sticky-top shadow-lg">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-play-btn-fill me-2 text-danger"></i>
+                <span>DramaBox</span>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="/" class="btn btn-outline-light back-btn">
+                    <i class="bi bi-arrow-left me-2"></i>Kembali ke Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-5">
+        <section id="drama-detail" class="mb-5">
+            <div class="text-center py-5">
+                <div class="spinner-border loading-spinner text-danger" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h4 class="mt-3">Memuat detail drama...</h4>
+            </div>
+        </section>
+
+        <section class="mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold">
+                    <i class="bi bi-play-btn me-2 text-danger"></i>Daftar Episode
+                </h3>
+                <div id="episode-count" class="badge badge-dramabox badge-episode">
+                    <span id="count-text">0 Episode</span>
+                </div>
+            </div>
+           
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list"></div>
+           
+            <div id="no-episodes" class="text-center py-5" style="display: none;">
+                <div class="alert alert-info w-75 mx-auto">
+                    <i class="bi bi-info-circle display-4 d-block mb-3"></i>
+                    <h4>Episode Belum Tersedia</h4>
+                </div>
+            </div>
+        </section>
+    </main>
     
-    <!-- Video Player dengan layout mobile friendly -->
+    <!-- Quality Selection Modal -->
+    <div id="quality-modal" class="quality-modal">
+        <div class="quality-modal-content">
+            <button class="modal-close-btn" onclick="closeQualityModal()">&times;</button>
+            <h3 class="quality-modal-title">
+                <i class="bi bi-hd me-2"></i>Pilih Kualitas Video
+            </h3>
+            <div id="episode-info" class="episode-info"></div>
+            <div id="quality-buttons" class="quality-buttons"></div>
+        </div>
+    </div>
+    
+    <!-- Video Player -->
     <div id="video-player-container" class="video-player-container">
         <div class="player-header">
             <div id="player-title" class="player-title"></div>
@@ -763,26 +818,32 @@
                 <strong>${currentDrama.bookName}</strong> - Episode ${episodeIndex}
             `;
             
+            // Clear previous buttons
+            elements.qualityButtons.innerHTML = '';
+            
             // Create quality buttons
-            const buttonsHtml = sortedVideos.map(video => {
+            sortedVideos.forEach(video => {
                 const isDefault = video.isDefault === 1;
                 const isVip = video.isVipEquity === 1;
                 const qualityLabel = getQualityLabel(video.quality);
                 const videoUrl = video.videoPath;
                 
-                return `
-                    <button class="quality-btn ${isDefault ? 'active' : ''} ${isVip ? 'vip' : ''}"
-                            onclick="selectQuality('${escapeHtml(videoUrl)}', ${video.quality}, ${episodeIndex})">
-                        <span>
-                            ${qualityLabel}
-                            ${isDefault ? ' <small>(Default)</small>' : ''}
-                        </span>
-                        ${isVip ? '<span class="badge">VIP</span>' : ''}
-                    </button>
+                const button = document.createElement('button');
+                button.className = `quality-btn ${isDefault ? 'active' : ''} ${isVip ? 'vip' : ''}`;
+                button.innerHTML = `
+                    <span>
+                        ${qualityLabel}
+                        ${isDefault ? ' <small>(Default)</small>' : ''}
+                    </span>
+                    ${isVip ? '<span class="badge">VIP</span>' : ''}
                 `;
-            }).join('');
+                
+                // JANGAN gunakan escapeHtml untuk URL! Ini penyebab error
+                button.onclick = () => selectQuality(videoUrl, video.quality, episodeIndex);
+                
+                elements.qualityButtons.appendChild(button);
+            });
             
-            elements.qualityButtons.innerHTML = buttonsHtml;
             elements.qualityModal.style.display = 'flex';
             
             // Prevent body scroll
@@ -797,6 +858,8 @@
         }
         
         function selectQuality(videoUrl, quality, episodeIndex) {
+            console.log('Selected quality:', { videoUrl, quality, episodeIndex });
+            
             if (!videoUrl) {
                 alert('URL video tidak valid');
                 return;
@@ -840,6 +903,8 @@
         
         async function playVideoInline(videoUrl, quality, episodeIndex) {
             try {
+                console.log('Playing video:', { videoUrl, quality, episodeIndex });
+                
                 // Set video source
                 videoPlayer.src = videoUrl;
                 
@@ -858,10 +923,13 @@
                 
                 // Play video
                 videoPlayer.load();
-                await videoPlayer.play().catch(e => {
-                    console.log('Autoplay prevented:', e);
-                    // User might need to tap to play
-                });
+                
+                try {
+                    await videoPlayer.play();
+                } catch (playError) {
+                    console.log('Autoplay prevented, user needs to tap to play:', playError);
+                    // Tampilkan pesan bahwa user perlu tap untuk play
+                }
                 
                 // Mark episode as playing
                 markEpisodeAsPlaying(episodeIndex);
@@ -889,8 +957,10 @@
         
         function closeVideoPlayer() {
             elements.videoPlayerContainer.style.display = 'none';
-            videoPlayer.pause();
-            videoPlayer.src = '';
+            if (videoPlayer) {
+                videoPlayer.pause();
+                videoPlayer.src = '';
+            }
             // Restore body scroll
             document.body.style.overflow = '';
         }
@@ -905,9 +975,9 @@
         }
         
         function toggleFullscreen() {
+            const playerContainer = elements.videoPlayerContainer;
+            
             if (!document.fullscreenElement) {
-                const playerContainer = elements.videoPlayerContainer;
-                
                 if (playerContainer.requestFullscreen) {
                     playerContainer.requestFullscreen();
                 } else if (playerContainer.webkitRequestFullscreen) {
@@ -951,12 +1021,16 @@
         
         function updateNavigationButtons() {
             // Update prev button
-            elements.prevBtn.disabled = currentEpisodeIndex <= 1;
-            elements.prevBtn.style.opacity = currentEpisodeIndex <= 1 ? '0.5' : '1';
+            if (elements.prevBtn) {
+                elements.prevBtn.disabled = currentEpisodeIndex <= 1;
+                elements.prevBtn.style.opacity = currentEpisodeIndex <= 1 ? '0.5' : '1';
+            }
             
             // Update next button
-            elements.nextBtn.disabled = currentEpisodeIndex >= totalEpisodes;
-            elements.nextBtn.style.opacity = currentEpisodeIndex >= totalEpisodes ? '0.5' : '1';
+            if (elements.nextBtn) {
+                elements.nextBtn.disabled = currentEpisodeIndex >= totalEpisodes;
+                elements.nextBtn.style.opacity = currentEpisodeIndex >= totalEpisodes ? '0.5' : '1';
+            }
         }
         
         function markEpisodeAsPlaying(index) {
@@ -1070,12 +1144,12 @@
                     case 'n':
                     case 'N':
                         e.preventDefault();
-                        if (!elements.nextBtn.disabled) playNextEpisode();
+                        if (elements.nextBtn && !elements.nextBtn.disabled) playNextEpisode();
                         break;
                     case 'p':
                     case 'P':
                         e.preventDefault();
-                        if (!elements.prevBtn.disabled) playPrevEpisode();
+                        if (elements.prevBtn && !elements.prevBtn.disabled) playPrevEpisode();
                         break;
                 }
             }
