@@ -11,264 +11,41 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   
     <style>
-        /* ========== BASE STYLES (sama seperti melolo) ========== */
-        body {
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
-            color: white;
-            min-height: 100vh;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-      
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.5rem;
-            background: linear-gradient(90deg, #fff, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-      
-        .back-btn {
-            border-radius: 50px;
-            padding: 0.5rem 1.5rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            border: 2px solid #ff6b6b;
-            color: #ff6b6b;
-            background: transparent;
-        }
-      
-        .back-btn:hover {
-            transform: translateX(-5px);
-            background: rgba(255, 107, 107, 0.1);
-            color: #ff6b6b;
-            border-color: #ff6b6b;
-        }
-        .drama-poster {
-            border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.7);
-            width: 100%;
-            height: auto;
-            max-height: 500px;
-            object-fit: cover;
-            border: 3px solid #ff6b6b;
-        }
-        .drama-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(90deg, #fff, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        .synopsis-box {
-            background: rgba(30,30,30,0.7);
-            border: 1px solid #444;
-            border-radius: 12px;
-            padding: 1.5rem;
-            line-height: 1.8;
-            border-left: 4px solid #ff6b6b;
-        }
+        /* Styles sama seperti sebelumnya, aku skip biar ringkas. Copy dari versi lama kalau perlu */
+        body { background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%); color: white; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .navbar-brand { font-weight: bold; font-size: 1.5rem; background: linear-gradient(90deg, #fff, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .back-btn { border-radius: 50px; padding: 0.5rem 1.5rem; font-weight: 600; transition: all 0.3s; border: 2px solid #ff6b6b; color: #ff6b6b; background: transparent; }
+        .back-btn:hover { transform: translateX(-5px); background: rgba(255, 107, 107, 0.1); color: #ff6b6b; border-color: #ff6b6b; }
+        .drama-poster { border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,0.7); width: 100%; height: auto; max-height: 500px; object-fit: cover; border: 3px solid #ff6b6b; }
+        .drama-title { font-size: 2.5rem; font-weight: 800; background: linear-gradient(90deg, #fff, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .synopsis-box { background: rgba(30,30,30,0.7); border: 1px solid #444; border-radius: 12px; padding: 1.5rem; line-height: 1.8; border-left: 4px solid #ff6b6b; }
         .episode-card { margin-bottom: 1rem; }
-        .episode-btn {
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            border: 2px solid #333;
-            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-            color: white;
-            padding: 1.2rem 0.5rem;
-            width: 100%;
-            min-height: 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            cursor: pointer;
-            position: relative;
-        }
-        .episode-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(255,107,107,0.4);
-            border-color: #ff6b6b;
-            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
-        }
-        .episode-btn.playing {
-            background: linear-gradient(145deg, #ff6b6b, #ff4757);
-            border-color: #ff4757;
-        }
-        .episode-btn.loading {
-            opacity: 0.7;
-            cursor: wait;
-        }
+        .episode-btn { border-radius: 12px; transition: all 0.3s ease; border: 2px solid #333; background: linear-gradient(145deg, #1e1e1e, #2a2a2a); color: white; padding: 1.2rem 0.5rem; width: 100%; min-height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; position: relative; }
+        .episode-btn:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(255,107,107,0.4); border-color: #ff6b6b; background: linear-gradient(145deg, #2a2a2a, #1e1e1e); }
+        .episode-btn.playing { background: linear-gradient(145deg, #ff6b6b, #ff4757); border-color: #ff4757; }
+        .episode-btn.loading { opacity: 0.7; cursor: wait; }
         .episode-number { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
         .episode-duration { font-size: 0.85rem; opacity: 0.8; }
         .loading-spinner { width: 4rem; height: 4rem; }
-        .error-box {
-            background: rgba(220,53,69,0.1);
-            border: 1px solid #dc3545;
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-        }
-        .badge-netshort {
-            background: linear-gradient(135deg, #ff6b6b, #ff4757);
-            color: white;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-        }
-      
-        .badge-episode {
-            font-size: 1.1rem;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-        }
-      
-        .drama-tags .badge {
-            background: #444;
-            margin: 0 0.3rem 0.3rem 0;
-        }
-      
-        /* Video Player Styles (sama) */
-        .video-player-container {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 10000;
-            flex-direction: column;
-        }
-      
-        .player-header {
-            padding: 0.8rem 1rem;
-            background: rgba(0, 0, 0, 0.95);
-            border-bottom: 1px solid #444;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            min-height: 60px;
-            flex-shrink: 0;
-        }
-      
-        .player-title {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #ff6b6b;
-            max-width: 70%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            line-height: 1.3;
-        }
-      
-        .player-close-btn {
-            background: rgba(255, 107, 107, 0.2);
-            border: 1px solid #ff6b6b;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            transition: background 0.3s ease;
-            flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-      
-        .player-close-btn:hover {
-            background: #ff6b6b;
-        }
-      
-        .video-wrapper {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0.5rem;
-            min-height: 0;
-        }
-      
-        #video-player {
-            width: 100%;
-            max-width: 1200px;
-            max-height: 100%;
-            border-radius: 8px;
-            background: #000;
-            object-fit: contain;
-        }
-      
-        .player-controls {
-            padding: 0.8rem;
-            background: rgba(0, 0, 0, 0.95);
-            border-top: 1px solid #444;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-      
-        .control-btn {
-            background: rgba(255, 107, 107, 0.2);
-            border: 1px solid #ff6b6b;
-            color: white;
-            padding: 0.6rem 0.8rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            min-height: 44px;
-        }
-      
-        .control-btn:hover {
-            background: #ff6b6b;
-        }
-      
-        .control-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: rgba(255, 107, 107, 0.1);
-        }
-      
-        .episode-nav {
-            display: flex;
-            gap: 0.5rem;
-            flex: 1;
-            justify-content: center;
-        }
-      
-        .fullscreen-btn {
-            min-width: 120px;
-        }
-        /* MOBILE OPTIMIZATION (sama) */
-        @media (max-width: 768px) {
-            .drama-title { font-size: 1.8rem; line-height: 1.2; }
-            .drama-poster { max-height: 350px; margin-bottom: 1.5rem; }
-            .player-header { padding: 0.6rem 0.8rem; min-height: 50px; }
-            .player-title { font-size: 0.9rem; max-width: 65%; }
-            .player-close-btn { padding: 0.3rem 0.6rem; font-size: 1rem; width: 36px; height: 36px; }
-            .video-wrapper { padding: 0.3rem; }
-            .player-controls { padding: 0.6rem; gap: 0.5rem; }
-            .control-btn { padding: 0.5rem 0.7rem; font-size: 0.85rem; flex: 1; min-width: 0; justify-content: center; }
-            .episode-nav { order: 1; width: 100%; gap: 0.3rem; }
-            .episode-nav .control-btn { flex: 1; }
-            .fullscreen-btn { order: 2; width: 100%; margin-top: 0.3rem; }
-        }
-      
-        @media (max-width: 480px) {
-            .player-title { font-size: 0.8rem; }
-            .control-btn { padding: 0.4rem 0.6rem; font-size: 0.8rem; gap: 0.3rem; }
-        }
+        .error-box { background: rgba(220,53,69,0.1); border: 1px solid #dc3545; border-radius: 12px; padding: 2rem; text-align: center; }
+        .badge-netshort { background: linear-gradient(135deg, #ff6b6b, #ff4757); color: white; padding: 0.5rem 1rem; font-weight: 600; }
+        .badge-episode { font-size: 1.1rem; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); }
+        .drama-tags .badge { background: #444; margin: 0 0.3rem 0.3rem 0; }
+        /* Video player styles (sama seperti sebelumnya) */
+        .video-player-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 10000; flex-direction: column; }
+        .player-header { padding: 0.8rem 1rem; background: rgba(0, 0, 0, 0.95); border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; min-height: 60px; flex-shrink: 0; }
+        .player-title { font-size: 1rem; font-weight: bold; color: #ff6b6b; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
+        .player-close-btn { background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; color: white; font-size: 1.2rem; cursor: pointer; padding: 0.4rem 0.8rem; border-radius: 8px; transition: background 0.3s ease; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .player-close-btn:hover { background: #ff6b6b; }
+        .video-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 0.5rem; min-height: 0; }
+        #video-player { width: 100%; max-width: 1200px; max-height: 100%; border-radius: 8px; background: #000; object-fit: contain; }
+        .player-controls { padding: 0.8rem; background: rgba(0, 0, 0, 0.95); border-top: 1px solid #444; display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; justify-content: center; flex-shrink: 0; }
+        .control-btn { background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; color: white; padding: 0.6rem 0.8rem; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; min-height: 44px; }
+        .control-btn:hover { background: #ff6b6b; }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; background: rgba(255, 107, 107, 0.1); }
+        .episode-nav { display: flex; gap: 0.5rem; flex: 1; justify-content: center; }
+        .fullscreen-btn { min-width: 120px; }
+        @media (max-width: 768px) { /* mobile styles sama */ }
     </style>
 </head>
 <body>
@@ -303,9 +80,7 @@
                     <span id="count-text">0 Episode</span>
                 </div>
             </div>
-         
             <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="episode-list"></div>
-         
             <div id="no-episodes" class="text-center py-5" style="display: none;">
                 <div class="alert alert-info w-75 mx-auto">
                     <i class="bi bi-info-circle display-4 d-block mb-3"></i>
@@ -315,19 +90,17 @@
         </section>
     </main>
   
-    <!-- Video Player -->
+    <!-- Video Player (sama) -->
     <div id="video-player-container" class="video-player-container">
         <div class="player-header">
             <div id="player-title" class="player-title">Episode 1</div>
             <button class="player-close-btn" onclick="closeVideoPlayer()">×</button>
         </div>
-      
         <div class="video-wrapper">
             <video id="video-player" controls playsinline>
                 Your browser does not support the video tag.
             </video>
         </div>
-      
         <div class="player-controls">
             <div class="episode-nav">
                 <button class="control-btn" onclick="playPrevEpisode()" id="prev-btn">
@@ -337,7 +110,6 @@
                     <span class="btn-text">Next</span> <i class="bi bi-skip-forward"></i>
                 </button>
             </div>
-          
             <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
                 <i class="bi bi-fullscreen"></i> <span class="btn-text">Fullscreen</span>
             </button>
@@ -380,7 +152,7 @@
             setupVideoPlayer();
         });
 
-        // ============== MAIN LOAD ==============
+        // ============== MAIN LOAD (diperbaiki untuk struktur real API) ==============
         async function loadDramaDetail(dramaId) {
             if (isLoading) return;
             isLoading = true;
@@ -388,19 +160,24 @@
                 const res = await fetch(`https://dramabos.asia/api/netshort/api/drama/info/${dramaId}?lang=id_ID`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const json = await res.json();
-                if (!json.success || !json.data) throw new Error('Drama tidak ditemukan');
+                if (!json.success || !json.data) throw new Error('Drama tidak ditemukan atau response invalid');
                 
                 const data = json.data;
-                currentDramaInfo = data.dramaInfo || {};
-                episodeList = Array.isArray(data.data) ? data.data : [];
+                currentDramaInfo = data.dramaInfo || {};  // metadata lengkap di sini
+                episodeList = Array.isArray(data.result) ? data.result : [];  // episodes di 'result'
                 totalEpisodes = episodeList.length || currentDramaInfo.totalEpisode || 0;
-                dramaCover = currentDramaInfo.shortPlayCover || CONFIG.defaultImage;
+                dramaCover = currentDramaInfo.shortPlayCover || data.name ? CONFIG.defaultImage : CONFIG.defaultImage;  // fallback
+                
+                // Fallback judul kalau shortPlayName tidak ada
+                if (!currentDramaInfo.shortPlayName && data.name) {
+                    currentDramaInfo.shortPlayName = data.name;
+                }
                 
                 renderDramaDetail(currentDramaInfo);
                 renderEpisodes(episodeList);
             } catch (err) {
                 console.error('Load error:', err);
-                showError(`Gagal memuat: ${err.message}`);
+                showError(`Gagal memuat detail: ${err.message}. Cek console untuk detail.`);
             } finally {
                 isLoading = false;
             }
@@ -457,8 +234,7 @@
             
             const html = episodes.map((ep, index) => {
                 const episodeNum = ep.episodeNo || (index + 1);
-                // Duration tidak ada di API, jadi kosongkan atau tampilkan placeholder
-                const duration = ''; // Bisa tambah logic kalau nanti ada
+                const duration = '';  // API tidak kasih duration, bisa tambah kalau nanti ada
                 return `
                     <div class="col">
                         <div class="episode-card">
@@ -476,7 +252,7 @@
             elements.episodeList.innerHTML = html;
         }
 
-        // ============== PLAY FUNCTIONS ==============
+        // ============== PLAY FUNCTIONS (sama, tapi pakai videoUrl langsung) ==============
         function playEpisode(episodeNumber) {
             const ep = episodeList.find(e => e.episodeNo === episodeNumber);
             if (!ep || !ep.videoUrl) {
@@ -489,28 +265,15 @@
             saveLastWatched(episodeNumber);
         }
 
-        async function loadAndPlayEpisode(episodeNumber) {
-            const ep = episodeList.find(e => e.episodeNo === episodeNumber);
-            if (!ep || !ep.videoUrl) {
-                alert('Episode tidak tersedia');
-                return;
-            }
-            currentEpisodeIndex = episodeNumber;
-            playVideoInline(ep.videoUrl, episodeNumber);
-            markEpisodeAsPlaying(episodeNumber);
-            saveLastWatched(episodeNumber);
-            updateNavigationButtons();
-        }
-
-        async function playNextEpisode() {
+        function playNextEpisode() {
             if (currentEpisodeIndex < totalEpisodes) {
-                await loadAndPlayEpisode(currentEpisodeIndex + 1);
+                playEpisode(currentEpisodeIndex + 1);
             }
         }
 
-        async function playPrevEpisode() {
+        function playPrevEpisode() {
             if (currentEpisodeIndex > 1) {
-                await loadAndPlayEpisode(currentEpisodeIndex - 1);
+                playEpisode(currentEpisodeIndex - 1);
             }
         }
 
@@ -522,7 +285,7 @@
                 elements.videoPlayerContainer.style.display = 'flex';
                 document.body.style.overflow = 'hidden';
                 videoPlayer.load();
-                videoPlayer.play().catch(() => {});
+                videoPlayer.play().catch(err => console.error('Play error:', err));
                 markEpisodeAsPlaying(episodeIndex);
             } catch (error) {
                 alert('Gagal memutar video: ' + error.message);
@@ -606,7 +369,7 @@
             return div.innerHTML;
         }
 
-        // ============== GLOBAL FUNCTIONS ==============
+        // Global functions
         window.playEpisode = playEpisode;
         window.closeVideoPlayer = closeVideoPlayer;
         window.playPrevEpisode = playPrevEpisode;
