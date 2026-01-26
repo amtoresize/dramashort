@@ -13,7 +13,7 @@ const WORKING_APIS = {
             try {
                 const response = await fetch(`${CONFIG.apiBase}/home?offset=${offset}&count=${count}&lang=id`);
                 const data = await response.json();
-                
+               
                 if (data.code === 0 && data.data) {
                     return {
                         code: 0,
@@ -29,7 +29,7 @@ const WORKING_APIS = {
                 return { code: -1, error: error.message, data: [] };
             }
         },
-        
+       
         detail: async (dramaId) => {
             try {
                 const response = await fetch(`${CONFIG.apiBase}/detail/${dramaId}?lang=id`);
@@ -40,13 +40,13 @@ const WORKING_APIS = {
             }
         }
     },
-    
+   
     dramabox: {
         foryou: async (page = 1) => {
             try {
                 const response = await fetch(`${CONFIG.dramaboxApi}/recommend/${page}?lang=in`);
                 const data = await response.json();
-                
+               
                 if (data.recommendList && data.recommendList.records) {
                     const transformedData = data.recommendList.records.map(item => ({
                         bookId: item.bookId,
@@ -57,7 +57,7 @@ const WORKING_APIS = {
                         tags: item.tags || [],
                         playCount: item.playCount || '0'
                     }));
-                    
+                   
                     return {
                         code: 0,
                         success: true,
@@ -73,12 +73,12 @@ const WORKING_APIS = {
                 return { code: -1, error: error.message, data: [] };
             }
         },
-        
+       
         detail: async (bookId) => {
             try {
                 const response = await fetch(`${CONFIG.dramaboxApi}/drama/${bookId}?lang=in`);
                 const data = await response.json();
-                
+               
                 if (data.bookId) {
                     return {
                         code: 0,
@@ -101,40 +101,30 @@ const WORKING_APIS = {
             }
         }
     },
-    
+   
     netshort: {
-        explore: async (offset = 0, limit = 20) => {
-            try {
-                const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/explore?lang=id_ID&offset=${offset}&limit=${limit}`);
-                const data = await response.json();
-                
-                if (data.success && data.data && data.data.result) {
-                    return {
-                        code: 0,
-                        success: true,
-                        data: data.data.result,
-                        hasMore: !data.data.isEnd,
-                        nextOffset: data.data.next || offset + limit
-                    };
-                }
-                return { code: -1, error: 'Invalid response', data: [] };
-            } catch (error) {
-                console.error('NetShort explore error:', error);
-                return { code: -1, error: error.message, data: [] };
-            }
-        },
-        
         discover: async () => {
             try {
                 const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/discover?lang=id_ID`);
                 const data = await response.json();
-                
+               
                 if (data.success && data.data && data.data.dataList) {
+                    const transformed = data.data.dataList.map(item => ({
+                        shortPlayId: item.shortPlayId,
+                        name: item.shortPlayName,
+                        cover: item.shortPlayCover,
+                        labels: item.labelArray || [],
+                        heat: item.heatScoreShow || '0',
+                        scriptName: item.scriptName || 'Populer',
+                        isDubbing: item.shortPlayName.toLowerCase().includes('(sulih suara)') || 
+                                   item.shortPlayName.toLowerCase().includes('dub')
+                    }));
+
                     return {
                         code: 0,
                         success: true,
-                        data: data.data.dataList,
-                        hasMore: false
+                        data: transformed,
+                        hasMore: false  // discover tidak support pagination
                     };
                 }
                 return { code: -1, error: 'Invalid response', data: [] };
@@ -143,12 +133,12 @@ const WORKING_APIS = {
                 return { code: -1, error: error.message, data: [] };
             }
         },
-        
+       
         detail: async (dramaId) => {
             try {
                 const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/info/${dramaId}`);
                 const data = await response.json();
-                
+               
                 if (data.success && data.data) {
                     return {
                         code: 0,
@@ -184,12 +174,9 @@ const elements = {
 // ============== INITIALIZATION ==============
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎬 DramaShort - Grid Only Mode');
-
     initializeSourceSelector();
     addScrollToTopButton();
-
     loadDramas();
-
     if (elements.loadMoreBtn) {
         elements.loadMoreBtn.addEventListener('click', function() {
             if (!isLoading && hasMoreData) {
@@ -203,7 +190,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeSourceSelector() {
     const header = document.querySelector('.d-flex.justify-content-between') || document.querySelector('header') || document.querySelector('.container');
     if (!header) return;
-
     const selectorHTML = `
         <div class="d-flex align-items-center gap-2">
             <label class="fw-bold text-white mb-0"></label>
@@ -214,20 +200,15 @@ function initializeSourceSelector() {
             </select>
         </div>
     `;
-
-    // Masukkan setelah logo atau di awal header
     const target = header.querySelector('.navbar-brand, h1, .fw-bold') || header;
     target.insertAdjacentHTML('afterend', selectorHTML);
-
     elements.sourceSelector = document.getElementById('source-selector');
-
     if (elements.sourceSelector) {
         elements.sourceSelector.addEventListener('change', async function() {
             currentSource = this.value;
             currentPage = 1;
             currentOffset = 0;
             localStorage.setItem('dramashort_source', currentSource);
-
             if (elements.dramaList) elements.dramaList.innerHTML = '';
             await loadDramas();
             updatePageTitle();
@@ -238,42 +219,44 @@ function initializeSourceSelector() {
 // ============== LOAD DRAMAS ==============
 async function loadDramas() {
     if (isLoading) return;
-    
+   
     isLoading = true;
     showLoading(true);
-    
+   
     try {
         let result;
-        
+       
         switch(currentSource) {
             case 'dramabox':
                 result = await WORKING_APIS.dramabox.foryou(currentPage);
                 break;
             case 'netshort':
-                result = await WORKING_APIS.netshort.explore(currentOffset, CONFIG.itemsPerPage);
+                result = await WORKING_APIS.netshort.discover();
                 break;
             case 'melolo':
             default:
                 result = await WORKING_APIS.melolo.home(currentOffset, CONFIG.itemsPerPage);
                 break;
         }
-        
+       
         if (result.code === 0 && result.data && Array.isArray(result.data)) {
             if (currentPage === 1 && currentOffset === 0) {
                 elements.dramaList.innerHTML = '';
             }
-            
+           
             if (result.data.length > 0) {
                 renderDramas(result.data);
-                
-                if (currentSource === 'melolo' || currentSource === 'netshort') {
+               
+                if (currentSource === 'melolo') {
                     currentOffset += result.data.length;
                     hasMoreData = result.hasMore || (result.data.length >= CONFIG.itemsPerPage);
                 } else if (currentSource === 'dramabox') {
                     hasMoreData = result.hasMore || false;
                     if (hasMoreData) currentPage = result.nextPage || currentPage + 1;
+                } else if (currentSource === 'netshort') {
+                    hasMoreData = false;  // discover tidak punya more
                 }
-                
+               
                 updateLoadMoreButton();
                 hideEmptyState();
             } else {
@@ -304,7 +287,6 @@ async function loadMoreDramas() {
 // ============== RENDER DRAMAS (HANYA GRID) ==============
 function renderDramas(dramas) {
     if (!dramas || !Array.isArray(dramas) || dramas.length === 0) return;
-
     const dramasHtml = dramas.map(drama => {
         const data = formatDramaData(drama);
         return createGridViewHTML(
@@ -320,7 +302,6 @@ function renderDramas(dramas) {
             data.playCount
         );
     }).join('');
-
     elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
 }
 
@@ -339,7 +320,7 @@ function formatDramaData(drama) {
         tags: [],
         playCount: ''
     };
-    
+   
     switch(currentSource) {
         case 'melolo':
             formatted = {
@@ -353,7 +334,7 @@ function formatDramaData(drama) {
                 source: 'melolo'
             };
             break;
-            
+           
         case 'dramabox':
             const title = drama.bookName || drama.title || 'Drama';
             const isDubbing = title.toLowerCase().includes('(sulih suara)') || title.toLowerCase().includes('dub');
@@ -371,23 +352,28 @@ function formatDramaData(drama) {
                 playCount: drama.playCount || ''
             };
             break;
-            
+           
         case 'netshort':
             const netTitle = drama.name || drama.shortPlayName || 'NetShort Drama';
+            const isDubbing = drama.isDubbing || 
+                              netTitle.toLowerCase().includes('(sulih suara)') || 
+                              netTitle.toLowerCase().includes('dub');
             formatted = {
                 title: netTitle,
-                author: 'NetShort',
-                intro: drama.labelArray ? drama.labelArray.join(', ') : 'Short drama',
-                episodes: 1,
-                cover: drama.shortPlayCover || drama.cover || CONFIG.defaultImage,
+                author: drama.scriptName || 'NetShort',
+                intro: drama.labels ? drama.labels.join(', ') : 'Short drama populer',
+                episodes: 1,  // short drama biasanya 1 series panjang
+                cover: drama.cover || drama.shortPlayCover || CONFIG.defaultImage,
                 id: drama.shortPlayId || drama.id,
                 watchUrl: `/netshort.html?id=${drama.shortPlayId || drama.id}`,
                 source: 'netshort',
-                isDubbing: netTitle.toLowerCase().includes('(sulih suara)') || netTitle.toLowerCase().includes('dub')
+                isDubbing: isDubbing,
+                tags: drama.labels || drama.labelArray || [],
+                playCount: drama.heat || drama.heatScoreShow || ''
             };
             break;
     }
-    
+   
     return formatted;
 }
 
@@ -397,12 +383,12 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
         `<div class="drama-tags mt-2">
             ${tags.slice(0, 3).map(tag => `<span class="badge bg-secondary me-1 mb-1">${escapeHtml(tag)}</span>`).join('')}
         </div>` : '';
-    
+   
     const playCountHtml = playCount ?
         `<div class="play-count">
             <small><i class="bi bi-eye"></i> ${playCount}</small>
         </div>` : '';
-    
+   
     return `
         <div class="col">
             <div class="drama-card position-relative">
@@ -412,42 +398,42 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
                          alt="${title}"
                          loading="lazy"
                          onerror="this.src='${CONFIG.defaultImage}'">
-                    
+                   
                     ${episodes > 0 ? `
                     <div class="episode-badge">
                         ${episodes} ${currentSource === 'netshort' ? 'SHORT' : 'EP'}
                     </div>` : ''}
-                    
+                   
                     <div class="source-badge">
                         ${currentSource === 'melolo' ? '🎬' :
                           currentSource === 'dramabox' ? '📺' : '⚡'}
                         ${currentSource.toUpperCase()}
                     </div>
-                    
-${isDubbing ? `
-<div class="badge bg-success position-absolute bottom-0 start-0 m-2">
-    <i class="bi bi-volume-up-fill"></i> Dub ID
-</div>` : ''}
-                    
+                   
+                    ${isDubbing ? `
+                    <div class="badge bg-success position-absolute bottom-0 start-0 m-2">
+                        <i class="bi bi-volume-up-fill"></i> Dub ID
+                    </div>` : ''}
+                   
                     <div class="play-overlay">
                         <a href="${watchUrl}" class="play-btn">
                             <i class="bi bi-play-fill"></i>
                         </a>
                     </div>
                 </div>
-                
+               
                 <div class="card-body">
                     <h6 class="drama-title">${title}</h6>
-                    
+                   
                     <div class="drama-meta">
                         <small><i class="bi bi-person"></i> ${author}</small>
                         ${playCountHtml}
                     </div>
-                    
+                   
                     <p class="drama-desc">${intro.length > 80 ? intro.substring(0, 80) + '...' : intro}</p>
-                    
+                   
                     ${tagsHtml}
-                    
+                   
                     <a href="${watchUrl}" class="btn btn-primary btn-sm w-100 mt-2">
                         <i class="bi bi-eye me-1"></i>
                         ${currentSource === 'netshort' ? 'Watch Short' : 'Watch Now'}
@@ -463,7 +449,7 @@ function showLoading(show) {
     if (elements.loadingIndicator) {
         elements.loadingIndicator.style.display = show ? 'block' : 'none';
     }
-    
+   
     if (elements.loadMoreBtn) {
         elements.loadMoreBtn.innerHTML = show ?
             `<span class="spinner-border spinner-border-sm" role="status"></span> Loading...` :
@@ -538,7 +524,7 @@ function escapeHtml(text) {
 
 function addScrollToTopButton() {
     if (document.getElementById('scroll-to-top')) return;
-    
+   
     const scrollBtn = document.createElement('button');
     scrollBtn.id = 'scroll-to-top';
     scrollBtn.className = 'btn btn-primary rounded-circle shadow';
@@ -553,11 +539,11 @@ function addScrollToTopButton() {
         display: none;
         transition: all 0.3s ease;
     `;
-    
+   
     document.body.appendChild(scrollBtn);
-    
+   
     scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    
+   
     window.addEventListener('scroll', () => {
         scrollBtn.style.display = window.scrollY > 300 ? 'block' : 'none';
     });
@@ -581,7 +567,7 @@ window.loadMoreDramas = loadMoreDramas;
 function showNotification(message) {
     const existing = document.getElementById('temp-notification');
     if (existing) existing.remove();
-    
+   
     const notification = document.createElement('div');
     notification.id = 'temp-notification';
     notification.innerHTML = `
@@ -590,9 +576,9 @@ function showNotification(message) {
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `;
-    
+   
     document.body.appendChild(notification);
-    
+   
     setTimeout(() => notification.remove(), 3000);
 }
 
@@ -609,50 +595,50 @@ document.head.insertAdjacentHTML('beforeend', `
         overflow: hidden;
         transition: all 0.3s ease;
     }
-    
+   
     .drama-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
         border-color: #ff6b6b;
     }
-    
+   
     .card-cover {
         position: relative;
         height: 200px;
         overflow: hidden;
     }
-    
+   
     .drama-cover {
         width: 100%;
         height: 100%;
         object-fit: cover;
         transition: transform 0.3s ease;
     }
-    
+   
     .drama-card:hover .drama-cover {
         transform: scale(1.05);
     }
-    
+   
     .card-body {
         padding: 15px;
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
     }
-    
+   
     .drama-title {
         font-size: 0.95rem;
         font-weight: bold;
         margin-bottom: 8px;
         line-height: 1.3;
     }
-    
+   
     .drama-meta {
         font-size: 0.8rem;
         color: #aaa;
         margin-bottom: 10px;
     }
-    
+   
     .drama-desc {
         font-size: 0.85rem;
         color: #ccc;
@@ -660,15 +646,15 @@ document.head.insertAdjacentHTML('beforeend', `
         margin-bottom: 15px;
         line-height: 1.4;
     }
-    
+   
     .drama-tags {
         font-size: 0.75rem;
     }
-    
+   
     .source-selector {
         min-width: 160px;
     }
-    
+   
     @media (max-width: 576px) {
         .source-selector {
             width: 140px !important;
