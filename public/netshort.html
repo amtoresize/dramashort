@@ -166,8 +166,7 @@
                 currentDramaInfo = data.dramaInfo || {};  // metadata lengkap di sini
                 episodeList = Array.isArray(data.result) ? data.result : [];  // episodes di 'result'
                 totalEpisodes = episodeList.length || currentDramaInfo.totalEpisode || 0;
-                dramaCover = currentDramaInfo.shortPlayCover || data.name ? CONFIG.defaultImage : CONFIG.defaultImage;  // fallback
-                
+                dramaCover = currentDramaInfo.shortPlayCover || CONFIG.defaultImage;                
                 // Fallback judul kalau shortPlayName tidak ada
                 if (!currentDramaInfo.shortPlayName && data.name) {
                     currentDramaInfo.shortPlayName = data.name;
