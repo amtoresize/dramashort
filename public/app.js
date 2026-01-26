@@ -108,26 +108,26 @@ const WORKING_APIS = {
                 const response = await fetch(`https://dramabos.asia/api/netshort/api/drama/discover?lang=id_ID`);
                 const data = await response.json();
                
-                if (data.success && data.data && data.data.dataList) {
+                if (data.success && data.data && Array.isArray(data.data.dataList)) {
                     const transformed = data.data.dataList.map(item => ({
-                        shortPlayId: item.shortPlayId,
-                        name: item.shortPlayName,
-                        cover: item.shortPlayCover,
-                        labels: item.labelArray || [],
-                        heat: item.heatScoreShow || '0',
-                        scriptName: item.scriptName || 'Populer',
-                        isDubbing: item.shortPlayName.toLowerCase().includes('(sulih suara)') || 
-                                   item.shortPlayName.toLowerCase().includes('dub')
+                        shortPlayId: item.shortPlayId || '',
+                        shortPlayName: item.shortPlayName || 'Drama Tanpa Judul',
+                        shortPlayCover: item.shortPlayCover || CONFIG.defaultImage,
+                        labels: Array.isArray(item.labelArray) ? item.labelArray : [],
+                        heatScoreShow: item.heatScoreShow || '0',
+                        scriptName: item.scriptName || 'NetShort',
+                        isDubbing: (item.shortPlayName || '').toLowerCase().includes('(sulih suara)') || 
+                                   (item.shortPlayName || '').toLowerCase().includes('dub')
                     }));
 
                     return {
                         code: 0,
                         success: true,
                         data: transformed,
-                        hasMore: false  // discover tidak support pagination
+                        hasMore: false
                     };
                 }
-                return { code: -1, error: 'Invalid response', data: [] };
+                return { code: -1, error: 'Invalid response or no dataList', data: [] };
             } catch (error) {
                 console.error('NetShort discover error:', error);
                 return { code: -1, error: error.message, data: [] };
@@ -254,7 +254,7 @@ async function loadDramas() {
                     hasMoreData = result.hasMore || false;
                     if (hasMoreData) currentPage = result.nextPage || currentPage + 1;
                 } else if (currentSource === 'netshort') {
-                    hasMoreData = false;  // discover tidak punya more
+                    hasMoreData = false;
                 }
                
                 updateLoadMoreButton();
@@ -284,7 +284,7 @@ async function loadMoreDramas() {
     await loadDramas();
 }
 
-// ============== RENDER DRAMAS (HANYA GRID) ==============
+// ============== RENDER DRAMAS ==============
 function renderDramas(dramas) {
     if (!dramas || !Array.isArray(dramas) || dramas.length === 0) return;
     const dramasHtml = dramas.map(drama => {
@@ -305,7 +305,7 @@ function renderDramas(dramas) {
     elements.dramaList.insertAdjacentHTML('beforeend', dramasHtml);
 }
 
-// ============== FORMAT DATA ==============
+// ============== FORMAT DATA (diperkuat guard clause) ==============
 function formatDramaData(drama) {
     let formatted = {
         title: 'Untitled Drama',
@@ -329,47 +329,49 @@ function formatDramaData(drama) {
                 intro: drama.intro || drama.introduction || 'No description.',
                 episodes: drama.episodes || 0,
                 cover: drama.cover || CONFIG.defaultImage,
-                id: drama.id,
-                watchUrl: `/drama.html?id=${drama.id}`,
+                id: drama.id || '',
+                watchUrl: `/drama.html?id=${drama.id || ''}`,
                 source: 'melolo'
             };
             break;
            
         case 'dramabox':
             const title = drama.bookName || drama.title || 'Drama';
-            const isDubbing = title.toLowerCase().includes('(sulih suara)') || title.toLowerCase().includes('dub');
+            const isDubbingDb = title.toLowerCase().includes('(sulih suara)') || title.toLowerCase().includes('dub');
             formatted = {
                 title: title,
                 author: 'DramaBox',
                 intro: drama.introduction || 'Drama from DramaBox',
                 episodes: drama.chapterCount || 0,
                 cover: drama.cover || drama.coverWap || CONFIG.defaultImage,
-                id: drama.bookId || drama.id,
-                watchUrl: `/dramabox.html?id=${drama.bookId || drama.id}`,
+                id: drama.bookId || drama.id || '',
+                watchUrl: `/dramabox.html?id=${drama.bookId || drama.id || ''}`,
                 source: 'dramabox',
-                isDubbing: isDubbing,
+                isDubbing: isDubbingDb,
                 tags: drama.tags || [],
                 playCount: drama.playCount || ''
             };
             break;
            
         case 'netshort':
-            const netTitle = drama.name || drama.shortPlayName || 'NetShort Drama';
-            const isDubbing = drama.isDubbing || 
-                              netTitle.toLowerCase().includes('(sulih suara)') || 
-                              netTitle.toLowerCase().includes('dub');
+            const netTitle = drama.shortPlayName || drama.name || 'NetShort Drama';
+            const isDubbingNs = (drama.isDubbing === true) || 
+                                netTitle.toLowerCase().includes('(sulih suara)') || 
+                                netTitle.toLowerCase().includes('dub');
             formatted = {
                 title: netTitle,
                 author: drama.scriptName || 'NetShort',
-                intro: drama.labels ? drama.labels.join(', ') : 'Short drama populer',
-                episodes: 1,  // short drama biasanya 1 series panjang
-                cover: drama.cover || drama.shortPlayCover || CONFIG.defaultImage,
-                id: drama.shortPlayId || drama.id,
-                watchUrl: `/netshort.html?id=${drama.shortPlayId || drama.id}`,
+                intro: Array.isArray(drama.labels) && drama.labels.length > 0 
+                       ? drama.labels.join(', ') 
+                       : 'Short drama populer',
+                episodes: 1,
+                cover: drama.shortPlayCover || drama.cover || CONFIG.defaultImage,
+                id: drama.shortPlayId || drama.id || '',
+                watchUrl: `/netshort.html?id=${drama.shortPlayId || drama.id || ''}`,
                 source: 'netshort',
-                isDubbing: isDubbing,
-                tags: drama.labels || drama.labelArray || [],
-                playCount: drama.heat || drama.heatScoreShow || ''
+                isDubbing: isDubbingNs,
+                tags: Array.isArray(drama.labels) ? drama.labels : [],
+                playCount: drama.heatScoreShow || ''
             };
             break;
     }
@@ -377,7 +379,7 @@ function formatDramaData(drama) {
     return formatted;
 }
 
-// ============== CREATE GRID CARD HTML ==============
+// ============== CREATE GRID CARD HTML (sama) ==============
 function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watchUrl, isDubbing, tags = [], playCount = '') {
     const tagsHtml = tags.length > 0 ?
         `<div class="drama-tags mt-2">
@@ -444,7 +446,7 @@ function createGridViewHTML(title, author, intro, episodes, cover, dramaId, watc
     `;
 }
 
-// ============== UI HELPER FUNCTIONS ==============
+// ============== UI HELPER FUNCTIONS (sama) ==============
 function showLoading(show) {
     if (elements.loadingIndicator) {
         elements.loadingIndicator.style.display = show ? 'block' : 'none';
@@ -582,7 +584,7 @@ function showNotification(message) {
     setTimeout(() => notification.remove(), 3000);
 }
 
-// ============== CSS TAMBAHAN UNTUK CARD RATA TINGGI ==============
+// ============== CSS (sama) ==============
 document.head.insertAdjacentHTML('beforeend', `
 <style>
     .drama-card {
